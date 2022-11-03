@@ -25,6 +25,9 @@ macro_rules! def_ndh {
     };
 }
 
+mod core;
+pub use crate::core::*;
+
 /// VK_NULL_HANDLE
 /// TODO: Pointer instead in 64-bit archs.
 #[inline]
