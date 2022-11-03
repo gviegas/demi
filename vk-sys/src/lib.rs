@@ -67,3 +67,45 @@ pub fn null_handle() -> u64 {
 pub fn is_null_handle(ndh: u64) -> bool {
     ndh == 0
 }
+
+/// VkBool32
+pub type Bool32 = u32;
+pub const TRUE: Bool32 = 1;
+pub const FALSE: Bool32 = 0;
+
+/// VkOffset2D
+#[repr(C)]
+pub struct Offset2d {
+    pub x: i32,
+    pub y: i32,
+}
+
+/// VkOffset3D
+#[repr(C)]
+pub struct Offset3d {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+}
+
+/// VkExtent2D
+#[repr(C)]
+pub struct Extent2d {
+    pub width: u32,
+    pub height: u32,
+}
+
+/// VkExtent3D
+#[repr(C)]
+pub struct Extent3d {
+    pub width: u32,
+    pub height: u32,
+    pub depth: u32,
+}
+
+/// VkRect2D
+#[repr(C)]
+pub struct Rect2d {
+    pub offset: Offset2d,
+    pub extent: Extent2d,
+}
