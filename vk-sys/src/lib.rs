@@ -46,13 +46,16 @@ macro_rules! def_flags64 {
 // Defines IDs (non-flags) and their associated type.
 macro_rules! def_ids {
     ($name:ident, $( $cons:ident = $val:expr ),*) => {
-        pub type $name = core::ffi::c_int;
+        pub type $name = ::core::ffi::c_int;
         $( pub const $cons: $name = $val; )*
     };
 }
 
 mod core;
 pub use crate::core::*;
+
+mod result;
+pub use crate::result::*;
 
 /// VK_NULL_HANDLE
 // TODO: Pointer instead in 64-bit archs.
