@@ -1,5 +1,10 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+use std::ffi::c_void;
+
+#[allow(non_camel_case_types)]
+pub type c_size_t = usize; // XXX
+
 #[cfg(unix)]
 mod unix {} // TODO
 
@@ -115,3 +120,59 @@ pub struct Rect2d {
     pub offset: Offset2d,
     pub extent: Extent2d,
 }
+
+/// VkAllocationCallbacks
+#[repr(C)]
+pub struct AllocationCallbacks {
+    pub user_data: *mut c_void,
+    pub allocation: AllocationFunction,
+    pub reallocation: ReallocationFunction,
+    pub free: FreeFunction,
+    pub internal_allocation: Option<InternalAllocationNotification>,
+    pub internal_free: Option<InternalFreeNotification>,
+}
+
+/// PFN_vkAllocationFunction
+pub type AllocationFunction = unsafe extern "C" fn(
+    user_data: *mut c_void,
+    size: c_size_t,
+    alignment: c_size_t,
+    allocation_scope: SystemAllocationScope,
+) -> *mut c_void;
+
+/// PFN_vkReallocationFunction
+pub type ReallocationFunction = unsafe extern "C" fn(
+    user_data: *mut c_void,
+    original: *mut c_void,
+    size: c_size_t,
+    alignment: c_size_t,
+    allocation_scope: SystemAllocationScope,
+) -> *mut c_void;
+
+/// PFN_vkFreeFunction
+pub type FreeFunction = unsafe extern "C" fn(user_data: *mut c_void, memory: *mut c_void);
+
+/// PFN_vkInternalAllocationNotification
+pub type InternalAllocationNotification = unsafe extern "C" fn(
+    user_data: *mut c_void,
+    size: c_size_t,
+    allocation_type: InternalAllocationType,
+    allocation_scope: SystemAllocationScope,
+);
+
+/// PFN_vkInternalFreeNotification
+pub type InternalFreeNotification = InternalAllocationNotification;
+
+def_ids!(
+    SystemAllocationScope,
+    SYSTEM_ALLOCATION_SCOPE_COMMAND = 0,
+    SYSTEM_ALLOCATION_SCOPE_OBJECT = 1,
+    SYSTEM_ALLOCATION_SCOPE_CACHE = 2,
+    SYSTEM_ALLOCATION_SCOPE_DEVICE = 3,
+    SYSTEM_ALLOCATION_SCOPE_INSTANCE = 4
+);
+
+def_ids!(
+    InternalAllocationType,
+    INTERNAL_ALLOCATION_TYPE_EXECUTABLE = 0
+);
