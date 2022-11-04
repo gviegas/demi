@@ -68,6 +68,9 @@ pub use crate::stype::*;
 mod format;
 pub use crate::format::*;
 
+mod wsi;
+pub use crate::wsi::*;
+
 /// VK_NULL_HANDLE
 // TODO: Pointer instead in 64-bit archs.
 #[inline]
