@@ -298,7 +298,7 @@ pub static SURFACE_INTERFACE: Interface = Interface {
 #[repr(C)]
 pub struct SurfaceListener {
     pub enter: unsafe extern "C" fn(data: *mut c_void, surface: *mut Surface, output: *mut Output),
-    pub leave: unsafe extern "C" fn(data: *mut c_void, sutface: *mut Surface, output: *mut Output),
+    pub leave: unsafe extern "C" fn(data: *mut c_void, surface: *mut Surface, output: *mut Output),
 }
 
 /// wl_surface_add_listener
@@ -726,7 +726,7 @@ pub static BUFFER_INTERFACE: Interface = Interface {
 /// struct wl_buffer_listener
 #[repr(C)]
 pub struct BufferListener {
-    pub release: unsafe extern "C" fn(data: *mut c_void),
+    pub release: unsafe extern "C" fn(data: *mut c_void, buffer: *mut Buffer),
 }
 
 /// wl_buffer_add_listener
