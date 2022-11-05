@@ -24,6 +24,9 @@ macro_rules! proxy_marshal_flags {
 mod wl;
 pub use crate::wl::*;
 
+mod xdg;
+pub use crate::xdg::*;
+
 /// struct wl_interface
 #[repr(C)]
 pub struct Interface {
