@@ -45,7 +45,7 @@ pub struct Callback {
 }
 
 /// wl_callback_interface
-pub const CALLBACK_INTERFACE: Interface = Interface {
+pub static CALLBACK_INTERFACE: Interface = Interface {
     name: b"wl_callback\0".as_ptr().cast(),
     version: 1,
     method_count: 0,
@@ -81,7 +81,7 @@ pub struct Registry {
 }
 
 /// wl_registry_interface
-pub const REGISTRY_INTERFACE: Interface = Interface {
+pub static REGISTRY_INTERFACE: Interface = Interface {
     name: b"wl_registry\0".as_ptr().cast(),
     version: 1,
     method_count: 1,
@@ -159,7 +159,7 @@ pub struct Compositor {
 }
 
 /// wl_compositor_interface
-pub const COMPOSITOR_INTERFACE: Interface = Interface {
+pub static COMPOSITOR_INTERFACE: Interface = Interface {
     name: b"wl_compositor\0".as_ptr().cast(),
     version: 5,
     method_count: 2,
@@ -216,7 +216,7 @@ pub struct Surface {
 }
 
 /// wl_surface_interface
-pub const SURFACE_INTERFACE: Interface = Interface {
+pub static SURFACE_INTERFACE: Interface = Interface {
     name: b"wl_surface\0".as_ptr().cast(),
     version: 5,
     method_count: 11,
@@ -475,7 +475,7 @@ pub struct Region {
 }
 
 /// wl_region_interface
-pub const REGION_INTERFACE: Interface = Interface {
+pub static REGION_INTERFACE: Interface = Interface {
     name: b"wl_region\0".as_ptr().cast(),
     version: 1,
     method_count: 3,
@@ -553,7 +553,7 @@ pub struct Shm {
 }
 
 /// wl_shm_interface
-pub const SHM_INTERFACE: Interface = Interface {
+pub static SHM_INTERFACE: Interface = Interface {
     name: b"wl_shm\0".as_ptr().cast(),
     version: 1,
     method_count: 1,
@@ -611,7 +611,7 @@ pub struct ShmPool {
 }
 
 /// wl_shm_pool_interface
-pub const SHM_POOL_INTERFACE: Interface = Interface {
+pub static SHM_POOL_INTERFACE: Interface = Interface {
     name: b"wl_shm_pool\0".as_ptr().cast(),
     version: 1,
     method_count: 3,
@@ -704,7 +704,7 @@ pub struct Buffer {
 }
 
 /// wl_buffer_interface
-pub const BUFFER_INTERFACE: Interface = Interface {
+pub static BUFFER_INTERFACE: Interface = Interface {
     name: b"wl_buffer\0".as_ptr().cast(),
     version: 1,
     method_count: 1,
@@ -758,7 +758,7 @@ pub struct Seat {
 }
 
 /// wl_seat_interface
-pub const SEAT_INTERFACE: Interface = Interface {
+pub static SEAT_INTERFACE: Interface = Interface {
     name: b"wl_seat\0".as_ptr().cast(),
     version: 7,
     method_count: 4,
@@ -879,7 +879,7 @@ pub struct Pointer {
 }
 
 /// wl_pointer_interface
-pub const POINTER_INTERFACE: Interface = Interface {
+pub static POINTER_INTERFACE: Interface = Interface {
     name: b"wl_pointer\0".as_ptr().cast(),
     version: 7,
     method_count: 2,
@@ -1046,7 +1046,7 @@ pub struct Keyboard {
 }
 
 /// wl_keyboard_interface
-pub const KEYBOARD_INTERFACE: Interface = Interface {
+pub static KEYBOARD_INTERFACE: Interface = Interface {
     name: b"wl_keyboard\0".as_ptr().cast(),
     version: 7,
     method_count: 1,
@@ -1165,7 +1165,7 @@ pub struct Touch {
 }
 
 /// wl_touch_interface
-pub const TOUCH_INTERFACE: Interface = Interface {
+pub static TOUCH_INTERFACE: Interface = Interface {
     name: b"wl_touch\0".as_ptr().cast(),
     version: 7,
     method_count: 1,
@@ -1292,7 +1292,7 @@ pub struct Output {
 }
 
 /// wl_output_interface
-pub const OUTPUT_INTERFACE: Interface = Interface {
+pub static OUTPUT_INTERFACE: Interface = Interface {
     name: b"wl_output\0".as_ptr().cast(),
     version: 4,
     method_count: 1,

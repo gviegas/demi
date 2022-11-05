@@ -6,7 +6,7 @@ use std::ffi::{c_char, c_int, c_void};
 use std::mem;
 use std::sync::Once;
 
-use dl::{self, Dl};
+use dl::Dl;
 
 macro_rules! proxy_marshal_flags {
     ($proxy:expr, $opcode:expr, $iface:expr, $vers:expr, $flags:expr, $( $x:expr ),*) => {
@@ -22,26 +22,32 @@ macro_rules! proxy_marshal_flags {
 }
 
 mod wl;
-pub use wl::*;
+pub use crate::wl::*;
 
 /// struct wl_interface
 #[repr(C)]
 pub struct Interface {
-    pub name: *const c_char,
-    pub version: c_int,
-    pub method_count: c_int,
-    pub methods: *const Message,
-    pub event_count: c_int,
-    pub events: *const Message,
+    name: *const c_char,
+    version: c_int,
+    method_count: c_int,
+    methods: *const Message,
+    event_count: c_int,
+    events: *const Message,
 }
+
+unsafe impl Send for Interface {}
+unsafe impl Sync for Interface {}
 
 /// struct wl_message
 #[repr(C)]
 pub struct Message {
-    pub name: *const c_char,
-    pub signature: *const c_char,
-    pub types: *const *const Interface,
+    name: *const c_char,
+    signature: *const c_char,
+    types: *const *const Interface,
 }
+
+unsafe impl Send for Message {}
+unsafe impl Sync for Message {}
 
 /// struct wl_proxy
 #[repr(C)]
