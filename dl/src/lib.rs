@@ -4,8 +4,6 @@
 
 use std::ffi::{c_int, c_void, CStr, CString};
 
-use dl_sys;
-
 /// Handle to a shared object.
 #[derive(Debug)]
 pub struct Dl(*mut c_void);
@@ -47,6 +45,7 @@ impl Drop for Dl {
 }
 
 /// RTLD_* flags.
+///
 /// The default is LAZY | LOCAL.
 pub type Flags = u32;
 pub const LAZY: Flags = 0;
@@ -56,9 +55,9 @@ pub const GLOBAL: Flags = 0x2;
 
 fn convert_flags(flags: Flags) -> c_int {
     let flg = if flags & NOW != 0 {
-        dl_sys::RTLD_LAZY
-    } else {
         dl_sys::RTLD_NOW
+    } else {
+        dl_sys::RTLD_LAZY
     };
     if flags & GLOBAL != 0 {
         flg | dl_sys::RTLD_GLOBAL
