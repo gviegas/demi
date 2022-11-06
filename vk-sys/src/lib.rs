@@ -6,7 +6,7 @@ use std::ffi::c_void;
 pub type c_size_t = usize; // XXX
 
 mod init;
-pub use crate::init::init;
+pub use crate::init::*;
 
 // Defines a dispatchable handle.
 macro_rules! def_dh {

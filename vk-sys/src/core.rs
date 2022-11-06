@@ -9,8 +9,8 @@ use crate::{
 
 def_dh!(InstanceT, Instance);
 
-// vkEnumerateInstanceVersion
-type EnumerateInstanceVersion = unsafe extern "C" fn(api_version: *mut u32) -> Result;
+/// PFN_vkEnumerateInstanceVersion
+pub(crate) type EnumerateInstanceVersion = unsafe extern "C" fn(api_version: *mut u32) -> Result;
 
 /// VkInstanceCreateInfo
 #[repr(C)]
@@ -39,15 +39,15 @@ pub struct ApplicationInfo {
     pub api_version: u32,
 }
 
-// vkCreateInstance
-type CreateInstance = unsafe extern "C" fn(
+/// PFN_vkCreateInstance
+pub(crate) type CreateInstance = unsafe extern "C" fn(
     info: *const InstanceCreateInfo,
     allocator: *const AllocationCallbacks,
     instance: *mut Instance,
 ) -> Result;
 
-// vkDestroyInstance
-type DestroyInstance =
+/// PFN_vkDestroyInstance
+pub(crate) type DestroyInstance =
     unsafe extern "C" fn(instance: Instance, allocator: *const AllocationCallbacks);
 
 def_dh!(PhysicalDeviceT, PhysicalDevice);
@@ -321,30 +321,30 @@ pub struct PhysicalDeviceFeatures {
     pub inherited_queries: Bool32,
 }
 
-// vkEnumeratePhysicalDevices
-type EnumeratePhysicalDevices = unsafe extern "C" fn(
+/// PFN_vkEnumeratePhysicalDevices
+pub(crate) type EnumeratePhysicalDevices = unsafe extern "C" fn(
     instance: Instance,
     count: *mut u32,
     phys_devs: *mut PhysicalDevice,
 ) -> Result;
 
-// vkGetPhysicalDeviceProperties
-type GetPhysicalDeviceProperties =
+/// PFN_vkGetPhysicalDeviceProperties
+pub(crate) type GetPhysicalDeviceProperties =
     unsafe extern "C" fn(phys_dev: PhysicalDevice, properties: *const PhysicalDeviceProperties);
 
-// vkGetPhysicalDeviceQueueFamilyProperties
-type GetPhysicalDeviceQueueFamilyProperties = unsafe extern "C" fn(
+/// PFN_vkGetPhysicalDeviceQueueFamilyProperties
+pub(crate) type GetPhysicalDeviceQueueFamilyProperties = unsafe extern "C" fn(
     phys_dev: PhysicalDevice,
     count: *mut u32,
     queue_props: *mut QueueFamilyProperties,
 );
 
-// vkGetPhysicalDeviceMemoryProperties
-type GetPhysicalDeviceMemoryProperties =
+/// PFN_vkGetPhysicalDeviceMemoryProperties
+pub(crate) type GetPhysicalDeviceMemoryProperties =
     unsafe extern "C" fn(phys_dev: PhysicalDevice, mem_props: *mut PhysicalDeviceMemoryProperties);
 
-// vkGetPhysicalDeviceFeatures
-type GetPhysicalDeviceFeatures =
+/// PFN_vkGetPhysicalDeviceFeatures
+pub(crate) type GetPhysicalDeviceFeatures =
     unsafe extern "C" fn(phys_dev: PhysicalDevice, features: *mut PhysicalDeviceFeatures);
 
 def_dh!(DeviceT, Device);
@@ -383,16 +383,17 @@ def_flags!(
     DEVICE_QUEUE_CREATE_PROTECTED_BIT = 0x00000001
 );
 
-// vkCreateDevice
-type CreateDevice = unsafe extern "C" fn(
+/// PFN_vkCreateDevice
+pub(crate) type CreateDevice = unsafe extern "C" fn(
     phys_dev: PhysicalDevice,
     info: *const DeviceCreateInfo,
     allocator: *const AllocationCallbacks,
     device: *mut Device,
 ) -> Result;
 
-// vkDestroyDevice
-type DestroyDevice = unsafe extern "C" fn(device: Device, allocator: *const AllocationCallbacks);
+/// PFN_vkDestroyDevice
+pub(crate) type DestroyDevice =
+    unsafe extern "C" fn(device: Device, allocator: *const AllocationCallbacks);
 
 def_dh!(QueueT, Queue);
 
@@ -410,12 +411,12 @@ pub struct SubmitInfo {
     pub signal_semaphores: *const Semaphore,
 }
 
-// vkGetDeviceQueue
-type GetDeviceQueue =
+/// PFN_vkGetDeviceQueue
+pub(crate) type GetDeviceQueue =
     unsafe extern "C" fn(device: Device, fam_idx: u32, queue_idx: u32, queue: *mut Queue);
 
-// vkQueueSubmit
-type QueueSubmit = unsafe extern "C" fn(
+/// PFN_vkQueueSubmit
+pub(crate) type QueueSubmit = unsafe extern "C" fn(
     queue: Queue,
     submit_count: u32,
     submits: *const SubmitInfo,
@@ -460,19 +461,19 @@ def_flags!(
     COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT = 0x00000001
 );
 
-// vkBeginCommandBuffer
-type BeginCommandBuffer =
+/// PFN_vkBeginCommandBuffer
+pub(crate) type BeginCommandBuffer =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, info: *const CommandBufferBeginInfo) -> Result;
 
-// vkCmdExecuteCommands
-type CmdExecuteCommands =
+/// PFN_vkCmdExecuteCommands
+pub(crate) type CmdExecuteCommands =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, count: u32, cmd_bufs: *const CommandBuffer);
 
-// vkEndCommandBuffer
-type EndCommandBuffer = unsafe extern "C" fn(cmd_buf: CommandBuffer) -> Result;
+/// PFN_vkEndCommandBuffer
+pub(crate) type EndCommandBuffer = unsafe extern "C" fn(cmd_buf: CommandBuffer) -> Result;
 
-// vkResetCommandBuffer
-type ResetCommandBuffer =
+/// PFN_vkResetCommandBuffer
+pub(crate) type ResetCommandBuffer =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, flags: CommandBufferResetFlags) -> Result;
 
 def_ndh!(CommandPoolT, CommandPool);
@@ -518,41 +519,41 @@ def_ids!(
     COMMAND_BUFFER_LEVEL_SECONDARY = 1
 );
 
-// vkCreateCommandPool
-type CreateCommandPool = unsafe extern "C" fn(
+/// PFN_vkCreateCommandPool
+pub(crate) type CreateCommandPool = unsafe extern "C" fn(
     device: Device,
     info: *const CommandPoolCreateInfo,
     allocator: *const AllocationCallbacks,
     cmd_pool: *mut CommandPool,
 ) -> Result;
 
-// vkTrimCommandPool
-type TrimCommandPool =
+/// PFN_vkTrimCommandPool
+pub(crate) type TrimCommandPool =
     unsafe extern "C" fn(device: Device, cmd_pool: CommandPool, flags: CommandPoolTrimFlags);
 
-// vkResetCommandPool
-type ResetCommandPool = unsafe extern "C" fn(
+/// PFN_vkResetCommandPool
+pub(crate) type ResetCommandPool = unsafe extern "C" fn(
     device: Device,
     cmd_pool: CommandPool,
     flags: CommandPoolResetFlags,
 ) -> Result;
 
-// vkDestroyCommandPool
-type DestroyCommandPool = unsafe extern "C" fn(
+/// PFN_vkDestroyCommandPool
+pub(crate) type DestroyCommandPool = unsafe extern "C" fn(
     device: Device,
     cmd_pool: CommandPool,
     allocator: *const AllocationCallbacks,
 );
 
-// vkAllocateCommandBuffers
-type AllocateCommandBuffers = unsafe extern "C" fn(
+/// PFN_vkAllocateCommandBuffers
+pub(crate) type AllocateCommandBuffers = unsafe extern "C" fn(
     device: Device,
     info: *const CommandBufferAllocateInfo,
     cmd_bufs: *mut CommandBuffer,
 ) -> Result;
 
-// vkFreeCommandBuffers
-type FreeCommandBuffers = unsafe extern "C" fn(
+/// PFN_vkFreeCommandBuffers
+pub(crate) type FreeCommandBuffers = unsafe extern "C" fn(
     device: Device,
     cmd_pool: CommandPool,
     count: u32,
@@ -575,22 +576,23 @@ def_flags!(
     FENCE_CREATE_SIGNALED_BIT = 0x00000001
 );
 
-// vkCreateFence
-type CreateFence = unsafe extern "C" fn(
+/// PFN_vkCreateFence
+pub(crate) type CreateFence = unsafe extern "C" fn(
     device: Device,
     info: *const FenceCreateInfo,
     allocator: *const AllocationCallbacks,
     fence: *mut Fence,
 ) -> Result;
 
-// vkGetfenceStatus
-type GetFenceStatus = unsafe extern "C" fn(device: Device, fence: Fence) -> Result;
+/// PFN_vkGetfenceStatus
+pub(crate) type GetFenceStatus = unsafe extern "C" fn(device: Device, fence: Fence) -> Result;
 
-// vkResetFences
-type ResetFences = unsafe extern "C" fn(device: Device, count: u32, fences: *const Fence) -> Result;
+/// PFN_vkResetFences
+pub(crate) type ResetFences =
+    unsafe extern "C" fn(device: Device, count: u32, fences: *const Fence) -> Result;
 
-// vkWaitForFences
-type WaitForFences = unsafe extern "C" fn(
+/// PFN_vkWaitForFences
+pub(crate) type WaitForFences = unsafe extern "C" fn(
     device: Device,
     count: u32,
     fences: *const Fence,
@@ -598,8 +600,8 @@ type WaitForFences = unsafe extern "C" fn(
     timeout: u64,
 ) -> Result;
 
-// vkDestroyFence
-type DestroyFence =
+/// PFN_vkDestroyFence
+pub(crate) type DestroyFence =
     unsafe extern "C" fn(device: Device, fence: Fence, allocator: *const AllocationCallbacks);
 
 def_ndh!(SemaphoreT, Semaphore);
@@ -614,16 +616,16 @@ pub struct SemaphoreCreateInfo {
 
 def_flags!(SemaphoreCreateFlags, SemaphoreCreateFlagBits,);
 
-// vkCreateSemaphore
-type CreateSemaphore = unsafe extern "C" fn(
+/// PFN_vkCreateSemaphore
+pub(crate) type CreateSemaphore = unsafe extern "C" fn(
     device: Device,
     info: *const SemaphoreCreateInfo,
     allocator: *const AllocationCallbacks,
     semaphore: *mut Semaphore,
 ) -> Result;
 
-// vkDestroySemaphore
-type DestroySemaphore = unsafe extern "C" fn(
+/// PFN_vkDestroySemaphore
+pub(crate) type DestroySemaphore = unsafe extern "C" fn(
     device: Device,
     semaphore: Semaphore,
     allocator: *const AllocationCallbacks,
@@ -667,8 +669,8 @@ pub struct BufferMemoryBarrier {
     pub size: u64,
 }
 
-// vkCmdPipelineBarrier
-type CmdPipelineBarrier = unsafe extern "C" fn(
+/// PFN_vkCmdPipelineBarrier
+pub(crate) type CmdPipelineBarrier = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     src_stage_mask: PipelineStageFlags,
     dst_stage_mask: PipelineStageFlags,
@@ -776,11 +778,11 @@ def_ids!(
     SHARING_MODE_CONCURRENT = 1
 );
 
-// vkDeviceWaitIdle
-type DeviceWaitIdle = unsafe extern "C" fn(device: Device) -> Result;
+/// PFN_vkDeviceWaitIdle
+pub(crate) type DeviceWaitIdle = unsafe extern "C" fn(device: Device) -> Result;
 
-// vkQueueWaitIdle
-type QueueWaitIdle = unsafe extern "C" fn(queue: Queue) -> Result;
+/// PFN_vkQueueWaitIdle
+pub(crate) type QueueWaitIdle = unsafe extern "C" fn(queue: Queue) -> Result;
 
 def_ndh!(DeviceMemoryT, DeviceMemory);
 
@@ -813,16 +815,16 @@ pub struct MemoryRequirements {
 
 def_flags!(MemoryMapFlags, MemoryMapFlagBits,);
 
-// vkAllocateMemory
-type AllocateMemory = unsafe extern "C" fn(
+/// PFN_vkAllocateMemory
+pub(crate) type AllocateMemory = unsafe extern "C" fn(
     device: Device,
     info: *const MemoryAllocateInfo,
     allocator: *const AllocationCallbacks,
     memory: *mut DeviceMemory,
 ) -> Result;
 
-// vkMapMemory
-type MapMemory = unsafe extern "C" fn(
+/// PFN_vkMapMemory
+pub(crate) type MapMemory = unsafe extern "C" fn(
     device: Device,
     memory: DeviceMemory,
     offset: u64,
@@ -831,25 +833,25 @@ type MapMemory = unsafe extern "C" fn(
     data: *mut *mut c_void,
 ) -> Result;
 
-// vkFlushMappedMemoryRanges
-type FlushMappedMemoryRanges = unsafe extern "C" fn(
+/// PFN_vkFlushMappedMemoryRanges
+pub(crate) type FlushMappedMemoryRanges = unsafe extern "C" fn(
     device: Device,
     mem_range_count: u32,
     mem_ranges: *const MappedMemoryRange,
 ) -> Result;
 
-// vkInvalidateMappedMemoryRanges
-type InvalidateMappedMemoryRanges = unsafe extern "C" fn(
+/// PFN_vkInvalidateMappedMemoryRanges
+pub(crate) type InvalidateMappedMemoryRanges = unsafe extern "C" fn(
     device: Device,
     mem_range_count: u32,
     mem_ranges: *const MappedMemoryRange,
 ) -> Result;
 
-// vkUnmapMemory
-type UnmapMemory = unsafe extern "C" fn(device: Device, memory: DeviceMemory);
+/// PFN_vkUnmapMemory
+pub(crate) type UnmapMemory = unsafe extern "C" fn(device: Device, memory: DeviceMemory);
 
-// vkFreeMemory
-type FreeMemory = unsafe extern "C" fn(
+/// PFN_vkFreeMemory
+pub(crate) type FreeMemory = unsafe extern "C" fn(
     device: Device,
     memory: DeviceMemory,
     allocator: *const AllocationCallbacks,
@@ -910,28 +912,28 @@ def_flags!(
     BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR = BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
 );
 
-// vkCreateBuffer
-type CreateBuffer = unsafe extern "C" fn(
+/// PFN_vkCreateBuffer
+pub(crate) type CreateBuffer = unsafe extern "C" fn(
     device: Device,
     info: *const BufferCreateInfo,
     allocator: *const AllocationCallbacks,
     buffer: *mut Buffer,
 ) -> Result;
 
-// vkGetBufferMemoryRequirements
-type GetBufferMemoryRequirements =
+/// PFN_vkGetBufferMemoryRequirements
+pub(crate) type GetBufferMemoryRequirements =
     unsafe extern "C" fn(device: Device, buffer: Buffer, mem_reqs: *mut MemoryRequirements);
 
-// vkBindBufferMemory
-type BindBufferMemory = unsafe extern "C" fn(
+/// PFN_vkBindBufferMemory
+pub(crate) type BindBufferMemory = unsafe extern "C" fn(
     device: Device,
     buffer: Buffer,
     memory: DeviceMemory,
     mem_off: u64,
 ) -> Result;
 
-// vkDestroyBuffer
-type DestroyBuffer =
+/// PFN_vkDestroyBuffer
+pub(crate) type DestroyBuffer =
     unsafe extern "C" fn(device: Device, buffer: Buffer, allocator: *const AllocationCallbacks);
 
 /// VkBufferCopy
@@ -942,8 +944,8 @@ pub struct BufferCopy {
     pub size: u64,
 }
 
-// vkCmdCopyBuffer
-type CmdCopyBuffer = unsafe extern "C" fn(
+/// PFN_vkCmdCopyBuffer
+pub(crate) type CmdCopyBuffer = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     src_buf: Buffer,
     dst_buf: Buffer,
@@ -951,8 +953,8 @@ type CmdCopyBuffer = unsafe extern "C" fn(
     regions: *const BufferCopy,
 );
 
-// vkCmdFillBuffer
-type CmdFillBuffer = unsafe extern "C" fn(
+/// PFN_vkCmdFillBuffer
+pub(crate) type CmdFillBuffer = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     buffer: Buffer,
     offset: u64,
@@ -960,8 +962,8 @@ type CmdFillBuffer = unsafe extern "C" fn(
     value: u32,
 );
 
-// vkCmdUpdateBuffer
-type CmdUpdateBuffer = unsafe extern "C" fn(
+/// PFN_vkCmdUpdateBuffer
+pub(crate) type CmdUpdateBuffer = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     buffer: Buffer,
     offset: u64,
@@ -985,16 +987,16 @@ pub struct BufferViewCreateInfo {
 
 def_flags!(BufferViewCreateFlags, BufferViewCreateFlagBits,);
 
-// vkCreateBufferView
-type CreateBufferView = unsafe extern "C" fn(
+/// PFN_vkCreateBufferView
+pub(crate) type CreateBufferView = unsafe extern "C" fn(
     device: Device,
     info: *const BufferViewCreateInfo,
     allocator: *const AllocationCallbacks,
     view: *mut BufferView,
 ) -> Result;
 
-// vkDestroyBufferView
-type DestroyBufferView =
+/// PFN_vkDestroyBufferView
+pub(crate) type DestroyBufferView =
     unsafe extern "C" fn(device: Device, view: BufferView, allocator: *const AllocationCallbacks);
 
 def_ndh!(ImageT, Image);
@@ -1132,28 +1134,28 @@ def_ids!(
     IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR = IMAGE_LAYOUT_ATTACHMENT_OPTIMAL
 );
 
-// vkCreateImage
-type CreateImage = unsafe extern "C" fn(
+/// PFN_vkCreateImage
+pub(crate) type CreateImage = unsafe extern "C" fn(
     device: Device,
     info: *const ImageCreateInfo,
     allocator: *const AllocationCallbacks,
     image: *mut Image,
 ) -> Result;
 
-// vkGetImageMemoryProperties
-type GetImageMemoryRequirements =
+/// PFN_vkGetImageMemoryProperties
+pub(crate) type GetImageMemoryRequirements =
     unsafe extern "C" fn(device: Device, image: Image, mem_reqs: *mut MemoryRequirements);
 
-// vkBindImageMemory
-type BindImageMemory = unsafe extern "C" fn(
+/// PFN_vkBindImageMemory
+pub(crate) type BindImageMemory = unsafe extern "C" fn(
     device: Device,
     image: Image,
     memory: DeviceMemory,
     mem_off: u64,
 ) -> Result;
 
-// vkDestroyImage
-type DestroyImage =
+/// PFN_vkDestroyImage
+pub(crate) type DestroyImage =
     unsafe extern "C" fn(device: Device, image: Image, allocator: *const AllocationCallbacks);
 
 /// VkImageCopy
@@ -1175,8 +1177,8 @@ pub struct ImageSubresourceLayers {
     pub layer_count: u32,
 }
 
-// vkCmdCopyImage
-type CmdCopyImage = unsafe extern "C" fn(
+/// PFN_vkCmdCopyImage
+pub(crate) type CmdCopyImage = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     src_img: Image,
     src_layout: ImageLayout,
@@ -1186,8 +1188,8 @@ type CmdCopyImage = unsafe extern "C" fn(
     regions: *const ImageCopy,
 );
 
-// vkCmdClearColorImage
-type CmdClearColorImage = unsafe extern "C" fn(
+/// PFN_vkCmdClearColorImage
+pub(crate) type CmdClearColorImage = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     image: Image,
     layout: ImageLayout,
@@ -1196,8 +1198,8 @@ type CmdClearColorImage = unsafe extern "C" fn(
     ranges: *const ImageSubresourceRange,
 );
 
-// vkCmdClearDepthStencilImage
-type CmdClearDepthStencilImage = unsafe extern "C" fn(
+/// PFN_vkCmdClearDepthStencilImage
+pub(crate) type CmdClearDepthStencilImage = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     image: Image,
     layout: ImageLayout,
@@ -1290,16 +1292,16 @@ def_flags!(
     IMAGE_ASPECT_NONE_KHR = IMAGE_ASPECT_NONE
 );
 
-// vkCreateImageView
-type CreateImageView = unsafe extern "C" fn(
+/// PFN_vkCreateImageView
+pub(crate) type CreateImageView = unsafe extern "C" fn(
     device: Device,
     info: *const ImageViewCreateInfo,
     allocator: *const AllocationCallbacks,
     view: *mut ImageView,
 ) -> Result;
 
-// vkDestroyImageView
-type DestroyImageView =
+/// PFN_vkDestroyImageView
+pub(crate) type DestroyImageView =
     unsafe extern "C" fn(device: Device, view: ImageView, allocator: *const AllocationCallbacks);
 
 /// VkBufferImageCopy
@@ -1313,8 +1315,8 @@ pub struct BufferImageCopy {
     pub image_extent: Extent3d,
 }
 
-// vkCmdCopyBufferToImage
-type CmdCopyBufferToImage = unsafe extern "C" fn(
+/// PFN_vkCmdCopyBufferToImage
+pub(crate) type CmdCopyBufferToImage = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     src_buf: Buffer,
     dst_img: Image,
@@ -1323,8 +1325,8 @@ type CmdCopyBufferToImage = unsafe extern "C" fn(
     regions: *const BufferImageCopy,
 );
 
-// vkCmdCopyImageToBuffer
-type CmdCopyImageToBuffer = unsafe extern "C" fn(
+/// PFN_vkCmdCopyImageToBuffer
+pub(crate) type CmdCopyImageToBuffer = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     src_img: Image,
     src_layout: ImageLayout,
@@ -1415,16 +1417,16 @@ def_ids!(
     BORDER_COLOR_INT_CUSTOM_EXT = 1000287004
 );
 
-// vkCreateSampler
-type CreateSampler = unsafe extern "C" fn(
+/// PFN_vkCreateSampler
+pub(crate) type CreateSampler = unsafe extern "C" fn(
     device: Device,
     info: *const SamplerCreateInfo,
     allocator: *const AllocationCallbacks,
     sampler: *mut Sampler,
 ) -> Result;
 
-// vkDestroySampler
-type DestroySampler =
+/// PFN_vkDestroySampler
+pub(crate) type DestroySampler =
     unsafe extern "C" fn(device: Device, sampler: Sampler, allocator: *const AllocationCallbacks);
 
 def_ndh!(RenderPassT, RenderPass);
@@ -1540,16 +1542,16 @@ pub struct SubpassDependency {
     pub dependency_flags: DependencyFlags,
 }
 
-// vkCreateRenderPass
-type CreateRenderPass = unsafe extern "C" fn(
+/// PFN_vkCreateRenderPass
+pub(crate) type CreateRenderPass = unsafe extern "C" fn(
     device: Device,
     info: *const RenderPassCreateInfo,
     allocator: *const AllocationCallbacks,
     render_pass: *mut RenderPass,
 ) -> Result;
 
-// vkDestroyRenderPass
-type DestroyRenderPass = unsafe extern "C" fn(
+/// PFN_vkDestroyRenderPass
+pub(crate) type DestroyRenderPass = unsafe extern "C" fn(
     device: Device,
     render_pass: RenderPass,
     allocator: *const AllocationCallbacks,
@@ -1578,16 +1580,16 @@ def_flags!(
     FRAMEBUFFER_CREATE_IMAGELESS_BIT_KHR = FRAMEBUFFER_CREATE_IMAGELESS_BIT
 );
 
-// vkCreateFramebuffer
-type CreateFramebuffer = unsafe extern "C" fn(
+/// PFN_vkCreateFramebuffer
+pub(crate) type CreateFramebuffer = unsafe extern "C" fn(
     device: Device,
     info: *const FramebufferCreateInfo,
     allocator: *const AllocationCallbacks,
     framebuffer: *mut Framebuffer,
 ) -> Result;
 
-// vkDestroyFramebuffer
-type DestroyFramebuffer = unsafe extern "C" fn(
+/// PFN_vkDestroyFramebuffer
+pub(crate) type DestroyFramebuffer = unsafe extern "C" fn(
     device: Device,
     framebuffer: Framebuffer,
     allocator: *const AllocationCallbacks,
@@ -1636,18 +1638,19 @@ def_ids!(
     SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS = 1
 );
 
-// vkCmdBeginRenderPass
-type CmdBeginRenderPass = unsafe extern "C" fn(
+/// PFN_vkCmdBeginRenderPass
+pub(crate) type CmdBeginRenderPass = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     info: *const RenderPassBeginInfo,
     contents: SubpassContents,
 );
 
-// vkCmdNextSubpass
-type CmdNextSubpass = unsafe extern "C" fn(cmd_buf: CommandBuffer, contents: SubpassContents);
+/// PFN_vkCmdNextSubpass
+pub(crate) type CmdNextSubpass =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, contents: SubpassContents);
 
-// vkCmdEndRenderPass
-type CmdEndRenderPass = unsafe extern "C" fn(cmd_buf: CommandBuffer);
+/// PFN_vkCmdEndRenderPass
+pub(crate) type CmdEndRenderPass = unsafe extern "C" fn(cmd_buf: CommandBuffer);
 
 def_ndh!(DescriptorSetT, DescriptorSet);
 
@@ -1674,8 +1677,8 @@ def_ids!(
     DESCRIPTOR_TYPE_MUTABLE_VALVE = DESCRIPTOR_TYPE_MUTABLE_EXT
 );
 
-// vkCmdBindDescriptorSets
-type CmdBindDescriptorSets = unsafe extern "C" fn(
+/// PFN_vkCmdBindDescriptorSets
+pub(crate) type CmdBindDescriptorSets = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     bind_point: PipelineBindPoint,
     layout: PipelineLayout,
@@ -1686,8 +1689,8 @@ type CmdBindDescriptorSets = unsafe extern "C" fn(
     dyn_offs: *const u32,
 );
 
-// vkCmdPushConstants
-type CmdPushConstants = unsafe extern "C" fn(
+/// PFN_vkCmdPushConstants
+pub(crate) type CmdPushConstants = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     layout: PipelineLayout,
     stage_flags: ShaderStageFlags,
@@ -1741,8 +1744,8 @@ pub struct DescriptorBufferInfo {
     pub range: u64,
 }
 
-// vkUpdateDescriptorSets
-type UpdateDescriptorSets = unsafe extern "C" fn(
+/// PFN_vkUpdateDescriptorSets
+pub(crate) type UpdateDescriptorSets = unsafe extern "C" fn(
     device: Device,
     write_count: u32,
     writes: *const WriteDescriptorSet,
@@ -1784,16 +1787,16 @@ pub struct DescriptorSetLayoutBinding {
     pub immutable_samplers: *const Sampler,
 }
 
-// vkCreateDescriptorSetLayout
-type CreateDescriptorSetLayout = unsafe extern "C" fn(
+/// PFN_vkCreateDescriptorSetLayout
+pub(crate) type CreateDescriptorSetLayout = unsafe extern "C" fn(
     device: Device,
     info: *const DescriptorSetLayoutCreateInfo,
     allocator: *const AllocationCallbacks,
     set_layout: *mut DescriptorSetLayout,
 ) -> Result;
 
-// vkDestroyDescriptorSetLayout
-type DestroyDescriptorSetLayout = unsafe extern "C" fn(
+/// PFN_vkDestroyDescriptorSetLayout
+pub(crate) type DestroyDescriptorSetLayout = unsafe extern "C" fn(
     device: Device,
     set_layout: DescriptorSetLayout,
     allocator: *const AllocationCallbacks,
@@ -1841,37 +1844,37 @@ pub struct DescriptorSetAllocateInfo {
     pub set_layouts: *const DescriptorSetLayout,
 }
 
-// vkCreateDescriptorPool
-type CreateDescriptorPool = unsafe extern "C" fn(
+/// PFN_vkCreateDescriptorPool
+pub(crate) type CreateDescriptorPool = unsafe extern "C" fn(
     device: Device,
     info: *const DescriptorPoolCreateInfo,
     allocator: *const AllocationCallbacks,
     desc_pool: *mut DescriptorPool,
 ) -> Result;
 
-// vkResetDescriptorPool
-type ResetDescriptorPool = unsafe extern "C" fn(
+/// PFN_vkResetDescriptorPool
+pub(crate) type ResetDescriptorPool = unsafe extern "C" fn(
     device: Device,
     desc_pool: DescriptorPool,
     flags: DescriptorPoolResetFlags,
 ) -> Result;
 
-// vkDestroyDescriptorPool
-type DestroyDescriptorPool = unsafe extern "C" fn(
+/// PFN_vkDestroyDescriptorPool
+pub(crate) type DestroyDescriptorPool = unsafe extern "C" fn(
     device: Device,
     desc_pool: DescriptorPool,
     allocator: *const AllocationCallbacks,
 );
 
-// vkAllocateDescriptorSets
-type AllocateDescriptorSets = unsafe extern "C" fn(
+/// PFN_vkAllocateDescriptorSets
+pub(crate) type AllocateDescriptorSets = unsafe extern "C" fn(
     device: Device,
     info: *const DescriptorSetAllocateInfo,
     desc_sets: *mut DescriptorSet,
 ) -> Result;
 
-// vkFreeDescriptorSets
-type FreeDescriptorSets = unsafe extern "C" fn(
+/// PFN_vkFreeDescriptorSets
+pub(crate) type FreeDescriptorSets = unsafe extern "C" fn(
     device: Device,
     desc_pool: DescriptorPool,
     count: u32,
@@ -1892,16 +1895,16 @@ pub struct ShaderModuleCreateInfo {
 
 def_flags!(ShaderModuleCreateFlags, ShaderModuleCreateFlagBits,);
 
-// vkCreateShaderModule
-type CreateShaderModule = unsafe extern "C" fn(
+/// PFN_vkCreateShaderModule
+pub(crate) type CreateShaderModule = unsafe extern "C" fn(
     device: Device,
     info: *const ShaderModuleCreateInfo,
     allocator: *const AllocationCallbacks,
     shader_mod: *mut ShaderModule,
 ) -> Result;
 
-// vkDestroyShaderModule
-type DestroyShaderModule = unsafe extern "C" fn(
+/// PFN_vkDestroyShaderModule
+pub(crate) type DestroyShaderModule = unsafe extern "C" fn(
     device: Device,
     shader_mod: ShaderModule,
     allocator: *const AllocationCallbacks,
@@ -1918,8 +1921,8 @@ def_ids!(
     PIPELINE_BIND_POINT_RAY_TRACING_NV = PIPELINE_BIND_POINT_RAY_TRACING_KHR
 );
 
-// vkCmdBindPipeline
-type CmdBindPipeline =
+/// PFN_vkCmdBindPipeline
+pub(crate) type CmdBindPipeline =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, bind_point: PipelineBindPoint, pipeline: Pipeline);
 
 def_flags!(
@@ -1967,8 +1970,8 @@ def_flags!(
     PIPELINE_CREATE_EARLY_RETURN_ON_FAILURE_BIT_EXT = PIPELINE_CREATE_EARLY_RETURN_ON_FAILURE_BIT
 );
 
-// vkCreateGraphicsPipelines
-type CreateGraphicsPipelines = unsafe extern "C" fn(
+/// PFN_vkCreateGraphicsPipelines
+pub(crate) type CreateGraphicsPipelines = unsafe extern "C" fn(
     device: Device,
     pl_cache: PipelineCache,
     info_count: u32,
@@ -1977,8 +1980,8 @@ type CreateGraphicsPipelines = unsafe extern "C" fn(
     pipelines: *mut Pipeline,
 ) -> Result;
 
-// vkCreateComputePipelines
-type CreateComputePipelines = unsafe extern "C" fn(
+/// PFN_vkCreateComputePipelines
+pub(crate) type CreateComputePipelines = unsafe extern "C" fn(
     device: Device,
     pl_cache: PipelineCache,
     info_count: u32,
@@ -1987,8 +1990,8 @@ type CreateComputePipelines = unsafe extern "C" fn(
     pipelines: *mut Pipeline,
 ) -> Result;
 
-// vkDestroyPipeline
-type DestroyPipeline =
+/// PFN_vkDestroyPipeline
+pub(crate) type DestroyPipeline =
     unsafe extern "C" fn(device: Device, pipeline: Pipeline, allocator: *const AllocationCallbacks);
 
 def_flags!(
@@ -2229,12 +2232,12 @@ pub struct DrawIndexedIndirectCommand {
     pub first_instance: u32,
 }
 
-// vkBindIndexBuffers
-type CmdBindIndexBuffer =
+/// PFN_vkBindIndexBuffers
+pub(crate) type CmdBindIndexBuffer =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, buffer: Buffer, offset: u64, idx_type: IndexType);
 
-// vkCmdBindVertexBuffers
-type CmdBindVertexBuffers = unsafe extern "C" fn(
+/// PFN_vkCmdBindVertexBuffers
+pub(crate) type CmdBindVertexBuffers = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     first_binding: u32,
     binding_count: u32,
@@ -2242,8 +2245,8 @@ type CmdBindVertexBuffers = unsafe extern "C" fn(
     offsets: *const u64,
 );
 
-// vkCmdDraw
-type CmdDraw = unsafe extern "C" fn(
+/// PFN_vkCmdDraw
+pub(crate) type CmdDraw = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     vert_count: u32,
     inst_count: u32,
@@ -2251,8 +2254,8 @@ type CmdDraw = unsafe extern "C" fn(
     first_inst: u32,
 );
 
-// vkCmdDrawIndexed
-type CmdDrawIndexed = unsafe extern "C" fn(
+/// PFN_vkCmdDrawIndexed
+pub(crate) type CmdDrawIndexed = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     idx_count: u32,
     inst_count: u32,
@@ -2261,8 +2264,8 @@ type CmdDrawIndexed = unsafe extern "C" fn(
     first_inst: u32,
 );
 
-// vkCmdDrawIndirect
-type CmdDrawIndirect = unsafe extern "C" fn(
+/// PFN_vkCmdDrawIndirect
+pub(crate) type CmdDrawIndirect = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     buffer: Buffer,
     offset: u64,
@@ -2270,8 +2273,8 @@ type CmdDrawIndirect = unsafe extern "C" fn(
     stride: u32,
 );
 
-// vkCmdDrawIndexedIndirect
-type CmdDrawIndexedIndirect = CmdDrawIndirect;
+/// PFN_vkCmdDrawIndexedIndirect
+pub(crate) type CmdDrawIndexedIndirect = CmdDrawIndirect;
 
 /// VkPipelineTessellationStateCreateInfo
 #[repr(C)]
@@ -2305,16 +2308,16 @@ pub struct Viewport {
     pub max_depth: f32,
 }
 
-// vkCmdSetViewport
-type CmdSetViewport = unsafe extern "C" fn(
+/// PFN_vkCmdSetViewport
+pub(crate) type CmdSetViewport = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     first_vport: u32,
     vport_count: u32,
     viewports: *const Viewport,
 );
 
-// vkCmdSetScissor
-type CmdSetScissor = unsafe extern "C" fn(
+/// PFN_vkCmdSetScissor
+pub(crate) type CmdSetScissor = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     first_sciss: u32,
     sciss_count: u32,
@@ -2362,11 +2365,11 @@ def_ids!(
     FRONT_FACE_CLOCKWISE = 1
 );
 
-// vkCmdSetLineWidth
-type CmdSetLineWidth = unsafe extern "C" fn(cmd_buf: CommandBuffer, line_width: f32);
+/// PFN_vkCmdSetLineWidth
+pub(crate) type CmdSetLineWidth = unsafe extern "C" fn(cmd_buf: CommandBuffer, line_width: f32);
 
-// vkCmdSetDepthBias
-type CmdSetDepthBias = unsafe extern "C" fn(
+/// PFN_vkCmdSetDepthBias
+pub(crate) type CmdSetDepthBias = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     const_factor: f32,
     clamp_value: f32,
@@ -2437,19 +2440,20 @@ def_flags!(
     STENCIL_FRONT_AND_BACK = STENCIL_FACE_FRONT_AND_BACK
 );
 
-// vkCmdSetDepthBounds
-type CmdSetDepthBounds = unsafe extern "C" fn(cmd_buf: CommandBuffer, min: f32, max: f32);
+/// PFN_vkCmdSetDepthBounds
+pub(crate) type CmdSetDepthBounds =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, min: f32, max: f32);
 
-// vkCmdSetStencilCompareMask
-type CmdSetStencilCompareMask =
+/// PFN_vkCmdSetStencilCompareMask
+pub(crate) type CmdSetStencilCompareMask =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, face_mask: StencilFaceFlags, cmp_mask: u32);
 
-// vkCmdSetStencilWriteMask
-type CmdSetStencilWriteMask =
+/// PFN_vkCmdSetStencilWriteMask
+pub(crate) type CmdSetStencilWriteMask =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, face_mask: StencilFaceFlags, write_mask: u32);
 
-// vkCmdSetStencilReference
-type CmdSetStencilReference =
+/// PFN_vkCmdSetStencilReference
+pub(crate) type CmdSetStencilReference =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, face_mask: StencilFaceFlags, reference: u32);
 
 /// VkPipelineColorBlendStateCreateInfo
@@ -2585,8 +2589,9 @@ def_flags!(
     COLOR_COMPONENT_A_BIT = 0x00000008
 );
 
-// vkCmdSetBlendConstants
-type CmdSetBlendConstants = unsafe extern "C" fn(cmd_buf: CommandBuffer, blend_consts: *const f32);
+/// PFN_vkCmdSetBlendConstants
+pub(crate) type CmdSetBlendConstants =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, blend_consts: *const f32);
 
 /// VkPipelineDynamicStateCreateInfo
 #[repr(C)]
@@ -2705,16 +2710,16 @@ pub struct DispatchIndirectCommand {
     pub z: u32,
 }
 
-// vkCmdDispatch
-type CmdDispatch = unsafe extern "C" fn(
+/// PFN_vkCmdDispatch
+pub(crate) type CmdDispatch = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     grp_count_x: u32,
     grp_count_y: u32,
     grp_count_z: u32,
 );
 
-// vkCmdDispatchIndirect
-type CmdDispatchIndirect =
+/// PFN_vkCmdDispatchIndirect
+pub(crate) type CmdDispatchIndirect =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, buffer: Buffer, offset: u64);
 
 def_ndh!(PipelineLayoutT, PipelineLayout);
@@ -2745,16 +2750,16 @@ pub struct PushConstantRange {
     pub size: u32,
 }
 
-// vkCreatePipelineLayout
-type CreatePipelineLayout = unsafe extern "C" fn(
+/// PFN_vkCreatePipelineLayout
+pub(crate) type CreatePipelineLayout = unsafe extern "C" fn(
     device: Device,
     info: *const PipelineLayoutCreateInfo,
     allocator: *const AllocationCallbacks,
     pl_layout: *mut PipelineLayout,
 ) -> Result;
 
-// vkDestroyPipelineLayout
-type DestroyPipelineLayout = unsafe extern "C" fn(
+/// PFN_vkDestroyPipelineLayout
+pub(crate) type DestroyPipelineLayout = unsafe extern "C" fn(
     device: Device,
     pl_layout: PipelineLayout,
     allocator: *const AllocationCallbacks,
@@ -2795,32 +2800,32 @@ def_ids!(
     PIPELINE_CACHE_HEADER_VERSION_ONE = 1
 );
 
-// vkCreatePipelineCache
-type CreatePipelineCache = unsafe extern "C" fn(
+/// PFN_vkCreatePipelineCache
+pub(crate) type CreatePipelineCache = unsafe extern "C" fn(
     device: Device,
     info: *const PipelineCacheCreateInfo,
     allocator: *const AllocationCallbacks,
     pl_cache: *mut PipelineCache,
 ) -> Result;
 
-// vkMergePipelineCaches
-type MergePipelineCaches = unsafe extern "C" fn(
+/// PFN_vkMergePipelineCaches
+pub(crate) type MergePipelineCaches = unsafe extern "C" fn(
     device: Device,
     dst_cache: PipelineCache,
     src_cache_count: u32,
     src_caches: *const PipelineCache,
 ) -> Result;
 
-// vkGetPipelineCacheData
-type GetPipelineCacheData = unsafe extern "C" fn(
+/// PFN_vkGetPipelineCacheData
+pub(crate) type GetPipelineCacheData = unsafe extern "C" fn(
     device: Device,
     pl_cache: PipelineCache,
     data_size: *mut c_size_t,
     data: *mut c_void,
 ) -> Result;
 
-// vkDestroyPipelineCache
-type DestroyPipelineCache = unsafe extern "C" fn(
+/// PFN_vkDestroyPipelineCache
+pub(crate) type DestroyPipelineCache = unsafe extern "C" fn(
     device: Device,
     pl_cache: PipelineCache,
     allocator: *const AllocationCallbacks,
@@ -2893,23 +2898,23 @@ def_flags!(
     QUERY_RESULT_PARTIAL_BIT = 0x00000008
 );
 
-// vkCreateQueryPool
-type CreateQueryPool = unsafe extern "C" fn(
+/// PFN_vkCreateQueryPool
+pub(crate) type CreateQueryPool = unsafe extern "C" fn(
     device: Device,
     info: *const QueryPoolCreateInfo,
     allocator: *const AllocationCallbacks,
     query_pool: *mut QueryPool,
 ) -> Result;
 
-// vkDestroyQueryPool
-type DestroyQueryPool = unsafe extern "C" fn(
+/// PFN_vkDestroyQueryPool
+pub(crate) type DestroyQueryPool = unsafe extern "C" fn(
     device: Device,
     query_pool: QueryPool,
     allocator: *const AllocationCallbacks,
 );
 
-// vkGetQueryPoolResults
-type GetQueryPoolResults = unsafe extern "C" fn(
+/// PFN_vkGetQueryPoolResults
+pub(crate) type GetQueryPoolResults = unsafe extern "C" fn(
     device: Device,
     query_pool: QueryPool,
     first_query: u32,
@@ -2920,21 +2925,22 @@ type GetQueryPoolResults = unsafe extern "C" fn(
     flags: QueryResultFlags,
 );
 
-// vkCmdResetQueryPool
-type CmdResetQueryPool = unsafe extern "C" fn(
+/// PFN_vkCmdResetQueryPool
+pub(crate) type CmdResetQueryPool = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     query_pool: QueryPool,
     first_query: u32,
     query_count: u32,
 );
 
-// vkCmdBeginQuery
-type CmdBeginQuery = unsafe extern "C" fn(
+/// PFN_vkCmdBeginQuery
+pub(crate) type CmdBeginQuery = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
     query_pool: QueryPool,
     query: u32,
     flags: QueryControlFlags,
 );
 
-// vkCmdEndQuery
-type CmdEndQuery = unsafe extern "C" fn(cmd_buf: CommandBuffer, query_pool: QueryPool, query: u32);
+/// PFN_vkCmdEndQuery
+pub(crate) type CmdEndQuery =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, query_pool: QueryPool, query: u32);

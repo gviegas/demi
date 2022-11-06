@@ -25,15 +25,15 @@ pub fn init() -> Result<(), &'static str> {
     }
 }
 
-// PFN_vkVoidFunction
-type VoidFunction = unsafe extern "C" fn();
+/// PFN_vkVoidFunction
+pub(crate) type VoidFunction = unsafe extern "C" fn();
 
-// PFN_vkGetInstanceProcAddr
-type GetInstanceProcAddr =
+/// PFN_vkGetInstanceProcAddr
+pub(crate) type GetInstanceProcAddr =
     unsafe extern "C" fn(instance: Instance, name: *const c_char) -> Option<VoidFunction>;
 
-// PFN_vkGetDeviceProcAddr
-type GetDeviceProcAddr =
+/// PFN_vkGetDeviceProcAddr
+pub(crate) type GetDeviceProcAddr =
     unsafe extern "C" fn(device: Device, name: *const c_char) -> Option<VoidFunction>;
 
 #[cfg(unix)]
