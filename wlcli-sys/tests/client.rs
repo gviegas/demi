@@ -59,6 +59,7 @@ fn test_client() {
         .unwrap();
     let data = vec![0u8; SIZE as usize];
     file.write(&data).unwrap();
+    file.flush().unwrap();
     let fd = file.as_raw_fd();
     let shm_pool = global.create_pool(fd, SIZE);
     println!("shm_pool: {:#?}", shm_pool);
@@ -73,20 +74,18 @@ fn test_client() {
         WIDTH * BPP / 8,
         SHM_FORMAT_XRGB8888,
     );
-    file.flush().unwrap();
     println!("buffer: {:#?}", buffer);
 
     // Commit a second time, now with a buffer attached.
     attach(surface, buffer, 0, 0);
     commit(surface);
-    roundtrip(display);
+    flush(display);
 
     while !quit() {
-        dispatch_pending(display);
-        thread::sleep(Duration::from_millis(33));
+        dispatch(display);
     }
 
-    //wait_wm_ping(display, Duration::new(30, 0));
+    wait_wm_ping(display, Duration::new(30, 0));
 
     disconnect(display);
 }
@@ -111,9 +110,21 @@ fn disconnect(display: *mut Display) {
     }
 }
 
+fn dispatch(display: *mut Display) {
+    unsafe {
+        wlcli_sys::display_dispatch(display);
+    }
+}
+
 fn dispatch_pending(display: *mut Display) {
     unsafe {
         wlcli_sys::display_dispatch_pending(display);
+    }
+}
+
+fn flush(display: *mut Display) {
+    unsafe {
+        wlcli_sys::display_flush(display);
     }
 }
 
@@ -276,18 +287,19 @@ impl Global {
     }
 }
 
-static mut PING_CHECK: isize = -1;
+static mut PING_CHECK: isize = -50;
 
 fn wait_wm_ping(display: *mut Display, timeout: Duration) {
     let start = Instant::now();
     unsafe {
         while PING_CHECK < 0 {
-            wlcli_sys::display_dispatch_pending(display);
+            wlcli_sys::display_roundtrip(display);
             if start.elapsed() >= timeout {
                 break;
             }
             thread::sleep(Duration::from_millis(33));
         }
+        println!("PING_CHECK: {}", PING_CHECK);
     }
 }
 
@@ -428,7 +440,7 @@ static WM_BASE_LISTENER: WmBaseListener = WmBaseListener { ping: wm_ping };
 unsafe extern "C" fn wm_ping(data: *mut c_void, wm_base: *mut WmBase, serial: u32) {
     println!("wm_base.ping: {:?} {:?} {:?}", data, wm_base, serial);
     wlcli_sys::wm_base_pong(wm_base, serial);
-    *data.cast() = 1isize;
+    *data.cast::<isize>() += 1;
 }
 
 static XDG_SURFACE_LISTENER: XdgSurfaceListener = XdgSurfaceListener {
