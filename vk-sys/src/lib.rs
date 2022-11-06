@@ -5,11 +5,8 @@ use std::ffi::c_void;
 #[allow(non_camel_case_types)]
 pub type c_size_t = usize; // XXX
 
-#[cfg(unix)]
-mod unix {} // TODO
-
-#[cfg(windows)]
-mod windows {} // TODO
+mod init;
+pub use crate::init::init;
 
 // Defines a dispatchable handle.
 macro_rules! def_dh {
