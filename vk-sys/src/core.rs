@@ -7,9 +7,12 @@ use crate::{
     StructureType,
 };
 
+// TODO: Sparse API, events, ...
+
 def_dh!(InstanceT, Instance);
 
 /// PFN_vkEnumerateInstanceVersion
+/// [v1.1]
 pub(crate) type EnumerateInstanceVersion = unsafe extern "C" fn(api_version: *mut u32) -> Result;
 
 /// VkInstanceCreateInfo
@@ -321,6 +324,28 @@ pub struct PhysicalDeviceFeatures {
     pub inherited_queries: Bool32,
 }
 
+/// VkPhysicalDeviceGroupProperties
+/// [v1.1]
+#[repr(C)]
+pub struct PhysicalDeviceGroupProperties {
+    pub s_type: StructureType,
+    pub next: *mut c_void,
+    pub physical_device_count: u32,
+    pub physical_devices: [PhysicalDevice; 32],
+    pub subset_allocation: Bool32,
+}
+
+/// VkPhysicalDeviceFeatures2
+/// [v1.1]
+#[repr(C)]
+pub struct PhysicalDeviceFeatures2 {
+    pub s_type: StructureType,
+    pub next: *mut c_void,
+    pub features: PhysicalDeviceFeatures,
+}
+
+// TODO: v1.1+ feature structs.
+
 /// PFN_vkEnumeratePhysicalDevices
 pub(crate) type EnumeratePhysicalDevices = unsafe extern "C" fn(
     instance: Instance,
@@ -346,6 +371,19 @@ pub(crate) type GetPhysicalDeviceMemoryProperties =
 /// PFN_vkGetPhysicalDeviceFeatures
 pub(crate) type GetPhysicalDeviceFeatures =
     unsafe extern "C" fn(phys_dev: PhysicalDevice, features: *mut PhysicalDeviceFeatures);
+
+/// PFN_vkEnumeratePhysicalDeviceGroups
+/// [v1.1]
+pub(crate) type EnumeratePhysicalDeviceGroups = unsafe extern "C" fn(
+    instance: Instance,
+    count: *mut u32,
+    grp_props: *mut PhysicalDeviceGroupProperties,
+) -> Result;
+
+/// PFN_vkGetPhysicalDeviceFeatures2
+/// [v1.1]
+pub(crate) type GetPhysicalDeviceFeatures2 =
+    unsafe extern "C" fn(phys_dev: PhysicalDevice, features: *mut PhysicalDeviceFeatures2);
 
 def_dh!(DeviceT, Device);
 

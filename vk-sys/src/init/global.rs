@@ -4,6 +4,7 @@ use crate::init::GLOBAL_FP;
 use crate::{AllocationCallbacks, Instance, InstanceCreateInfo, Result};
 
 /// vkEnumerateInstanceVersion
+/// [v1.1]
 pub unsafe fn enumerate_instance_version(api_version: *mut u32) -> Result {
     // BUG: Return version 1.0 if this command is not available.
     debug_assert!(GLOBAL_FP
