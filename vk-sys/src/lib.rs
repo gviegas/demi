@@ -65,6 +65,9 @@ pub use crate::stype::*;
 mod format;
 pub use crate::format::*;
 
+mod limits;
+pub use crate::limits::*;
+
 mod features;
 pub use crate::features::*;
 
