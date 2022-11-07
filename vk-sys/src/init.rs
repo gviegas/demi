@@ -8,6 +8,9 @@ use std::sync::Once;
 use crate::init::proc::Proc;
 use crate::{CreateInstance, Device, EnumerateInstanceVersion, Instance};
 
+mod global;
+pub use crate::init::global::*;
+
 static mut PROC: Option<Proc> = None;
 static mut FP_GLOBAL: Option<FpGlobal> = None;
 
