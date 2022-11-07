@@ -11,8 +11,11 @@ use crate::{CreateInstance, Device, EnumerateInstanceVersion, Instance};
 mod global;
 pub use crate::init::global::*;
 
+mod instance;
+pub use crate::init::instance::*;
+
 static mut PROC: Option<Proc> = None;
-static mut FP_GLOBAL: Option<FpGlobal> = None;
+static mut GLOBAL_FP: Option<GlobalFp> = None;
 
 /// Initializes the library.
 pub fn init() -> Result<(), &'static str> {
@@ -20,10 +23,10 @@ pub fn init() -> Result<(), &'static str> {
     static mut ERR: Option<Box<String>> = None;
     unsafe {
         INIT.call_once(|| match Proc::new() {
-            Ok(proc) => match FpGlobal::new(proc.fp()) {
+            Ok(proc) => match GlobalFp::new(proc.fp()) {
                 Ok(globl) => {
                     PROC = Some(proc);
-                    FP_GLOBAL = Some(globl);
+                    GLOBAL_FP = Some(globl);
                 }
                 Err(e) => ERR = Some(Box::new(e)),
             },
@@ -38,14 +41,14 @@ pub fn init() -> Result<(), &'static str> {
 }
 
 // Global commands.
-struct FpGlobal {
+struct GlobalFp {
     create_instance: CreateInstance,
 
     // v1.1
     enumerate_instance_version: Option<EnumerateInstanceVersion>,
 }
 
-impl FpGlobal {
+impl GlobalFp {
     fn new(get: GetInstanceProcAddr) -> Result<Self, String> {
         macro_rules! get {
             ($bs:expr) => {
@@ -61,7 +64,7 @@ impl FpGlobal {
             };
         }
 
-        Ok(FpGlobal {
+        Ok(Self {
             create_instance: get!(b"vkCreateInstance\0")?,
             enumerate_instance_version: get!(b"vkEnumerateInstanceVersion\0").ok(),
         })
