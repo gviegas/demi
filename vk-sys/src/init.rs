@@ -1,12 +1,15 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use std::ffi::c_char;
+use std::mem;
+use std::ptr;
 use std::sync::Once;
 
 use crate::init::proc::Proc;
-use crate::{Device, Instance};
+use crate::{CreateInstance, Device, EnumerateInstanceVersion, Instance};
 
 static mut PROC: Option<Proc> = None;
+static mut FP_GLOBAL: Option<FpGlobal> = None;
 
 /// Initializes the library.
 pub fn init() -> Result<(), &'static str> {
@@ -14,7 +17,13 @@ pub fn init() -> Result<(), &'static str> {
     static mut ERR: Option<Box<String>> = None;
     unsafe {
         INIT.call_once(|| match Proc::new() {
-            Ok(x) => PROC = Some(x),
+            Ok(proc) => match FpGlobal::new(proc.fp()) {
+                Ok(globl) => {
+                    PROC = Some(proc);
+                    FP_GLOBAL = Some(globl);
+                }
+                Err(e) => ERR = Some(Box::new(e)),
+            },
             Err(e) => ERR = Some(Box::new(e)),
         });
         if let Some(ref e) = ERR {
@@ -22,6 +31,37 @@ pub fn init() -> Result<(), &'static str> {
         } else {
             Ok(())
         }
+    }
+}
+
+// Global commands.
+struct FpGlobal {
+    create_instance: CreateInstance,
+
+    // v1.1
+    enumerate_instance_version: Option<EnumerateInstanceVersion>,
+}
+
+impl FpGlobal {
+    fn new(get: GetInstanceProcAddr) -> Result<Self, String> {
+        macro_rules! get {
+            ($bs:expr) => {
+                unsafe {
+                    match get(ptr::null_mut(), $bs.as_ptr().cast()) {
+                        Some(x) => Ok(mem::transmute(x)),
+                        None => Err(format!(
+                            "could not get FP: {}",
+                            String::from_utf8_lossy(&$bs[..$bs.len() - 1])
+                        )),
+                    }
+                }
+            };
+        }
+
+        Ok(FpGlobal {
+            create_instance: get!(b"vkCreateInstance\0")?,
+            enumerate_instance_version: get!(b"vkEnumerateInstanceVersion\0").ok(),
+        })
     }
 }
 
@@ -48,7 +88,7 @@ mod proc {
     }
 
     impl Proc {
-        pub fn new() -> Result<Proc, String> {
+        pub fn new() -> Result<Self, String> {
             const LIB_NAMES: [&str; 2] = ["libvulkan.so.1", "libvulkan.so"];
             let mut err = String::new();
             for i in LIB_NAMES {
@@ -66,6 +106,10 @@ mod proc {
                 }
             }
             Err(err)
+        }
+
+        pub fn fp(&self) -> GetInstanceProcAddr {
+            self.get_instance_proc_addr
         }
     }
 }
