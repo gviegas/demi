@@ -65,6 +65,9 @@ pub use crate::stype::*;
 mod format;
 pub use crate::format::*;
 
+mod features;
+pub use crate::features::*;
+
 mod wsi;
 pub use crate::wsi::*;
 
