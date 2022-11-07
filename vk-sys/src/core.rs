@@ -4,7 +4,7 @@ use std::ffi::{c_char, c_void};
 
 use crate::{
     c_size_t, AllocationCallbacks, Bool32, Extent3d, Format, Offset3d, PhysicalDeviceFeatures,
-    Rect2d, Result, StructureType, PhysicalDeviceLimits,
+    PhysicalDeviceLimits, Rect2d, Result, StructureType,
 };
 
 // TODO: Sparse API, events, physical device properties #2, ...

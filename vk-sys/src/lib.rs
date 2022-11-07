@@ -185,3 +185,27 @@ def_ids!(
     InternalAllocationType,
     INTERNAL_ALLOCATION_TYPE_EXECUTABLE = 0
 );
+
+/// VK_API_VERSION_VARIANT
+#[inline]
+pub fn api_version_variant(version: u32) -> u32 {
+    version >> 29
+}
+
+/// VK_API_VERSION_MAJOR
+#[inline]
+pub fn api_version_major(version: u32) -> u32 {
+    version >> 22 & 0x00_00_00_7F
+}
+
+/// VK_API_VERSION_MINOR
+#[inline]
+pub fn api_version_minor(version: u32) -> u32 {
+    version >> 12 & 0x00_00_03_FF
+}
+
+/// VK_API_VERSION_PATCH
+#[inline]
+pub fn api_version_patch(version: u32) -> u32 {
+    version & 0x00_00_0F_FF
+}
