@@ -1,6 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use std::mem;
+use std::ptr;
 use std::result;
 
 use crate::init::PROC;
@@ -74,6 +75,14 @@ impl InstanceFp {
 }
 
 impl InstanceFp {
+    /// vkDestroyInstance
+    ///
+    /// The `InstanceFp` must not be used anymore.
+    pub unsafe fn destroy_instance(&mut self, allocator: *const AllocationCallbacks) {
+        (self.destroy_instance)(self.instance, allocator);
+        self.instance = ptr::null_mut();
+    }
+
     /// vkEnumeratePhysicalDevices
     pub unsafe fn enumerate_physical_devices(
         &self,
