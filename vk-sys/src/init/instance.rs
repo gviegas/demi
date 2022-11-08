@@ -19,8 +19,6 @@ use crate::{
 
 /// Instance-level commands.
 pub struct InstanceFp {
-    instance: Instance,
-
     destroy_instance: DestroyInstance,
     enumerate_physical_devices: EnumeratePhysicalDevices,
     get_physical_device_properties: GetPhysicalDeviceProperties,
@@ -59,7 +57,6 @@ impl InstanceFp {
         }
 
         Ok(Self {
-            instance,
             destroy_instance: get!(b"vkDestroyInstance\0")?,
             enumerate_physical_devices: get!(b"vkEnumeratePhysicalDevices\0")?,
             get_physical_device_properties: get!(b"vkGetPhysicalDeviceProperties\0")?,
@@ -91,29 +88,34 @@ impl InstanceFp {
     /// vkDestroyInstance
     ///
     /// The `InstanceFp` must not be used anymore.
-    pub unsafe fn destroy_instance(&mut self, allocator: *const AllocationCallbacks) {
-        (self.destroy_instance)(self.instance, allocator);
-        self.instance = ptr::null_mut();
+    pub unsafe fn destroy_instance(
+        &mut self,
+        instance: Instance,
+        allocator: *const AllocationCallbacks,
+    ) {
+        (self.destroy_instance)(instance, allocator);
     }
 
     /// vkEnumeratePhysicalDevices
     pub unsafe fn enumerate_physical_devices(
         &self,
+        instance: Instance,
         physical_device_count: *mut u32,
         physical_devices: *mut PhysicalDevice,
     ) -> Result {
-        (self.enumerate_physical_devices)(self.instance, physical_device_count, physical_devices)
+        (self.enumerate_physical_devices)(instance, physical_device_count, physical_devices)
     }
 
     /// vkEnumeratePhysicalDeviceGroups
     /// [v1.1]
     pub unsafe fn enumerate_physical_device_groups(
         &self,
+        instance: Instance,
         physical_device_group_count: *mut u32,
         physical_device_group_properties: *mut PhysicalDeviceGroupProperties,
     ) -> Result {
         (self.enumerate_physical_device_groups.unwrap())(
-            self.instance,
+            instance,
             physical_device_group_count,
             physical_device_group_properties,
         )

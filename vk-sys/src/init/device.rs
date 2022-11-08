@@ -3,13 +3,12 @@
 use std::mem;
 use std::result;
 
-use crate::{DestroyDevice, Device, InstanceFp};
+use crate::{AllocationCallbacks, DestroyDevice, Device, GetDeviceQueue, InstanceFp, Queue};
 
 /// Device-level commands.
 pub struct DeviceFp {
-    device: Device,
-
     destroy_device: DestroyDevice,
+    get_device_queue: GetDeviceQueue,
     // TODO...
 }
 
@@ -33,8 +32,8 @@ impl DeviceFp {
         }
 
         Ok(Self {
-            device,
             destroy_device: get!(b"vkDestroyDevice\0")?,
+            get_device_queue: get!(b"vkGetDeviceQueue\0")?,
         })
     }
 }
