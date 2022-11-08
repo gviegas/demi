@@ -1,5 +1,6 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+use std::ffi::c_char;
 use std::mem;
 use std::ptr;
 use std::result;
@@ -8,11 +9,12 @@ use crate::init::PROC;
 use crate::{
     AllocationCallbacks, CreateDevice, DestroyInstance, Device, DeviceCreateInfo,
     EnumeratePhysicalDeviceGroups, EnumeratePhysicalDevices, Format, FormatProperties,
-    GetPhysicalDeviceFeatures, GetPhysicalDeviceFeatures2, GetPhysicalDeviceFormatProperties,
-    GetPhysicalDeviceMemoryProperties, GetPhysicalDeviceProperties,
-    GetPhysicalDeviceQueueFamilyProperties, Instance, PhysicalDevice, PhysicalDeviceFeatures,
-    PhysicalDeviceFeatures2, PhysicalDeviceGroupProperties, PhysicalDeviceMemoryProperties,
-    PhysicalDeviceProperties, QueueFamilyProperties, Result,
+    GetDeviceProcAddr, GetPhysicalDeviceFeatures, GetPhysicalDeviceFeatures2,
+    GetPhysicalDeviceFormatProperties, GetPhysicalDeviceMemoryProperties,
+    GetPhysicalDeviceProperties, GetPhysicalDeviceQueueFamilyProperties, Instance, PhysicalDevice,
+    PhysicalDeviceFeatures, PhysicalDeviceFeatures2, PhysicalDeviceGroupProperties,
+    PhysicalDeviceMemoryProperties, PhysicalDeviceProperties, QueueFamilyProperties, Result,
+    VoidFunction,
 };
 
 /// Instance-level commands.
@@ -28,6 +30,8 @@ pub struct InstanceFp {
     get_physical_device_format_properties: GetPhysicalDeviceFormatProperties,
     create_device: CreateDevice,
 
+    get_device_proc_addr: GetDeviceProcAddr,
+
     // v1.1
     enumerate_physical_device_groups: Option<EnumeratePhysicalDeviceGroups>,
     get_physical_device_features_2: Option<GetPhysicalDeviceFeatures2>,
@@ -40,18 +44,16 @@ impl InstanceFp {
             return Err(String::from("InstanceFp::new: instance should be non-null"));
         }
 
-        let get = unsafe { PROC.as_ref().unwrap().fp() };
+        let get = PROC.as_ref().unwrap().fp();
 
         macro_rules! get {
             ($bs:expr) => {
-                unsafe {
-                    match get(instance, $bs.as_ptr().cast()) {
-                        Some(x) => Ok(mem::transmute(x)),
-                        None => Err(format!(
-                            "could not obtain FP: {}",
-                            String::from_utf8_lossy(&$bs[..$bs.len() - 1])
-                        )),
-                    }
+                match get(instance, $bs.as_ptr().cast()) {
+                    Some(x) => Ok(mem::transmute(x)),
+                    None => Err(format!(
+                        "could not obtain FP: {}",
+                        String::from_utf8_lossy(&$bs[..$bs.len() - 1])
+                    )),
                 }
             };
         }
@@ -68,9 +70,20 @@ impl InstanceFp {
             get_physical_device_features: get!(b"vkGetPhysicalDeviceFeatures\0")?,
             get_physical_device_format_properties: get!(b"vkGetPhysicalDeviceFormatProperties\0")?,
             create_device: get!(b"vkCreateDevice\0")?,
+            get_device_proc_addr: get!(b"vkGetDeviceProcAddr\0")?,
             enumerate_physical_device_groups: get!(b"vkEnumeratePhysicalDeviceGroups\0").ok(),
             get_physical_device_features_2: get!(b"vkGetPhysicalDeviceFeatures2\0").ok(),
         })
+    }
+
+    /// vkGetDeviceProcAddr
+    pub(crate) unsafe fn get_device_proc_addr(
+        self,
+        device: Device,
+        name: *const c_char,
+    ) -> Option<VoidFunction> {
+        debug_assert!(!device.is_null() && !name.is_null());
+        (self.get_device_proc_addr)(device, name)
     }
 }
 
