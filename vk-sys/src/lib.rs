@@ -90,7 +90,11 @@ pub fn is_null_handle(ndh: u64) -> bool {
 
 /// VkBool32
 pub type Bool32 = u32;
+
+/// VK_TRUE
 pub const TRUE: Bool32 = 1;
+
+/// VK_FALSE
 pub const FALSE: Bool32 = 0;
 
 /// VkOffset2D
@@ -222,3 +226,24 @@ pub const API_VERSION_1_2: u32 = make_api_version(0, 1, 2, 0);
 
 /// VK_API_VERSION_1_3
 pub const API_VERSION_1_3: u32 = make_api_version(0, 1, 3, 0);
+
+/// VK_ATTACHMENT_UNUSED
+pub const ATTACHMENT_UNUSED: u32 = u32::MAX;
+
+/// VK_LOD_CLAMP_NONE
+pub const LOD_CLAMP_NONE: f32 = 1000.0;
+
+/// VK_QUEUE_FAMILY_IGNORED
+pub const QUEUE_FAMILY_IGNORED: u32 = u32::MAX;
+
+/// VK_REMAINING_ARRAY_LAYERS
+pub const REMAINING_ARRAY_LAYERS: u32 = u32::MAX;
+
+/// VK_REMAINING_MIP_LEVELS
+pub const REMAINING_MIP_LEVELS: u32 = u32::MAX;
+
+/// VK_SUBPASS_EXTERNAL
+pub const SUBPASS_EXTERNAL: u32 = u32::MAX;
+
+/// VK_WHOLE_SIZE
+pub const WHOLE_SIZE: u64 = u64::MAX;
