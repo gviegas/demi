@@ -14,6 +14,9 @@ pub use crate::init::global::*;
 mod instance;
 pub use crate::init::instance::*;
 
+mod device;
+pub use crate::init::device::*;
+
 static mut PROC: Option<Proc> = None;
 static mut GLOBAL_FP: Option<GlobalFp> = None;
 

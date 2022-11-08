@@ -78,7 +78,7 @@ impl InstanceFp {
 
     /// vkGetDeviceProcAddr
     pub(crate) unsafe fn get_device_proc_addr(
-        self,
+        &self,
         device: Device,
         name: *const c_char,
     ) -> Option<VoidFunction> {
