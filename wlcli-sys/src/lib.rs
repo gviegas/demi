@@ -189,22 +189,19 @@ static mut LIB: Option<(Dl, Fp)> = None;
 /// Initializes the library.
 pub fn init() -> Result<(), &'static str> {
     static INIT: Once = Once::new();
-    static mut ERR: Option<Box<String>> = None;
+    static mut ERR: Option<String> = None;
     unsafe {
         INIT.call_once(|| {
             let lib = match Dl::new(LIB_NAME, dl::LAZY | dl::LOCAL) {
                 Ok(x) => x,
                 Err(e) => {
-                    ERR = Some(Box::new(e));
+                    ERR = Some(e);
                     return;
                 }
             };
             match get_fp(&lib) {
                 Ok(x) => LIB = Some((lib, x)),
-                Err(e) => {
-                    ERR = Some(Box::new(e));
-                    return;
-                }
+                Err(e) => ERR = Some(e),
             }
         });
         if let Some(ref err) = ERR {
