@@ -34,7 +34,7 @@ pub struct InstanceFp {
 
 impl InstanceFp {
     /// Initializes the function pointers for a given `Instance`.
-    pub fn new(instance: Instance) -> result::Result<Self, String> {
+    pub unsafe fn new(instance: Instance) -> result::Result<Self, String> {
         if instance.is_null() {
             return Err(String::from("InstanceFp::new: instance should be non-null"));
         }
