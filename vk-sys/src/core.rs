@@ -375,6 +375,7 @@ pub(crate) type CreateCommandPool = unsafe extern "C" fn(
 ) -> Result;
 
 /// PFN_vkTrimCommandPool
+/// [v1.1]
 pub(crate) type TrimCommandPool =
     unsafe extern "C" fn(device: Device, cmd_pool: CommandPool, flags: CommandPoolTrimFlags);
 
@@ -463,6 +464,35 @@ pub struct SemaphoreCreateInfo {
 
 def_flags!(SemaphoreCreateFlags, SemaphoreCreateFlagBits,);
 
+/// VkSemaphoreWaitInfo
+/// [v1.2]
+#[repr(C)]
+pub struct SemaphoreWaitInfo {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub flags: SemaphoreWaitFlags,
+    pub semaphore_count: u32,
+    pub semaphore: *const Semaphore,
+    pub values: *const u64,
+}
+
+def_flags!(
+    SemaphoreWaitFlags,
+    SemaphoreWaitFlagBits,
+    SEMAPHORE_WAIT_ANY_BIT = 0x00000001,
+    SEMAPHORE_WAIT_ANY_BIT_KHR = SEMAPHORE_WAIT_ANY_BIT
+);
+
+/// VkSemaphoreSignalInfo
+/// [v1.2]
+#[repr(C)]
+pub struct SemaphoreSignalInfo {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub semaphore: Semaphore,
+    pub value: u64,
+}
+
 /// PFN_vkCreateSemaphore
 pub(crate) type CreateSemaphore = unsafe extern "C" fn(
     device: Device,
@@ -470,6 +500,24 @@ pub(crate) type CreateSemaphore = unsafe extern "C" fn(
     allocator: *const AllocationCallbacks,
     semaphore: *mut Semaphore,
 ) -> Result;
+
+/// PFN_vkGetSemaphoreCounterValue
+/// [v1.2]
+pub(crate) type GetSemaphoreCounterValue =
+    unsafe extern "C" fn(device: Device, semaphore: Semaphore, value: *mut u64) -> Result;
+
+/// PFN_vkWaitSemaphores
+/// [v1.2]
+pub(crate) type WaitSemaphores = unsafe extern "C" fn(
+    device: Device,
+    wait_info: *const SemaphoreWaitInfo,
+    timeout: u64,
+) -> Result;
+
+/// PFN_vkSignalSemaphore
+/// [v1.2]
+pub(crate) type SignalSemaphore =
+    unsafe extern "C" fn(device: Device, signal_info: *const SemaphoreSignalInfo) -> Result;
 
 /// PFN_vkDestroySemaphore
 pub(crate) type DestroySemaphore = unsafe extern "C" fn(
@@ -2770,7 +2818,7 @@ pub(crate) type GetQueryPoolResults = unsafe extern "C" fn(
     data: *mut c_void,
     stride: u64,
     flags: QueryResultFlags,
-);
+) -> Result;
 
 /// PFN_vkCmdResetQueryPool
 pub(crate) type CmdResetQueryPool = unsafe extern "C" fn(
