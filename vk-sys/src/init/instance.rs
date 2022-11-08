@@ -114,7 +114,8 @@ impl InstanceFp {
         physical_device_group_count: *mut u32,
         physical_device_group_properties: *mut PhysicalDeviceGroupProperties,
     ) -> Result {
-        (self.enumerate_physical_device_groups.unwrap())(
+        debug_assert!(self.enumerate_physical_device_groups.is_some());
+        (self.enumerate_physical_device_groups.unwrap_unchecked())(
             instance,
             physical_device_group_count,
             physical_device_group_properties,
@@ -171,7 +172,8 @@ impl InstanceFp {
         physical_device: PhysicalDevice,
         features: *mut PhysicalDeviceFeatures2,
     ) {
-        (self.get_physical_device_features_2.unwrap())(physical_device, features);
+        debug_assert!(self.get_physical_device_features_2.is_some());
+        (self.get_physical_device_features_2.unwrap_unchecked())(physical_device, features);
     }
 
     /// vkGetPhysicalDeviceFormatProperties
