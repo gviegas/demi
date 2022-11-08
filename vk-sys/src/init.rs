@@ -20,7 +20,7 @@ static mut GLOBAL_FP: Option<GlobalFp> = None;
 /// Initializes the library.
 pub fn init() -> Result<(), &'static str> {
     static INIT: Once = Once::new();
-    static mut ERR: Option<Box<String>> = None;
+    static mut ERR: Option<String> = None;
     unsafe {
         INIT.call_once(|| match Proc::new() {
             Ok(proc) => match GlobalFp::new(proc.fp()) {
@@ -28,9 +28,9 @@ pub fn init() -> Result<(), &'static str> {
                     PROC = Some(proc);
                     GLOBAL_FP = Some(globl);
                 }
-                Err(e) => ERR = Some(Box::new(e)),
+                Err(e) => ERR = Some(e),
             },
-            Err(e) => ERR = Some(Box::new(e)),
+            Err(e) => ERR = Some(e),
         });
         if let Some(ref e) = ERR {
             Err(e)
