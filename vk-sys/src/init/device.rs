@@ -5,47 +5,49 @@ use std::mem;
 use std::result;
 
 use crate::{
-    c_size_t, AllocateCommandBuffers, AllocateDescriptorSets, AllocateMemory, AllocationCallbacks,
-    BeginCommandBuffer, BindBufferMemory, BindImageMemory, Bool32, Buffer, BufferCopy,
-    BufferCreateInfo, BufferImageCopy, BufferMemoryBarrier, BufferView, BufferViewCreateInfo,
-    ClearColorValue, ClearDepthStencilValue, CmdBeginQuery, CmdBeginRenderPass, CmdBeginRendering,
-    CmdBindDescriptorSets, CmdBindIndexBuffer, CmdBindPipeline, CmdBindVertexBuffers,
-    CmdClearColorImage, CmdClearDepthStencilImage, CmdCopyBuffer, CmdCopyBufferToImage,
-    CmdCopyImage, CmdCopyImageToBuffer, CmdDispatch, CmdDispatchIndirect, CmdDraw, CmdDrawIndexed,
-    CmdDrawIndexedIndirect, CmdDrawIndirect, CmdEndQuery, CmdEndRenderPass, CmdEndRendering,
-    CmdExecuteCommands, CmdFillBuffer, CmdNextSubpass, CmdPipelineBarrier, CmdPipelineBarrier2,
-    CmdPushConstants, CmdResetQueryPool, CmdSetBlendConstants, CmdSetDepthBias, CmdSetDepthBounds,
-    CmdSetLineWidth, CmdSetScissor, CmdSetStencilCompareMask, CmdSetStencilReference,
-    CmdSetStencilWriteMask, CmdSetViewport, CmdUpdateBuffer, CommandBuffer,
-    CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferResetFlags, CommandPool,
-    CommandPoolCreateInfo, CommandPoolResetFlags, CommandPoolTrimFlags, ComputePipelineCreateInfo,
-    CopyDescriptorSet, CreateBuffer, CreateBufferView, CreateCommandPool, CreateComputePipelines,
-    CreateDescriptorPool, CreateDescriptorSetLayout, CreateFence, CreateFramebuffer,
-    CreateGraphicsPipelines, CreateImage, CreateImageView, CreatePipelineCache,
-    CreatePipelineLayout, CreateQueryPool, CreateRenderPass, CreateSampler, CreateSemaphore,
-    CreateShaderModule, DependencyFlags, DependencyInfo, DescriptorPool, DescriptorPoolCreateInfo,
+    c_size_t, AcquireNextImageKhr, AllocateCommandBuffers, AllocateDescriptorSets, AllocateMemory,
+    AllocationCallbacks, BeginCommandBuffer, BindBufferMemory, BindImageMemory, Bool32, Buffer,
+    BufferCopy, BufferCreateInfo, BufferImageCopy, BufferMemoryBarrier, BufferView,
+    BufferViewCreateInfo, ClearColorValue, ClearDepthStencilValue, CmdBeginQuery,
+    CmdBeginRenderPass, CmdBeginRendering, CmdBindDescriptorSets, CmdBindIndexBuffer,
+    CmdBindPipeline, CmdBindVertexBuffers, CmdClearColorImage, CmdClearDepthStencilImage,
+    CmdCopyBuffer, CmdCopyBufferToImage, CmdCopyImage, CmdCopyImageToBuffer, CmdDispatch,
+    CmdDispatchIndirect, CmdDraw, CmdDrawIndexed, CmdDrawIndexedIndirect, CmdDrawIndirect,
+    CmdEndQuery, CmdEndRenderPass, CmdEndRendering, CmdExecuteCommands, CmdFillBuffer,
+    CmdNextSubpass, CmdPipelineBarrier, CmdPipelineBarrier2, CmdPushConstants, CmdResetQueryPool,
+    CmdSetBlendConstants, CmdSetDepthBias, CmdSetDepthBounds, CmdSetLineWidth, CmdSetScissor,
+    CmdSetStencilCompareMask, CmdSetStencilReference, CmdSetStencilWriteMask, CmdSetViewport,
+    CmdUpdateBuffer, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
+    CommandBufferResetFlags, CommandPool, CommandPoolCreateInfo, CommandPoolResetFlags,
+    CommandPoolTrimFlags, ComputePipelineCreateInfo, CopyDescriptorSet, CreateBuffer,
+    CreateBufferView, CreateCommandPool, CreateComputePipelines, CreateDescriptorPool,
+    CreateDescriptorSetLayout, CreateFence, CreateFramebuffer, CreateGraphicsPipelines,
+    CreateImage, CreateImageView, CreatePipelineCache, CreatePipelineLayout, CreateQueryPool,
+    CreateRenderPass, CreateSampler, CreateSemaphore, CreateShaderModule, CreateSwapchainKhr,
+    DependencyFlags, DependencyInfo, DescriptorPool, DescriptorPoolCreateInfo,
     DescriptorPoolResetFlags, DescriptorSet, DescriptorSetAllocateInfo, DescriptorSetLayout,
     DescriptorSetLayoutCreateInfo, DestroyBuffer, DestroyBufferView, DestroyCommandPool,
     DestroyDescriptorPool, DestroyDescriptorSetLayout, DestroyDevice, DestroyFence,
     DestroyFramebuffer, DestroyImage, DestroyImageView, DestroyPipeline, DestroyPipelineCache,
     DestroyPipelineLayout, DestroyQueryPool, DestroyRenderPass, DestroySampler, DestroySemaphore,
-    DestroyShaderModule, Device, DeviceMemory, DeviceWaitIdle, EndCommandBuffer, Fence,
-    FenceCreateInfo, FlushMappedMemoryRanges, Framebuffer, FramebufferCreateInfo,
-    FreeCommandBuffers, FreeDescriptorSets, FreeMemory, GetBufferMemoryRequirements,
-    GetDeviceQueue, GetFenceStatus, GetImageMemoryRequirements, GetPipelineCacheData,
-    GetQueryPoolResults, GetSemaphoreCounterValue, GraphicsPipelineCreateInfo, Image, ImageCopy,
-    ImageCreateInfo, ImageLayout, ImageMemoryBarrier, ImageSubresourceRange, ImageView,
-    ImageViewCreateInfo, IndexType, InstanceFp, InvalidateMappedMemoryRanges, MapMemory,
-    MappedMemoryRange, MemoryAllocateInfo, MemoryBarrier, MemoryMapFlags, MemoryRequirements,
-    MergePipelineCaches, Pipeline, PipelineBindPoint, PipelineCache, PipelineCacheCreateInfo,
-    PipelineLayout, PipelineLayoutCreateInfo, PipelineStageFlags, QueryControlFlags, QueryPool,
-    QueryPoolCreateInfo, QueryResultFlags, Queue, QueueSubmit, QueueSubmit2, QueueWaitIdle, Rect2d,
+    DestroyShaderModule, DestroySwapchainKhr, Device, DeviceMemory, DeviceWaitIdle,
+    EndCommandBuffer, Fence, FenceCreateInfo, FlushMappedMemoryRanges, Framebuffer,
+    FramebufferCreateInfo, FreeCommandBuffers, FreeDescriptorSets, FreeMemory,
+    GetBufferMemoryRequirements, GetDeviceQueue, GetFenceStatus, GetImageMemoryRequirements,
+    GetPipelineCacheData, GetQueryPoolResults, GetSemaphoreCounterValue, GetSwapchainImagesKhr,
+    GraphicsPipelineCreateInfo, Image, ImageCopy, ImageCreateInfo, ImageLayout, ImageMemoryBarrier,
+    ImageSubresourceRange, ImageView, ImageViewCreateInfo, IndexType, InstanceFp,
+    InvalidateMappedMemoryRanges, MapMemory, MappedMemoryRange, MemoryAllocateInfo, MemoryBarrier,
+    MemoryMapFlags, MemoryRequirements, MergePipelineCaches, Pipeline, PipelineBindPoint,
+    PipelineCache, PipelineCacheCreateInfo, PipelineLayout, PipelineLayoutCreateInfo,
+    PipelineStageFlags, PresentInfoKhr, QueryControlFlags, QueryPool, QueryPoolCreateInfo,
+    QueryResultFlags, Queue, QueuePresentKhr, QueueSubmit, QueueSubmit2, QueueWaitIdle, Rect2d,
     RenderPass, RenderPassBeginInfo, RenderPassCreateInfo, RenderingInfo, ResetCommandBuffer,
     ResetCommandPool, ResetDescriptorPool, ResetFences, Result, Sampler, SamplerCreateInfo,
     Semaphore, SemaphoreCreateInfo, SemaphoreSignalInfo, SemaphoreWaitInfo, ShaderModule,
     ShaderModuleCreateInfo, ShaderStageFlags, SignalSemaphore, StencilFaceFlags, SubmitInfo,
-    SubmitInfo2, SubpassContents, TrimCommandPool, UnmapMemory, UpdateDescriptorSets, Viewport,
-    WaitForFences, WaitSemaphores, WriteDescriptorSet,
+    SubmitInfo2, SubpassContents, SwapchainCreateInfoKhr, SwapchainKhr, TrimCommandPool,
+    UnmapMemory, UpdateDescriptorSets, Viewport, WaitForFences, WaitSemaphores, WriteDescriptorSet,
 };
 
 /// Device-level commands.
@@ -168,6 +170,13 @@ pub struct DeviceFp {
     cmd_pipeline_barrier_2: Option<CmdPipelineBarrier2>,
     cmd_begin_rendering: Option<CmdBeginRendering>,
     cmd_end_rendering: Option<CmdEndRendering>,
+
+    // VK_KHR_swapchain
+    create_swapchain_khr: Option<CreateSwapchainKhr>,
+    destroy_swapchain_khr: Option<DestroySwapchainKhr>,
+    get_swapchain_images_khr: Option<GetSwapchainImagesKhr>,
+    acquire_next_image_khr: Option<AcquireNextImageKhr>,
+    queue_present_khr: Option<QueuePresentKhr>,
 }
 
 impl DeviceFp {
@@ -305,6 +314,12 @@ impl DeviceFp {
             cmd_pipeline_barrier_2: get!(b"vkCmdPipelineBarrier2\0").ok(),
             cmd_begin_rendering: get!(b"vkCmdBeginRendering\0").ok(),
             cmd_end_rendering: get!(b"vkCmdEndRendering\0").ok(),
+
+            create_swapchain_khr: get!(b"vkCreateSwapchainKHR\0").ok(),
+            destroy_swapchain_khr: get!(b"vkDestroySwapchainKHR\0").ok(),
+            get_swapchain_images_khr: get!(b"vkGetSwapchainImagesKHR\0").ok(),
+            acquire_next_image_khr: get!(b"vkAcquireNextImageKHR\0").ok(),
+            queue_present_khr: get!(b"vkQueuePresentKHR\0").ok(),
         })
     }
 }
@@ -1024,6 +1039,71 @@ impl DeviceFp {
     ) {
         (self.destroy_query_pool)(device, query_pool, allocator);
     }
+
+    /// vkCreateSwapchainKHR
+    /// [VK_KHR_swapchain]
+    pub unsafe fn create_swapchain_khr(
+        &self,
+        device: Device,
+        create_info: *const SwapchainCreateInfoKhr,
+        allocator: *const AllocationCallbacks,
+        swapchain: *mut SwapchainKhr,
+    ) -> Result {
+        debug_assert!(self.create_swapchain_khr.is_some());
+        (self.create_swapchain_khr.unwrap_unchecked())(device, create_info, allocator, swapchain)
+    }
+
+    /// vkDestroySwapchainKHR
+    /// [VK_KHR_swapchain]
+    pub unsafe fn destroy_swapchain_khr(
+        &self,
+        device: Device,
+        swapchain: SwapchainKhr,
+        allocator: *const AllocationCallbacks,
+    ) {
+        debug_assert!(self.destroy_swapchain_khr.is_some());
+        (self.destroy_swapchain_khr.unwrap_unchecked())(device, swapchain, allocator);
+    }
+
+    /// vkGetSwapchainImagesKHR
+    /// [VK_KHR_swapchain]
+    pub unsafe fn get_swapchain_images_khr(
+        &self,
+        device: Device,
+        swapchain: SwapchainKhr,
+        swapchain_image_count: *mut u32,
+        swapchain_images: *mut Image,
+    ) -> Result {
+        debug_assert!(self.get_swapchain_images_khr.is_some());
+        (self.get_swapchain_images_khr.unwrap_unchecked())(
+            device,
+            swapchain,
+            swapchain_image_count,
+            swapchain_images,
+        )
+    }
+
+    /// vkAcquireNextImageKHR
+    /// [VK_KHR_swapchain]
+    pub unsafe fn acquire_next_image_khr(
+        &self,
+        device: Device,
+        swapchain: SwapchainKhr,
+        timeout: u64,
+        semaphore: Semaphore,
+        fence: Fence,
+        image_index: *mut u32,
+    ) -> Result {
+        debug_assert!(self.acquire_next_image_khr.is_some());
+        (self.acquire_next_image_khr.unwrap_unchecked())(
+            device,
+            swapchain,
+            timeout,
+            semaphore,
+            fence,
+            image_index,
+        )
+    }
 }
 
 impl DeviceFp {
@@ -1049,6 +1129,17 @@ impl DeviceFp {
     ) -> Result {
         debug_assert!(self.queue_submit_2.is_some());
         (self.queue_submit_2.unwrap_unchecked())(queue, submit_count, submits, fence)
+    }
+
+    /// vkQueuePresentKHR
+    /// [VK_KHR_swapchain]
+    pub unsafe fn queue_present_khr(
+        &self,
+        queue: Queue,
+        present_info: *const PresentInfoKhr,
+    ) -> Result {
+        debug_assert!(self.queue_present_khr.is_some());
+        (self.queue_present_khr.unwrap_unchecked())(queue, present_info)
     }
 
     /// vkQueueWaitIdle
