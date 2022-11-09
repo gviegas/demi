@@ -2,20 +2,36 @@
 
 use std::ffi::c_char;
 use std::mem;
-use std::ptr;
 use std::result;
 
 use crate::init::PROC;
 use crate::{
-    AllocationCallbacks, CreateDevice, DestroyInstance, Device, DeviceCreateInfo,
-    EnumeratePhysicalDeviceGroups, EnumeratePhysicalDevices, Format, FormatProperties,
-    GetDeviceProcAddr, GetPhysicalDeviceFeatures, GetPhysicalDeviceFeatures2,
+    AllocationCallbacks, Bool32, CreateDevice, DestroyInstance, DestroySurfaceKhr, Device,
+    DeviceCreateInfo, EnumeratePhysicalDeviceGroups, EnumeratePhysicalDevices, Format,
+    FormatProperties, GetDeviceProcAddr, GetPhysicalDeviceFeatures, GetPhysicalDeviceFeatures2,
     GetPhysicalDeviceFormatProperties, GetPhysicalDeviceMemoryProperties,
-    GetPhysicalDeviceProperties, GetPhysicalDeviceQueueFamilyProperties, Instance, PhysicalDevice,
-    PhysicalDeviceFeatures, PhysicalDeviceFeatures2, PhysicalDeviceGroupProperties,
-    PhysicalDeviceMemoryProperties, PhysicalDeviceProperties, QueueFamilyProperties, Result,
+    GetPhysicalDeviceProperties, GetPhysicalDeviceQueueFamilyProperties,
+    GetPhysicalDeviceSurfaceCapabilitiesKhr, GetPhysicalDeviceSurfaceFormatsKhr,
+    GetPhysicalDeviceSurfacePresentModesKhr, GetPhysicalDeviceSurfaceSupportKhr, Instance,
+    PhysicalDevice, PhysicalDeviceFeatures, PhysicalDeviceFeatures2, PhysicalDeviceGroupProperties,
+    PhysicalDeviceMemoryProperties, PhysicalDeviceProperties, PresentModeKhr,
+    QueueFamilyProperties, Result, SurfaceCapabilitiesKhr, SurfaceFormatKhr, SurfaceKhr,
     VoidFunction,
 };
+
+#[cfg(target_os = "linux")]
+use crate::{CreateWaylandSurfaceKhr, WaylandSurfaceCreateInfoKhr};
+
+#[cfg(windows)]
+use crate::{CreateWin32SurfaceKhr, Win32SurfaceCreateInfoKhr};
+
+#[cfg(all(
+    unix,
+    not(target_os = "android"),
+    not(target_os = "ios"),
+    not(target_os = "macos")
+))]
+use crate::{CreateXcbSurfaceKhr, XcbSurfaceCreateInfoKhr};
 
 /// Instance-level commands.
 pub struct InstanceFp {
@@ -33,6 +49,30 @@ pub struct InstanceFp {
     // v1.1
     enumerate_physical_device_groups: Option<EnumeratePhysicalDeviceGroups>,
     get_physical_device_features_2: Option<GetPhysicalDeviceFeatures2>,
+
+    // VK_KHR_wayland_surface
+    #[cfg(target_os = "linux")]
+    create_wayland_surface_khr: Option<CreateWaylandSurfaceKhr>,
+
+    // VK_KHR_win32_surface
+    #[cfg(windows)]
+    create_win32_surface_khr: Option<CreateWin32SurfaceKhr>,
+
+    // VK_KHR_xcb_surface
+    #[cfg(all(
+        unix,
+        not(target_os = "android"),
+        not(target_os = "ios"),
+        not(target_os = "macos")
+    ))]
+    create_xcb_surface_khr: Option<CreateXcbSurfaceKhr>,
+
+    // VK_KHR_surface
+    destroy_surface_khr: Option<DestroySurfaceKhr>,
+    get_physical_device_surface_support_khr: Option<GetPhysicalDeviceSurfaceSupportKhr>,
+    get_physical_device_surface_capabilities_khr: Option<GetPhysicalDeviceSurfaceCapabilitiesKhr>,
+    get_physical_device_surface_formats_khr: Option<GetPhysicalDeviceSurfaceFormatsKhr>,
+    get_physical_device_surface_present_modes_khr: Option<GetPhysicalDeviceSurfacePresentModesKhr>,
 }
 
 impl InstanceFp {
@@ -70,6 +110,38 @@ impl InstanceFp {
             get_device_proc_addr: get!(b"vkGetDeviceProcAddr\0")?,
             enumerate_physical_device_groups: get!(b"vkEnumeratePhysicalDeviceGroups\0").ok(),
             get_physical_device_features_2: get!(b"vkGetPhysicalDeviceFeatures2\0").ok(),
+
+            #[cfg(target_os = "linux")]
+            create_wayland_surface_khr: get!(b"vkCreateWaylandSurfaceKHR\0").ok(),
+
+            #[cfg(windows)]
+            create_win32_surface_khr: get!(b"vkCreateWin32SurfaceKHR\0").ok(),
+
+            #[cfg(all(
+                unix,
+                not(target_os = "android"),
+                not(target_os = "ios"),
+                not(target_os = "macos")
+            ))]
+            create_xcb_surface_khr: get!(b"vkCreateXcbSurfaceKHR\0").ok(),
+
+            destroy_surface_khr: get!(b"vkDestroySurfaceKHR\0").ok(),
+            get_physical_device_surface_support_khr: get!(
+                b"vkGetPhysicalDeviceSurfaceSupportKHR\0"
+            )
+            .ok(),
+            get_physical_device_surface_capabilities_khr: get!(
+                b"vkGetPhysicalDeviceSurfaceCapabilitiesKHR\0"
+            )
+            .ok(),
+            get_physical_device_surface_formats_khr: get!(
+                b"vkGetPhysicalDeviceSurfaceFormatsKHR\0"
+            )
+            .ok(),
+            get_physical_device_surface_present_modes_khr: get!(
+                b"vkGetPhysicalDeviceSurfacePresentModesKHR\0"
+            )
+            .ok(),
         })
     }
 
@@ -120,6 +192,75 @@ impl InstanceFp {
             physical_device_group_count,
             physical_device_group_properties,
         )
+    }
+
+    /// vkCreateWaylandInstanceKHR
+    /// [VK_KHR_wayland_surface]
+    #[cfg(target_os = "linux")]
+    pub unsafe fn create_wayland_surface_khr(
+        &self,
+        instance: Instance,
+        create_info: *const WaylandSurfaceCreateInfoKhr,
+        allocator: *const AllocationCallbacks,
+        surface: *mut SurfaceKhr,
+    ) -> Result {
+        debug_assert!(self.create_wayland_surface_khr.is_some());
+        (self.create_wayland_surface_khr.unwrap_unchecked())(
+            instance,
+            create_info,
+            allocator,
+            surface,
+        )
+    }
+
+    /// vkCreateWin32SurfaceKHR
+    /// [VK_KHR_win32_surface]
+    #[cfg(windows)]
+    pub unsafe fn create_win32_surface_khr(
+        &self,
+        instance: Instance,
+        create_info: *const Win32SurfaceCreateInfoKhr,
+        allocator: *const AllocationCallbacks,
+        surface: *mut SurfaceKhr,
+    ) -> Result {
+        debug_assert!(self.create_win32_surface_khr.is_some());
+        (self.create_win32_surface_khr.unwrap_unchecked())(
+            instance,
+            create_info,
+            allocator,
+            surface,
+        )
+    }
+
+    /// vkCreateXcbSurfaceKHR
+    /// [VK_KHR_xcb_surface]
+    #[cfg(all(
+        unix,
+        not(target_os = "android"),
+        not(target_os = "ios"),
+        not(target_os = "macos")
+    ))]
+    pub unsafe fn create_xcb_surface_khr(
+        &self,
+        instance: Instance,
+        create_info: *const XcbSurfaceCreateInfoKhr,
+        allocator: *const AllocationCallbacks,
+        surface: *mut SurfaceKhr,
+    ) -> Result {
+        debug_assert!(self.create_xcb_surface_khr.is_some());
+        (self.create_xcb_surface_khr.unwrap_unchecked())(instance, create_info, allocator, surface)
+    }
+
+    /// vkDestroySurfaceKHR
+    /// [VK_KHR_surface]
+    pub unsafe fn destroy_surface_khr(
+        &self,
+        instance: Instance,
+        surface: SurfaceKhr,
+        allocator: *const AllocationCallbacks,
+    ) {
+        debug_assert!(self.destroy_surface_khr.is_some());
+        (self.destroy_surface_khr.unwrap_unchecked())(instance, surface, allocator);
     }
 }
 
@@ -184,6 +325,70 @@ impl InstanceFp {
         format_properties: *mut FormatProperties,
     ) {
         (self.get_physical_device_format_properties)(physical_device, format, format_properties);
+    }
+
+    /// vkGetPhysicalDeviceSurfaceSupportKHR
+    /// [VK_KHR_surface]
+    pub unsafe fn get_physical_device_surface_support_khr(
+        &self,
+        physical_device: PhysicalDevice,
+        queue_family_index: u32,
+        surface: SurfaceKhr,
+        supported: *mut Bool32,
+    ) -> Result {
+        debug_assert!(self.get_physical_device_surface_support_khr.is_some());
+        (self
+            .get_physical_device_surface_support_khr
+            .unwrap_unchecked())(physical_device, queue_family_index, surface, supported)
+    }
+
+    /// vkGetPhysicalDeviceSurfaceCapabilitiesKHR
+    /// [VK_KHR_surface]
+    pub unsafe fn get_physical_device_surface_capabilities_khr(
+        &self,
+        physical_device: PhysicalDevice,
+        surface: SurfaceKhr,
+        surface_capabilities: *mut SurfaceCapabilitiesKhr,
+    ) -> Result {
+        debug_assert!(self.get_physical_device_surface_capabilities_khr.is_some());
+        (self
+            .get_physical_device_surface_capabilities_khr
+            .unwrap_unchecked())(physical_device, surface, surface_capabilities)
+    }
+
+    /// vkGetPhysicalDeviceSurfaceFormatsKHR
+    /// [VK_KHR_surface]
+    pub unsafe fn get_physical_device_surface_formats_khr(
+        &self,
+        physical_device: PhysicalDevice,
+        surface: SurfaceKhr,
+        surface_format_count: *mut u32,
+        surface_formats: *mut SurfaceFormatKhr,
+    ) -> Result {
+        debug_assert!(self.get_physical_device_surface_formats_khr.is_some());
+        (self
+            .get_physical_device_surface_formats_khr
+            .unwrap_unchecked())(
+            physical_device,
+            surface,
+            surface_format_count,
+            surface_formats,
+        )
+    }
+
+    /// vkGetPhysicalDeviceSurfacePresentModesKHR
+    /// [VK_KHR_surface]
+    pub unsafe fn get_physical_device_surface_present_modes_khr(
+        &self,
+        physical_device: PhysicalDevice,
+        surface: SurfaceKhr,
+        present_mode_count: *mut u32,
+        present_modes: *mut PresentModeKhr,
+    ) -> Result {
+        debug_assert!(self.get_physical_device_surface_present_modes_khr.is_some());
+        (self
+            .get_physical_device_surface_present_modes_khr
+            .unwrap_unchecked())(physical_device, surface, present_mode_count, present_modes)
     }
 
     /// vkCreateDevice
