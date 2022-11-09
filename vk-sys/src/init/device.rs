@@ -27,11 +27,12 @@ use crate::{
     ImageViewCreateInfo, InstanceFp, InvalidateMappedMemoryRanges, MapMemory, MappedMemoryRange,
     MemoryAllocateInfo, MemoryMapFlags, MemoryRequirements, MergePipelineCaches, Pipeline,
     PipelineCache, PipelineCacheCreateInfo, PipelineLayout, PipelineLayoutCreateInfo, QueryPool,
-    QueryPoolCreateInfo, QueryResultFlags, Queue, QueueWaitIdle, RenderPass, RenderPassCreateInfo,
-    ResetCommandBuffer, ResetCommandPool, ResetDescriptorPool, ResetFences, Result, Sampler,
-    SamplerCreateInfo, Semaphore, SemaphoreCreateInfo, SemaphoreSignalInfo, SemaphoreWaitInfo,
-    ShaderModule, ShaderModuleCreateInfo, SignalSemaphore, TrimCommandPool, UnmapMemory,
-    UpdateDescriptorSets, WaitForFences, WaitSemaphores, WriteDescriptorSet,
+    QueryPoolCreateInfo, QueryResultFlags, Queue, QueueSubmit, QueueSubmit2, QueueWaitIdle,
+    RenderPass, RenderPassCreateInfo, ResetCommandBuffer, ResetCommandPool, ResetDescriptorPool,
+    ResetFences, Result, Sampler, SamplerCreateInfo, Semaphore, SemaphoreCreateInfo,
+    SemaphoreSignalInfo, SemaphoreWaitInfo, ShaderModule, ShaderModuleCreateInfo, SignalSemaphore,
+    SubmitInfo, SubmitInfo2, TrimCommandPool, UnmapMemory, UpdateDescriptorSets, WaitForFences,
+    WaitSemaphores, WriteDescriptorSet,
 };
 
 /// Device-level commands.
@@ -98,6 +99,7 @@ pub struct DeviceFp {
     get_query_pool_results: GetQueryPoolResults,
     destroy_query_pool: DestroyQueryPool,
 
+    queue_submit: QueueSubmit,
     queue_wait_idle: QueueWaitIdle,
 
     reset_command_buffer: ResetCommandBuffer,
@@ -109,6 +111,9 @@ pub struct DeviceFp {
     get_semaphore_counter_value: Option<GetSemaphoreCounterValue>,
     wait_semaphores: Option<WaitSemaphores>,
     signal_semaphore: Option<SignalSemaphore>,
+
+    // v1.3
+    queue_submit_2: Option<QueueSubmit2>,
 }
 
 impl DeviceFp {
@@ -193,6 +198,7 @@ impl DeviceFp {
             get_query_pool_results: get!(b"vkGetQueryPoolResults\0")?,
             destroy_query_pool: get!(b"vkDestroyQueryPool\0")?,
 
+            queue_submit: get!(b"vkQueueSubmit\0")?,
             queue_wait_idle: get!(b"vkQueueWaitIdle\0")?,
 
             reset_command_buffer: get!(b"vkResetCommandBuffer\0")?,
@@ -202,6 +208,8 @@ impl DeviceFp {
             get_semaphore_counter_value: get!(b"vkGetSemaphoreCounterValue\0").ok(),
             wait_semaphores: get!(b"vkWaitSemaphores\0").ok(),
             signal_semaphore: get!(b"vkSignalSemaphore\0").ok(),
+
+            queue_submit_2: get!(b"vkQueueSubmit2\0").ok(),
         })
     }
 }
@@ -924,6 +932,30 @@ impl DeviceFp {
 }
 
 impl DeviceFp {
+    /// vkQueueSubmit
+    pub unsafe fn queue_submit(
+        &self,
+        queue: Queue,
+        submit_count: u32,
+        submits: *const SubmitInfo,
+        fence: Fence,
+    ) -> Result {
+        (self.queue_submit)(queue, submit_count, submits, fence)
+    }
+
+    /// vkQueueSubmit2
+    /// [v1.3]
+    pub unsafe fn queue_submit_2(
+        &self,
+        queue: Queue,
+        submit_count: u32,
+        submits: *const SubmitInfo2,
+        fence: Fence,
+    ) -> Result {
+        debug_assert!(self.queue_submit_2.is_some());
+        (self.queue_submit_2.unwrap_unchecked())(queue, submit_count, submits, fence)
+    }
+
     /// vkQueueWaitIdle
     pub unsafe fn queue_wait_idle(&self, queue: Queue) -> Result {
         (self.queue_wait_idle)(queue)
