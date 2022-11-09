@@ -592,8 +592,8 @@ pub struct MemoryBarrier {
 pub struct ImageMemoryBarrier {
     pub s_type: StructureType,
     pub next: *const c_void,
-    pub src_access_mask: u32,
-    pub dst_access_mask: u32,
+    pub src_access_mask: AccessFlags,
+    pub dst_access_mask: AccessFlags,
     pub old_layout: ImageLayout,
     pub new_layout: ImageLayout,
     pub src_queue_family_index: u32,
@@ -629,6 +629,73 @@ pub(crate) type CmdPipelineBarrier = unsafe extern "C" fn(
     img_barrier_count: u32,
     img_barriers: *const ImageMemoryBarrier,
 );
+
+/// VkDependencyInfo
+/// [v1.3]
+#[repr(C)]
+pub struct DependencyInfo {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub dependency_flags: DependencyFlags,
+    pub memory_barrier_count: u32,
+    pub memory_barriers: *const MemoryBarrier2,
+    pub buffer_memory_barrier_count: u32,
+    pub buf_barriers: *const BufferMemoryBarrier2,
+    pub image_memory_barrier_count: u32,
+    pub image_memory_barriers: *const ImageMemoryBarrier2,
+}
+
+/// VkMemoryBarrier2
+/// [v1.3]
+#[repr(C)]
+pub struct MemoryBarrier2 {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub src_stage_mask: PipelineStageFlags2,
+    pub src_access_mask: AccessFlags2,
+    pub dst_stage_mask: PipelineStageFlags2,
+    pub dst_access_mask: AccessFlags2,
+}
+
+/// VkImageMemoryBarrier2
+/// [v1.3]
+#[repr(C)]
+pub struct ImageMemoryBarrier2 {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub src_stage_mask: PipelineStageFlags2,
+    pub src_access_mask: AccessFlags2,
+    pub dst_stage_mask: PipelineStageFlags2,
+    pub dst_access_mask: AccessFlags2,
+    pub old_layout: ImageLayout,
+    pub new_layout: ImageLayout,
+    pub src_queue_family_index: u32,
+    pub dst_queue_family_index: u32,
+    pub image: Image,
+    pub subresource_range: ImageSubresourceRange,
+}
+
+/// VkBufferMemoryBarrier2
+/// [v1.3]
+#[repr(C)]
+pub struct BufferMemoryBarrier2 {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub src_stage_mask: PipelineStageFlags2,
+    pub src_access_mask: AccessFlags2,
+    pub dst_stage_mask: PipelineStageFlags2,
+    pub dst_access_mask: AccessFlags2,
+    pub src_queue_family_index: u32,
+    pub dst_queue_family_index: u32,
+    pub buffer: Buffer,
+    pub offset: u64,
+    pub size: u64,
+}
+
+/// PFN_vkCmdPipelineBarrier2
+/// [v1.3]
+pub(crate) type CmdPipelineBarrier2 =
+    unsafe extern "C" fn(command_buffer: CommandBuffer, dependency_info: *const DependencyInfo);
 
 def_flags!(
     PipelineStageFlags,
@@ -1741,6 +1808,75 @@ pub(crate) type CmdNextSubpass =
 
 /// PFN_vkCmdEndRenderPass
 pub(crate) type CmdEndRenderPass = unsafe extern "C" fn(cmd_buf: CommandBuffer);
+
+/// VkRenderingInfo
+/// [v1.3]
+#[repr(C)]
+pub struct RenderingInfo {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub flags: RenderingFlags,
+    pub render_area: Rect2d,
+    pub layer_count: u32,
+    pub view_mask: u32,
+    pub color_attachment_count: u32,
+    pub color_attachments: *const RenderingAttachmentInfo,
+    pub depth_attachment: *const RenderingAttachmentInfo,
+    pub stencil_attachment: *const RenderingAttachmentInfo,
+}
+
+def_flags!(
+    RenderingFlags,
+    RenderingFlagBits,
+    RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT = 0x00000001,
+    RENDERING_SUSPENDING_BIT = 0x00000002,
+    RENDERING_RESUMING_BIT = 0x00000004,
+    RENDERING_ENABLE_LEGACY_DITHERING_BIT_EXT = 0x00000008,
+    RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT_KHR =
+        RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT,
+    RENDERING_SUSPENDING_BIT_KHR = RENDERING_SUSPENDING_BIT,
+    RENDERING_RESUMING_BIT_KHR = RENDERING_RESUMING_BIT
+);
+
+/// VkRenderingAttachmentInfo
+/// [v1.3]
+#[repr(C)]
+pub struct RenderingAttachmentInfo {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub image_view: ImageView,
+    pub image_layout: ImageLayout,
+    pub resolve_mode: ResolveModeFlagBits,
+    pub resolve_image_view: ImageView,
+    pub resolve_image_layout: ImageLayout,
+    pub load_op: AttachmentLoadOp,
+    pub store_op: AttachmentStoreOp,
+    pub clear_value: ClearValue,
+}
+
+def_flags!(
+    ResolveModeFlags,
+    ResolveModeFlagBits,
+    RESOLVE_MODE_NONE = 0,
+    RESOLVE_MODE_SAMPLE_ZERO_BIT = 0x00000001,
+    RESOLVE_MODE_AVERAGE_BIT = 0x00000002,
+    RESOLVE_MODE_MIN_BIT = 0x00000004,
+    RESOLVE_MODE_MAX_BIT = 0x00000008,
+    RESOLVE_MODE_NONE_KHR = RESOLVE_MODE_NONE,
+    RESOLVE_MODE_SAMPLE_ZERO_BIT_KHR = RESOLVE_MODE_SAMPLE_ZERO_BIT,
+    RESOLVE_MODE_AVERAGE_BIT_KHR = RESOLVE_MODE_AVERAGE_BIT,
+    RESOLVE_MODE_MIN_BIT_KHR = RESOLVE_MODE_MIN_BIT,
+    RESOLVE_MODE_MAX_BIT_KHR = RESOLVE_MODE_MAX_BIT
+);
+
+/// PFN_vkCmdBeginRendering
+/// [v1.3]
+pub(crate) type CmdBeginRendering =
+    unsafe extern "C" fn(command_buffer: CommandBuffer, rendering_info: *const RenderingInfo);
+
+/// PFN_vkCmdEndRendering
+/// [v1.3]
+pub(crate) type CmdEndRendering = unsafe extern "C" fn(command_buffer: CommandBuffer);
 
 def_ndh!(DescriptorSetT, DescriptorSet);
 

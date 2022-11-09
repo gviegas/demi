@@ -6,33 +6,46 @@ use std::result;
 
 use crate::{
     c_size_t, AllocateCommandBuffers, AllocateDescriptorSets, AllocateMemory, AllocationCallbacks,
-    BindBufferMemory, BindImageMemory, Bool32, Buffer, BufferCreateInfo, BufferView,
-    BufferViewCreateInfo, CommandBuffer, CommandBufferAllocateInfo, CommandBufferResetFlags,
-    CommandPool, CommandPoolCreateInfo, CommandPoolResetFlags, CommandPoolTrimFlags,
-    ComputePipelineCreateInfo, CopyDescriptorSet, CreateBuffer, CreateBufferView,
-    CreateCommandPool, CreateComputePipelines, CreateDescriptorPool, CreateDescriptorSetLayout,
-    CreateFence, CreateFramebuffer, CreateGraphicsPipelines, CreateImage, CreateImageView,
-    CreatePipelineCache, CreatePipelineLayout, CreateQueryPool, CreateRenderPass, CreateSampler,
-    CreateSemaphore, CreateShaderModule, DescriptorPool, DescriptorPoolCreateInfo,
+    BeginCommandBuffer, BindBufferMemory, BindImageMemory, Bool32, Buffer, BufferCopy,
+    BufferCreateInfo, BufferImageCopy, BufferMemoryBarrier, BufferView, BufferViewCreateInfo,
+    ClearColorValue, ClearDepthStencilValue, CmdBeginQuery, CmdBeginRenderPass, CmdBeginRendering,
+    CmdBindDescriptorSets, CmdBindIndexBuffer, CmdBindPipeline, CmdBindVertexBuffers,
+    CmdClearColorImage, CmdClearDepthStencilImage, CmdCopyBuffer, CmdCopyBufferToImage,
+    CmdCopyImage, CmdCopyImageToBuffer, CmdDispatch, CmdDispatchIndirect, CmdDraw, CmdDrawIndexed,
+    CmdDrawIndexedIndirect, CmdDrawIndirect, CmdEndQuery, CmdEndRenderPass, CmdEndRendering,
+    CmdExecuteCommands, CmdFillBuffer, CmdNextSubpass, CmdPipelineBarrier, CmdPipelineBarrier2,
+    CmdPushConstants, CmdResetQueryPool, CmdSetBlendConstants, CmdSetDepthBias, CmdSetDepthBounds,
+    CmdSetLineWidth, CmdSetScissor, CmdSetStencilCompareMask, CmdSetStencilReference,
+    CmdSetStencilWriteMask, CmdSetViewport, CmdUpdateBuffer, CommandBuffer,
+    CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferResetFlags, CommandPool,
+    CommandPoolCreateInfo, CommandPoolResetFlags, CommandPoolTrimFlags, ComputePipelineCreateInfo,
+    CopyDescriptorSet, CreateBuffer, CreateBufferView, CreateCommandPool, CreateComputePipelines,
+    CreateDescriptorPool, CreateDescriptorSetLayout, CreateFence, CreateFramebuffer,
+    CreateGraphicsPipelines, CreateImage, CreateImageView, CreatePipelineCache,
+    CreatePipelineLayout, CreateQueryPool, CreateRenderPass, CreateSampler, CreateSemaphore,
+    CreateShaderModule, DependencyFlags, DependencyInfo, DescriptorPool, DescriptorPoolCreateInfo,
     DescriptorPoolResetFlags, DescriptorSet, DescriptorSetAllocateInfo, DescriptorSetLayout,
     DescriptorSetLayoutCreateInfo, DestroyBuffer, DestroyBufferView, DestroyCommandPool,
     DestroyDescriptorPool, DestroyDescriptorSetLayout, DestroyDevice, DestroyFence,
     DestroyFramebuffer, DestroyImage, DestroyImageView, DestroyPipeline, DestroyPipelineCache,
     DestroyPipelineLayout, DestroyQueryPool, DestroyRenderPass, DestroySampler, DestroySemaphore,
-    DestroyShaderModule, Device, DeviceMemory, DeviceWaitIdle, Fence, FenceCreateInfo,
-    FlushMappedMemoryRanges, Framebuffer, FramebufferCreateInfo, FreeCommandBuffers,
-    FreeDescriptorSets, FreeMemory, GetBufferMemoryRequirements, GetDeviceQueue, GetFenceStatus,
-    GetImageMemoryRequirements, GetPipelineCacheData, GetQueryPoolResults,
-    GetSemaphoreCounterValue, GraphicsPipelineCreateInfo, Image, ImageCreateInfo, ImageView,
-    ImageViewCreateInfo, InstanceFp, InvalidateMappedMemoryRanges, MapMemory, MappedMemoryRange,
-    MemoryAllocateInfo, MemoryMapFlags, MemoryRequirements, MergePipelineCaches, Pipeline,
-    PipelineCache, PipelineCacheCreateInfo, PipelineLayout, PipelineLayoutCreateInfo, QueryPool,
-    QueryPoolCreateInfo, QueryResultFlags, Queue, QueueSubmit, QueueSubmit2, QueueWaitIdle,
-    RenderPass, RenderPassCreateInfo, ResetCommandBuffer, ResetCommandPool, ResetDescriptorPool,
-    ResetFences, Result, Sampler, SamplerCreateInfo, Semaphore, SemaphoreCreateInfo,
-    SemaphoreSignalInfo, SemaphoreWaitInfo, ShaderModule, ShaderModuleCreateInfo, SignalSemaphore,
-    SubmitInfo, SubmitInfo2, TrimCommandPool, UnmapMemory, UpdateDescriptorSets, WaitForFences,
-    WaitSemaphores, WriteDescriptorSet,
+    DestroyShaderModule, Device, DeviceMemory, DeviceWaitIdle, EndCommandBuffer, Fence,
+    FenceCreateInfo, FlushMappedMemoryRanges, Framebuffer, FramebufferCreateInfo,
+    FreeCommandBuffers, FreeDescriptorSets, FreeMemory, GetBufferMemoryRequirements,
+    GetDeviceQueue, GetFenceStatus, GetImageMemoryRequirements, GetPipelineCacheData,
+    GetQueryPoolResults, GetSemaphoreCounterValue, GraphicsPipelineCreateInfo, Image, ImageCopy,
+    ImageCreateInfo, ImageLayout, ImageMemoryBarrier, ImageSubresourceRange, ImageView,
+    ImageViewCreateInfo, IndexType, InstanceFp, InvalidateMappedMemoryRanges, MapMemory,
+    MappedMemoryRange, MemoryAllocateInfo, MemoryBarrier, MemoryMapFlags, MemoryRequirements,
+    MergePipelineCaches, Pipeline, PipelineBindPoint, PipelineCache, PipelineCacheCreateInfo,
+    PipelineLayout, PipelineLayoutCreateInfo, PipelineStageFlags, QueryControlFlags, QueryPool,
+    QueryPoolCreateInfo, QueryResultFlags, Queue, QueueSubmit, QueueSubmit2, QueueWaitIdle, Rect2d,
+    RenderPass, RenderPassBeginInfo, RenderPassCreateInfo, RenderingInfo, ResetCommandBuffer,
+    ResetCommandPool, ResetDescriptorPool, ResetFences, Result, Sampler, SamplerCreateInfo,
+    Semaphore, SemaphoreCreateInfo, SemaphoreSignalInfo, SemaphoreWaitInfo, ShaderModule,
+    ShaderModuleCreateInfo, ShaderStageFlags, SignalSemaphore, StencilFaceFlags, SubmitInfo,
+    SubmitInfo2, SubpassContents, TrimCommandPool, UnmapMemory, UpdateDescriptorSets, Viewport,
+    WaitForFences, WaitSemaphores, WriteDescriptorSet,
 };
 
 /// Device-level commands.
@@ -102,7 +115,45 @@ pub struct DeviceFp {
     queue_submit: QueueSubmit,
     queue_wait_idle: QueueWaitIdle,
 
+    begin_command_buffer: BeginCommandBuffer,
+    end_command_buffer: EndCommandBuffer,
     reset_command_buffer: ResetCommandBuffer,
+    cmd_execute_commands: CmdExecuteCommands,
+    cmd_pipeline_barrier: CmdPipelineBarrier,
+    cmd_begin_render_pass: CmdBeginRenderPass,
+    cmd_next_subpass: CmdNextSubpass,
+    cmd_end_render_pass: CmdEndRenderPass,
+    cmd_bind_pipeline: CmdBindPipeline,
+    cmd_bind_descriptor_sets: CmdBindDescriptorSets,
+    cmd_push_constants: CmdPushConstants,
+    cmd_reset_query_pool: CmdResetQueryPool,
+    cmd_begin_query: CmdBeginQuery,
+    cmd_end_query: CmdEndQuery,
+    cmd_clear_color_image: CmdClearColorImage,
+    cmd_clear_depth_stencil_image: CmdClearDepthStencilImage,
+    cmd_fill_buffer: CmdFillBuffer,
+    cmd_update_buffer: CmdUpdateBuffer,
+    cmd_copy_buffer: CmdCopyBuffer,
+    cmd_copy_image: CmdCopyImage,
+    cmd_copy_buffer_to_image: CmdCopyBufferToImage,
+    cmd_copy_image_to_buffer: CmdCopyImageToBuffer,
+    cmd_bind_index_buffer: CmdBindIndexBuffer,
+    cmd_bind_vertex_buffers: CmdBindVertexBuffers,
+    cmd_draw: CmdDraw,
+    cmd_draw_indexed: CmdDrawIndexed,
+    cmd_draw_indirect: CmdDrawIndirect,
+    cmd_draw_indexed_indirect: CmdDrawIndexedIndirect,
+    cmd_set_viewport: CmdSetViewport,
+    cmd_set_scissor: CmdSetScissor,
+    cmd_set_line_width: CmdSetLineWidth,
+    cmd_set_depth_bias: CmdSetDepthBias,
+    cmd_set_depth_bounds: CmdSetDepthBounds,
+    cmd_set_stencil_compare_mask: CmdSetStencilCompareMask,
+    cmd_set_stencil_write_mask: CmdSetStencilWriteMask,
+    cmd_set_stencil_reference: CmdSetStencilReference,
+    cmd_set_blend_constants: CmdSetBlendConstants,
+    cmd_dispatch: CmdDispatch,
+    cmd_dispatch_indirect: CmdDispatchIndirect,
 
     // v1.1
     trim_command_pool: Option<TrimCommandPool>,
@@ -114,6 +165,9 @@ pub struct DeviceFp {
 
     // v1.3
     queue_submit_2: Option<QueueSubmit2>,
+    cmd_pipeline_barrier_2: Option<CmdPipelineBarrier2>,
+    cmd_begin_rendering: Option<CmdBeginRendering>,
+    cmd_end_rendering: Option<CmdEndRendering>,
 }
 
 impl DeviceFp {
@@ -201,7 +255,45 @@ impl DeviceFp {
             queue_submit: get!(b"vkQueueSubmit\0")?,
             queue_wait_idle: get!(b"vkQueueWaitIdle\0")?,
 
+            begin_command_buffer: get!(b"vkBeginCommandBuffer\0")?,
+            end_command_buffer: get!(b"vkEndCommandBuffer\0")?,
             reset_command_buffer: get!(b"vkResetCommandBuffer\0")?,
+            cmd_execute_commands: get!(b"vkCmdExecuteCommands\0")?,
+            cmd_pipeline_barrier: get!(b"vkCmdPipelineBarrier\0")?,
+            cmd_begin_render_pass: get!(b"vkCmdBeginRenderPass\0")?,
+            cmd_next_subpass: get!(b"vkCmdNextSubpass\0")?,
+            cmd_end_render_pass: get!(b"vkCmdEndRenderPass\0")?,
+            cmd_bind_pipeline: get!(b"vkCmdBindPipeline\0")?,
+            cmd_bind_descriptor_sets: get!(b"vkCmdBindDescriptorSets\0")?,
+            cmd_push_constants: get!(b"vkCmdPushConstants\0")?,
+            cmd_reset_query_pool: get!(b"vkCmdResetQueryPool\0")?,
+            cmd_begin_query: get!(b"vkCmdBeginQuery\0")?,
+            cmd_end_query: get!(b"vkCmdEndQuery\0")?,
+            cmd_clear_color_image: get!(b"vkCmdClearColorImage\0")?,
+            cmd_clear_depth_stencil_image: get!(b"vkCmdClearDepthStencilImage\0")?,
+            cmd_fill_buffer: get!(b"vkCmdFillBuffer\0")?,
+            cmd_update_buffer: get!(b"vkCmdUpdateBuffer\0")?,
+            cmd_copy_buffer: get!(b"vkCmdCopyBuffer\0")?,
+            cmd_copy_image: get!(b"vkCmdCopyImage\0")?,
+            cmd_copy_buffer_to_image: get!(b"vkCmdCopyBufferToImage\0")?,
+            cmd_copy_image_to_buffer: get!(b"vkCmdCopyImageToBuffer\0")?,
+            cmd_bind_index_buffer: get!(b"vkCmdBindIndexBuffer\0")?,
+            cmd_bind_vertex_buffers: get!(b"vkCmdBindVertexBuffers\0")?,
+            cmd_draw: get!(b"vkCmdDraw\0")?,
+            cmd_draw_indexed: get!(b"vkCmdDrawIndexed\0")?,
+            cmd_draw_indirect: get!(b"vkCmdDrawIndirect\0")?,
+            cmd_draw_indexed_indirect: get!(b"vkCmdDrawIndexedIndirect\0")?,
+            cmd_set_viewport: get!(b"vkCmdSetViewport\0")?,
+            cmd_set_scissor: get!(b"vkCmdSetScissor\0")?,
+            cmd_set_line_width: get!(b"vkCmdSetLineWidth\0")?,
+            cmd_set_depth_bias: get!(b"vkCmdSetDepthBias\0")?,
+            cmd_set_depth_bounds: get!(b"vkCmdSetDepthBounds\0")?,
+            cmd_set_stencil_compare_mask: get!(b"vkCmdSetStencilCompareMask\0")?,
+            cmd_set_stencil_write_mask: get!(b"vkCmdSetStencilWriteMask\0")?,
+            cmd_set_stencil_reference: get!(b"vkCmdSetStencilReference\0")?,
+            cmd_set_blend_constants: get!(b"vkCmdSetBlendConstants\0")?,
+            cmd_dispatch: get!(b"vkCmdDispatch\0")?,
+            cmd_dispatch_indirect: get!(b"vkCmdDispatchIndirect\0")?,
 
             trim_command_pool: get!(b"vkTrimCommandPool\0").ok(),
 
@@ -210,6 +302,9 @@ impl DeviceFp {
             signal_semaphore: get!(b"vkSignalSemaphore\0").ok(),
 
             queue_submit_2: get!(b"vkQueueSubmit2\0").ok(),
+            cmd_pipeline_barrier_2: get!(b"vkCmdPipelineBarrier2\0").ok(),
+            cmd_begin_rendering: get!(b"vkCmdBeginRendering\0").ok(),
+            cmd_end_rendering: get!(b"vkCmdEndRendering\0").ok(),
         })
     }
 }
@@ -963,6 +1058,20 @@ impl DeviceFp {
 }
 
 impl DeviceFp {
+    /// vkBeginCommandBuffer
+    pub unsafe fn begin_command_buffer(
+        &self,
+        command_buffer: CommandBuffer,
+        begin_info: *const CommandBufferBeginInfo,
+    ) -> Result {
+        (self.begin_command_buffer)(command_buffer, begin_info)
+    }
+
+    /// vkEndCommandBuffer
+    pub unsafe fn end_command_buffer(&self, command_buffer: CommandBuffer) -> Result {
+        (self.end_command_buffer)(command_buffer)
+    }
+
     /// vkResetCommandBuffer
     pub unsafe fn reset_command_buffer(
         &self,
@@ -970,5 +1079,523 @@ impl DeviceFp {
         flags: CommandBufferResetFlags,
     ) -> Result {
         (self.reset_command_buffer)(command_buffer, flags)
+    }
+
+    /// vkCommandExecuteCommands
+    pub unsafe fn cmd_execute_commands(
+        &self,
+        command_buffer: CommandBuffer,
+        command_buffer_count: u32,
+        command_buffers: *const CommandBuffer,
+    ) {
+        (self.cmd_execute_commands)(command_buffer, command_buffer_count, command_buffers);
+    }
+
+    /// vkCmdPipelineBarrier
+    pub unsafe fn cmd_pipeline_barrier(
+        &self,
+        command_buffer: CommandBuffer,
+        src_stage_mask: PipelineStageFlags,
+        dst_stage_mask: PipelineStageFlags,
+        dependency_flags: DependencyFlags,
+        memory_barrier_count: u32,
+        memory_barriers: *const MemoryBarrier,
+        buffer_memory_barrier_count: u32,
+        buffer_memory_barriers: *const BufferMemoryBarrier,
+        image_memory_barrier_count: u32,
+        image_memory_barriers: *const ImageMemoryBarrier,
+    ) {
+        (self.cmd_pipeline_barrier)(
+            command_buffer,
+            src_stage_mask,
+            dst_stage_mask,
+            dependency_flags,
+            memory_barrier_count,
+            memory_barriers,
+            buffer_memory_barrier_count,
+            buffer_memory_barriers,
+            image_memory_barrier_count,
+            image_memory_barriers,
+        );
+    }
+
+    /// vkCmdPipelineBarrier2
+    /// [v1.3]
+    pub unsafe fn cmd_pipeline_barrier_2(
+        &self,
+        command_buffer: CommandBuffer,
+        dependency_info: *const DependencyInfo,
+    ) {
+        debug_assert!(self.cmd_pipeline_barrier_2.is_some());
+        (self.cmd_pipeline_barrier_2.unwrap_unchecked())(command_buffer, dependency_info);
+    }
+
+    /// vkCmdBeginRenderPass
+    pub unsafe fn cmd_begin_render_pass(
+        &self,
+        command_buffer: CommandBuffer,
+        render_pass_begin: *const RenderPassBeginInfo,
+        contents: SubpassContents,
+    ) {
+        (self.cmd_begin_render_pass)(command_buffer, render_pass_begin, contents);
+    }
+
+    /// vkCmdNextSubpass
+    pub unsafe fn cmd_next_subpass(
+        &self,
+        command_buffer: CommandBuffer,
+        contents: SubpassContents,
+    ) {
+        (self.cmd_next_subpass)(command_buffer, contents);
+    }
+
+    /// vkCmdEndRenderPass
+    pub unsafe fn cmd_end_render_pass(&self, command_buffer: CommandBuffer) {
+        (self.cmd_end_render_pass)(command_buffer);
+    }
+
+    /// vkCmdBeginRendering
+    /// [v1.3]
+    pub unsafe fn cmd_begin_rendering(
+        &self,
+        command_buffer: CommandBuffer,
+        rendering_info: *const RenderingInfo,
+    ) {
+        debug_assert!(self.cmd_begin_rendering.is_some());
+        (self.cmd_begin_rendering.unwrap_unchecked())(command_buffer, rendering_info);
+    }
+
+    /// vkCmdEndRendering
+    /// [v1.3]
+    pub unsafe fn cmd_end_rendering(&self, command_buffer: CommandBuffer) {
+        debug_assert!(self.cmd_end_rendering.is_some());
+        (self.cmd_end_rendering.unwrap_unchecked())(command_buffer);
+    }
+
+    /// vkCmdBindPipeline
+    pub unsafe fn cmd_bind_pipeline(
+        &self,
+        command_buffer: CommandBuffer,
+        pipeline_bind_point: PipelineBindPoint,
+        pipeline: Pipeline,
+    ) {
+        (self.cmd_bind_pipeline)(command_buffer, pipeline_bind_point, pipeline);
+    }
+
+    /// vkCmdBindDescriptorSets
+    pub unsafe fn cmd_bind_descriptor_sets(
+        &self,
+        command_buffer: CommandBuffer,
+        pipeline_bind_point: PipelineBindPoint,
+        layout: PipelineLayout,
+        first_set: u32,
+        descriptor_set_count: u32,
+        descriptor_sets: *const DescriptorSet,
+        dynamic_offset_count: u32,
+        dynamic_offsets: *const u32,
+    ) {
+        (self.cmd_bind_descriptor_sets)(
+            command_buffer,
+            pipeline_bind_point,
+            layout,
+            first_set,
+            descriptor_set_count,
+            descriptor_sets,
+            dynamic_offset_count,
+            dynamic_offsets,
+        );
+    }
+
+    /// vkCmdPushConstants
+    pub unsafe fn cmd_push_constants(
+        &self,
+        command_buffer: CommandBuffer,
+        layout: PipelineLayout,
+        stage_flags: ShaderStageFlags,
+        offset: u32,
+        size: u32,
+        values: *const c_void,
+    ) {
+        (self.cmd_push_constants)(command_buffer, layout, stage_flags, offset, size, values);
+    }
+
+    /// vkCmdResetQuerypool
+    pub unsafe fn cmd_reset_query_pool(
+        &self,
+        command_buffer: CommandBuffer,
+        query_pool: QueryPool,
+        first_query: u32,
+        query_count: u32,
+    ) {
+        (self.cmd_reset_query_pool)(command_buffer, query_pool, first_query, query_count);
+    }
+
+    /// vkCmdBeginQuery
+    pub unsafe fn cmd_begin_query(
+        &self,
+        command_buffer: CommandBuffer,
+        query_pool: QueryPool,
+        query: u32,
+        flags: QueryControlFlags,
+    ) {
+        (self.cmd_begin_query)(command_buffer, query_pool, query, flags);
+    }
+
+    /// vkCmdEndQuery
+    pub unsafe fn cmd_end_query(
+        &self,
+        command_buffer: CommandBuffer,
+        query_pool: QueryPool,
+        query: u32,
+    ) {
+        (self.cmd_end_query)(command_buffer, query_pool, query);
+    }
+
+    /// vkCmdClearColorImage
+    pub unsafe fn cmd_clear_color_image(
+        &self,
+        command_buffer: CommandBuffer,
+        image: Image,
+        image_layout: ImageLayout,
+        color: *const ClearColorValue,
+        range_count: u32,
+        ranges: *const ImageSubresourceRange,
+    ) {
+        (self.cmd_clear_color_image)(
+            command_buffer,
+            image,
+            image_layout,
+            color,
+            range_count,
+            ranges,
+        );
+    }
+
+    /// vkCmdClearDepthStencilImage
+    pub unsafe fn cmd_clear_depth_stencil_image(
+        &self,
+        command_buffer: CommandBuffer,
+        image: Image,
+        image_layout: ImageLayout,
+        depth_stencil: *const ClearDepthStencilValue,
+        range_count: u32,
+        ranges: *const ImageSubresourceRange,
+    ) {
+        (self.cmd_clear_depth_stencil_image)(
+            command_buffer,
+            image,
+            image_layout,
+            depth_stencil,
+            range_count,
+            ranges,
+        );
+    }
+
+    /// vkCmdFillBuffer
+    pub unsafe fn cmd_fill_buffer(
+        &self,
+        command_buffer: CommandBuffer,
+        buffer: Buffer,
+        dst_offset: u64,
+        size: u64,
+        data: u32,
+    ) {
+        (self.cmd_fill_buffer)(command_buffer, buffer, dst_offset, size, data);
+    }
+
+    /// vkCmdUpdateBuffer
+    pub unsafe fn cmd_update_buffer(
+        &self,
+        command_buffer: CommandBuffer,
+        buffer: Buffer,
+        dst_offset: u64,
+        data_size: u64,
+        data: *const c_void,
+    ) {
+        (self.cmd_update_buffer)(command_buffer, buffer, dst_offset, data_size, data);
+    }
+
+    /// vkCmdCopyBuffer
+    pub unsafe fn cmd_copy_buffer(
+        &self,
+        command_buffer: CommandBuffer,
+        src_buffer: Buffer,
+        dst_buffer: Buffer,
+        region_count: u32,
+        regions: *const BufferCopy,
+    ) {
+        (self.cmd_copy_buffer)(
+            command_buffer,
+            src_buffer,
+            dst_buffer,
+            region_count,
+            regions,
+        );
+    }
+
+    /// vkCmdCopyImage
+    pub unsafe fn cmd_copy_image(
+        &self,
+        command_buffer: CommandBuffer,
+        src_image: Image,
+        src_image_layout: ImageLayout,
+        dst_image: Image,
+        dst_image_layout: ImageLayout,
+        region_count: u32,
+        regions: *const ImageCopy,
+    ) {
+        (self.cmd_copy_image)(
+            command_buffer,
+            src_image,
+            src_image_layout,
+            dst_image,
+            dst_image_layout,
+            region_count,
+            regions,
+        );
+    }
+
+    /// vkCmdCopyBufferToImage
+    pub unsafe fn cmd_copy_buffer_to_image(
+        &self,
+        command_buffer: CommandBuffer,
+        src_buffer: Buffer,
+        dst_image: Image,
+        dst_image_layout: ImageLayout,
+        region_count: u32,
+        regions: *const BufferImageCopy,
+    ) {
+        (self.cmd_copy_buffer_to_image)(
+            command_buffer,
+            src_buffer,
+            dst_image,
+            dst_image_layout,
+            region_count,
+            regions,
+        );
+    }
+
+    /// vkCmdCopyImageToBuffer
+    pub unsafe fn cmd_copy_image_to_buffer(
+        &self,
+        command_buffer: CommandBuffer,
+        src_image: Image,
+        src_image_layout: ImageLayout,
+        dst_buffer: Buffer,
+        region_count: u32,
+        regions: *const BufferImageCopy,
+    ) {
+        (self.cmd_copy_image_to_buffer)(
+            command_buffer,
+            src_image,
+            src_image_layout,
+            dst_buffer,
+            region_count,
+            regions,
+        );
+    }
+
+    /// vkCmdBindIndexBuffer
+    pub unsafe fn cmd_bind_index_buffer(
+        &self,
+        command_buffer: CommandBuffer,
+        buffer: Buffer,
+        offset: u64,
+        index_type: IndexType,
+    ) {
+        (self.cmd_bind_index_buffer)(command_buffer, buffer, offset, index_type);
+    }
+
+    /// vkCmdBindVertexBuffers
+    pub unsafe fn cmd_bind_vertex_buffers(
+        &self,
+        command_buffer: CommandBuffer,
+        first_binding: u32,
+        binding_count: u32,
+        buffers: *const Buffer,
+        offsets: *const u64,
+    ) {
+        (self.cmd_bind_vertex_buffers)(
+            command_buffer,
+            first_binding,
+            binding_count,
+            buffers,
+            offsets,
+        );
+    }
+
+    /// vkCmdDraw
+    pub unsafe fn cmd_draw(
+        &self,
+        command_buffer: CommandBuffer,
+        vertex_count: u32,
+        instance_count: u32,
+        first_vertex: u32,
+        first_instance: u32,
+    ) {
+        (self.cmd_draw)(
+            command_buffer,
+            vertex_count,
+            instance_count,
+            first_vertex,
+            first_instance,
+        );
+    }
+
+    /// vkCmdDrawIndexed
+    pub unsafe fn cmd_draw_indexed(
+        &self,
+        command_buffer: CommandBuffer,
+        index_count: u32,
+        instance_count: u32,
+        first_index: u32,
+        vertex_offset: i32,
+        first_instance: u32,
+    ) {
+        (self.cmd_draw_indexed)(
+            command_buffer,
+            index_count,
+            instance_count,
+            first_index,
+            vertex_offset,
+            first_instance,
+        );
+    }
+
+    /// vkCmdDrawIndirect
+    pub unsafe fn cmd_draw_indirect(
+        &self,
+        command_buffer: CommandBuffer,
+        buffer: Buffer,
+        offset: u64,
+        draw_count: u32,
+        stride: u32,
+    ) {
+        (self.cmd_draw_indirect)(command_buffer, buffer, offset, draw_count, stride);
+    }
+
+    /// vkCmdDrawIndexedIndirect
+    pub unsafe fn cmd_draw_indexed_indirect(
+        &self,
+        command_buffer: CommandBuffer,
+        buffer: Buffer,
+        offset: u64,
+        draw_count: u32,
+        stride: u32,
+    ) {
+        (self.cmd_draw_indexed_indirect)(command_buffer, buffer, offset, draw_count, stride);
+    }
+
+    /// vkCmdSetViewport
+    pub unsafe fn cmd_set_viewport(
+        &self,
+        command_buffer: CommandBuffer,
+        first_viewport: u32,
+        viewport_count: u32,
+        viewports: *const Viewport,
+    ) {
+        (self.cmd_set_viewport)(command_buffer, first_viewport, viewport_count, viewports);
+    }
+
+    /// vkCmdSetScissor
+    pub unsafe fn cmd_set_scissor(
+        &self,
+        command_buffer: CommandBuffer,
+        first_scissor: u32,
+        scissor_count: u32,
+        scissors: *const Rect2d,
+    ) {
+        (self.cmd_set_scissor)(command_buffer, first_scissor, scissor_count, scissors);
+    }
+
+    /// vkCmdSetLineWidth
+    pub unsafe fn cmd_set_line_width(&self, command_buffer: CommandBuffer, line_width: f32) {
+        (self.cmd_set_line_width)(command_buffer, line_width);
+    }
+
+    /// vkCmdSetDepthBias
+    pub unsafe fn cmd_set_depth_bias(
+        &self,
+        command_buffer: CommandBuffer,
+        depth_bias_constant_factor: f32,
+        depth_bias_clamp: f32,
+        depth_bias_slope_factor: f32,
+    ) {
+        (self.cmd_set_depth_bias)(
+            command_buffer,
+            depth_bias_constant_factor,
+            depth_bias_clamp,
+            depth_bias_slope_factor,
+        );
+    }
+
+    /// vkCmdSetDepthBounds
+    pub unsafe fn cmd_set_depth_bounds(
+        &self,
+        command_buffer: CommandBuffer,
+        min_depth_bounds: f32,
+        max_depth_bounds: f32,
+    ) {
+        (self.cmd_set_depth_bounds)(command_buffer, min_depth_bounds, max_depth_bounds);
+    }
+
+    /// vkCmdSetStencilCompareMask
+    pub unsafe fn cmd_set_stencil_compare_mask(
+        &self,
+        command_buffer: CommandBuffer,
+        face_mask: StencilFaceFlags,
+        compare_mask: u32,
+    ) {
+        (self.cmd_set_stencil_compare_mask)(command_buffer, face_mask, compare_mask);
+    }
+
+    /// vkCmdSetStencilWriteMask
+    pub unsafe fn cmd_set_stencil_write_mask(
+        &self,
+        command_buffer: CommandBuffer,
+        face_mask: StencilFaceFlags,
+        write_mask: u32,
+    ) {
+        (self.cmd_set_stencil_write_mask)(command_buffer, face_mask, write_mask);
+    }
+
+    /// vkCmdSetStencilReference
+    pub unsafe fn cmd_set_stencil_reference(
+        &self,
+        command_buffer: CommandBuffer,
+        face_mask: StencilFaceFlags,
+        reference: u32,
+    ) {
+        (self.cmd_set_stencil_reference)(command_buffer, face_mask, reference);
+    }
+
+    /// vkCmdSetBlendConstants
+    pub unsafe fn cmd_set_blend_constants(
+        &self,
+        command_buffer: CommandBuffer,
+        blend_constants: *const f32,
+    ) {
+        (self.cmd_set_blend_constants)(command_buffer, blend_constants);
+    }
+
+    /// vkCmdDispatch
+    pub unsafe fn cmd_dispatch(
+        &self,
+        command_buffer: CommandBuffer,
+        group_count_x: u32,
+        group_count_y: u32,
+        group_count_z: u32,
+    ) {
+        (self.cmd_dispatch)(command_buffer, group_count_x, group_count_y, group_count_z);
+    }
+
+    /// vkCmdDispatchIndirect
+    pub unsafe fn cmd_dispatch_indirect(
+        &self,
+        command_buffer: CommandBuffer,
+        buffer: Buffer,
+        offset: u64,
+    ) {
+        (self.cmd_dispatch_indirect)(command_buffer, buffer, offset);
     }
 }
