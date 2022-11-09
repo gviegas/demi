@@ -34,6 +34,7 @@ use crate::{CreateWin32SurfaceKhr, Win32SurfaceCreateInfoKhr};
 use crate::{CreateXcbSurfaceKhr, XcbSurfaceCreateInfoKhr};
 
 /// Instance-level commands.
+#[derive(Debug)]
 pub struct InstanceFp {
     destroy_instance: DestroyInstance,
     enumerate_physical_devices: EnumeratePhysicalDevices,

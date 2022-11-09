@@ -51,6 +51,7 @@ use crate::{
 };
 
 /// Device-level commands.
+#[derive(Debug)]
 pub struct DeviceFp {
     destroy_device: DestroyDevice,
     get_device_queue: GetDeviceQueue,
