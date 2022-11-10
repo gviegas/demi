@@ -325,6 +325,7 @@ def_ids!(
 );
 
 /// VkFormatProperties
+#[derive(Debug)]
 #[repr(C)]
 pub struct FormatProperties {
     pub linear_tiling_features: FormatFeatureFlags,

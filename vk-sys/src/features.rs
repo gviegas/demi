@@ -7,6 +7,7 @@ use crate::{Bool32, PhysicalDevice, StructureType};
 // TODO: v1.1+ feature structs.
 
 /// VkPhysicalDeviceFeatures
+#[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceFeatures {
     pub robust_buffer_access: Bool32,
@@ -72,6 +73,7 @@ pub(crate) type GetPhysicalDeviceFeatures =
 
 /// VkPhysicalDeviceFeatures2
 /// [v1.1]
+#[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceFeatures2 {
     pub s_type: StructureType,

@@ -98,6 +98,7 @@ pub const TRUE: Bool32 = 1;
 pub const FALSE: Bool32 = 0;
 
 /// VkOffset2D
+#[derive(Debug)]
 #[repr(C)]
 pub struct Offset2d {
     pub x: i32,
@@ -105,6 +106,7 @@ pub struct Offset2d {
 }
 
 /// VkOffset3D
+#[derive(Debug)]
 #[repr(C)]
 pub struct Offset3d {
     pub x: i32,
@@ -113,6 +115,7 @@ pub struct Offset3d {
 }
 
 /// VkExtent2D
+#[derive(Debug)]
 #[repr(C)]
 pub struct Extent2d {
     pub width: u32,
@@ -120,6 +123,7 @@ pub struct Extent2d {
 }
 
 /// VkExtent3D
+#[derive(Debug)]
 #[repr(C)]
 pub struct Extent3d {
     pub width: u32,
@@ -128,6 +132,7 @@ pub struct Extent3d {
 }
 
 /// VkRect2D
+#[derive(Debug)]
 #[repr(C)]
 pub struct Rect2d {
     pub offset: Offset2d,
@@ -135,6 +140,7 @@ pub struct Rect2d {
 }
 
 /// VkAllocationCallbacks
+#[derive(Debug)]
 #[repr(C)]
 pub struct AllocationCallbacks {
     pub user_data: *mut c_void,

@@ -12,6 +12,7 @@ def_ndh!(SurfaceKhrT, SurfaceKhr);
 /// VkWaylandSurfaceCreateInfoKHR
 /// [VK_KHR_wayland_surface]
 #[cfg(target_os = "linux")]
+#[derive(Debug)]
 #[repr(C)]
 pub struct WaylandSurfaceCreateInfoKhr {
     pub s_type: StructureType,
@@ -40,6 +41,7 @@ pub(crate) type CreateWaylandSurfaceKhr = unsafe extern "C" fn(
 /// VkWin32SurfaceCreateInfoKHR
 /// [VK_KHR_win32_surface]
 #[cfg(windows)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct Win32SurfaceCreateInfoKhr {
     pub s_type: StructureType,
@@ -70,6 +72,7 @@ pub(crate) type CreateWin32SurfaceKhr = unsafe extern "C" fn(
     not(target_os = "ios"),
     not(target_os = "macos")
 ))]
+#[derive(Debug)]
 #[repr(C)]
 pub struct XcbSurfaceCreateInfoKhr {
     pub s_type: StructureType,
@@ -104,6 +107,7 @@ pub(crate) type CreateXcbSurfaceKhr = unsafe extern "C" fn(
 
 /// VkSurfaceCapabilitiesKHR
 /// [VK_KHR_surface]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SurfaceCapabilitiesKhr {
     pub min_image_count: u32,
@@ -143,6 +147,7 @@ def_flags!(
 
 /// VkSurfaceFormatKHR
 /// [VK_KHR_surface]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SurfaceFormatKhr {
     pub format: Format,
@@ -228,6 +233,7 @@ def_ndh!(SwapchainKhrT, SwapchainKhr);
 
 /// VkSwapchainCreateInfoKHR
 /// [VK_KHR_swapchain]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SwapchainCreateInfoKhr {
     pub s_type: StructureType,
@@ -297,6 +303,7 @@ pub(crate) type AcquireNextImageKhr = unsafe extern "C" fn(
 
 /// VkPresentInfoKHR
 /// [VK_KHR_swapchain]
+#[derive(Debug)]
 #[repr(C)]
 pub struct PresentInfoKhr {
     pub s_type: StructureType,

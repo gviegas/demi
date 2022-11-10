@@ -5,6 +5,7 @@ use crate::{c_size_t, Bool32, SampleCountFlags};
 // TODO: v1.1+ limits (need PhysicalDeviceProperties2 on `core.rs`)
 
 /// VkPhysicalDeviceLimits
+#[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceLimits {
     pub max_image_dimension_1d: u32,

@@ -1,6 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use std::ffi::{c_char, c_void};
+use std::fmt;
 
 use crate::{
     c_size_t, AllocationCallbacks, Bool32, Extent3d, Format, Offset3d, PhysicalDeviceFeatures,
@@ -16,6 +17,7 @@ def_dh!(InstanceT, Instance);
 pub(crate) type EnumerateInstanceVersion = unsafe extern "C" fn(api_version: *mut u32) -> Result;
 
 /// VkInstanceCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct InstanceCreateInfo {
     pub s_type: StructureType,
@@ -31,6 +33,7 @@ pub struct InstanceCreateInfo {
 def_flags!(InstanceCreateFlags, InstanceCreateFlagBits,);
 
 /// VkApplicationInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct ApplicationInfo {
     pub s_type: StructureType,
@@ -56,6 +59,7 @@ pub(crate) type DestroyInstance =
 def_dh!(PhysicalDeviceT, PhysicalDevice);
 
 /// VkPhysicalDeviceProperties
+#[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceProperties {
     pub api_version: u32,
@@ -79,6 +83,7 @@ def_ids!(
 );
 
 /// VkPhysicalDeviceSparseProperties
+#[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceSparseProperties {
     pub residency_standard_2d_block_shape: Bool32,
@@ -89,6 +94,7 @@ pub struct PhysicalDeviceSparseProperties {
 }
 
 /// VkQueueFamilyProperties
+#[derive(Debug)]
 #[repr(C)]
 pub struct QueueFamilyProperties {
     pub queue_flags: QueueFlags,
@@ -109,6 +115,7 @@ def_flags!(
 );
 
 /// VkPhysicalDeviceMemoryProperties
+#[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceMemoryProperties {
     pub memory_type_count: u32,
@@ -118,6 +125,7 @@ pub struct PhysicalDeviceMemoryProperties {
 }
 
 /// VkMemoryHeap
+#[derive(Debug)]
 #[repr(C)]
 pub struct MemoryHeap {
     pub size: u64,
@@ -125,6 +133,7 @@ pub struct MemoryHeap {
 }
 
 /// VkMemoryType
+#[derive(Debug)]
 #[repr(C)]
 pub struct MemoryType {
     pub property_flags: MemoryPropertyFlags,
@@ -155,6 +164,7 @@ def_flags!(
 
 /// VkPhysicalDeviceGroupProperties
 /// [v1.1]
+#[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceGroupProperties {
     pub s_type: StructureType,
@@ -197,6 +207,7 @@ pub(crate) type EnumeratePhysicalDeviceGroups = unsafe extern "C" fn(
 def_dh!(DeviceT, Device);
 
 /// VkDeviceCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct DeviceCreateInfo {
     pub s_type: StructureType,
@@ -214,6 +225,7 @@ pub struct DeviceCreateInfo {
 def_flags!(DeviceCreateFlags, DeviceCreateFlagBits,);
 
 /// VkDeviceQueueCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct DeviceQueueCreateInfo {
     pub s_type: StructureType,
@@ -245,6 +257,7 @@ pub(crate) type DestroyDevice =
 def_dh!(QueueT, Queue);
 
 /// VkSubmitInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct SubmitInfo {
     pub s_type: StructureType,
@@ -260,6 +273,7 @@ pub struct SubmitInfo {
 
 /// VkSubmitInfo2
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SubmitInfo2 {
     pub s_stype: StructureType,
@@ -282,6 +296,7 @@ def_flags!(
 
 /// VkSemaphoreSubmitInfo
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SemaphoreSubmitInfo {
     pub s_type: StructureType,
@@ -294,6 +309,7 @@ pub struct SemaphoreSubmitInfo {
 
 /// VkCommandBufferSubmitInfo
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct CommandBufferSubmitInfo {
     pub s_type: StructureType,
@@ -325,6 +341,7 @@ pub(crate) type QueueSubmit2 = unsafe extern "C" fn(
 def_dh!(CommandBufferT, CommandBuffer);
 
 /// VkCommandBufferBeginInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct CommandBufferBeginInfo {
     pub s_type: StructureType,
@@ -342,6 +359,7 @@ def_flags!(
 );
 
 /// VkCommandBufferInheritanceInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct CommandBufferInheritanceInfo {
     pub s_type: StructureType,
@@ -378,6 +396,7 @@ pub(crate) type ResetCommandBuffer =
 def_ndh!(CommandPoolT, CommandPool);
 
 /// VkCommandPoolCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct CommandPoolCreateInfo {
     pub s_type: StructureType,
@@ -403,6 +422,7 @@ def_flags!(
 );
 
 /// VkCommandBufferAllocateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct CommandBufferAllocateInfo {
     pub s_type: StructureType,
@@ -463,6 +483,7 @@ pub(crate) type FreeCommandBuffers = unsafe extern "C" fn(
 def_ndh!(FenceT, Fence);
 
 /// VkFenceCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct FenceCreateInfo {
     pub s_type: StructureType,
@@ -507,6 +528,7 @@ pub(crate) type DestroyFence =
 def_ndh!(SemaphoreT, Semaphore);
 
 /// VkSemaphoreCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct SemaphoreCreateInfo {
     pub s_type: StructureType,
@@ -518,6 +540,7 @@ def_flags!(SemaphoreCreateFlags, SemaphoreCreateFlagBits,);
 
 /// VkSemaphoreWaitInfo
 /// [v1.2]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SemaphoreWaitInfo {
     pub s_type: StructureType,
@@ -537,6 +560,7 @@ def_flags!(
 
 /// VkSemaphoreSignalInfo
 /// [v1.2]
+#[derive(Debug)]
 #[repr(C)]
 pub struct SemaphoreSignalInfo {
     pub s_type: StructureType,
@@ -579,6 +603,7 @@ pub(crate) type DestroySemaphore = unsafe extern "C" fn(
 );
 
 /// VkMemoryBarrier
+#[derive(Debug)]
 #[repr(C)]
 pub struct MemoryBarrier {
     pub s_type: StructureType,
@@ -588,6 +613,7 @@ pub struct MemoryBarrier {
 }
 
 /// VkImageMemoryBarrier
+#[derive(Debug)]
 #[repr(C)]
 pub struct ImageMemoryBarrier {
     pub s_type: StructureType,
@@ -603,6 +629,7 @@ pub struct ImageMemoryBarrier {
 }
 
 /// VkBufferMemoryBarrier
+#[derive(Debug)]
 #[repr(C)]
 pub struct BufferMemoryBarrier {
     pub s_type: StructureType,
@@ -632,6 +659,7 @@ pub(crate) type CmdPipelineBarrier = unsafe extern "C" fn(
 
 /// VkDependencyInfo
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct DependencyInfo {
     pub s_type: StructureType,
@@ -647,6 +675,7 @@ pub struct DependencyInfo {
 
 /// VkMemoryBarrier2
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct MemoryBarrier2 {
     pub s_type: StructureType,
@@ -659,6 +688,7 @@ pub struct MemoryBarrier2 {
 
 /// VkImageMemoryBarrier2
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct ImageMemoryBarrier2 {
     pub s_type: StructureType,
@@ -677,6 +707,7 @@ pub struct ImageMemoryBarrier2 {
 
 /// VkBufferMemoryBarrier2
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct BufferMemoryBarrier2 {
     pub s_type: StructureType,
@@ -944,6 +975,7 @@ pub(crate) type QueueWaitIdle = unsafe extern "C" fn(queue: Queue) -> Result;
 def_ndh!(DeviceMemoryT, DeviceMemory);
 
 /// VkMappedMemoryRange
+#[derive(Debug)]
 #[repr(C)]
 pub struct MappedMemoryRange {
     pub s_type: StructureType,
@@ -954,6 +986,7 @@ pub struct MappedMemoryRange {
 }
 
 /// VkMemoryAllocateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct MemoryAllocateInfo {
     pub s_type: StructureType,
@@ -963,6 +996,7 @@ pub struct MemoryAllocateInfo {
 }
 
 /// VkMemoryRequirements
+#[derive(Debug)]
 #[repr(C)]
 pub struct MemoryRequirements {
     pub size: u64,
@@ -1017,6 +1051,7 @@ pub(crate) type FreeMemory = unsafe extern "C" fn(
 def_ndh!(BufferT, Buffer);
 
 /// VkBufferCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct BufferCreateInfo {
     pub s_type: StructureType,
@@ -1094,6 +1129,7 @@ pub(crate) type DestroyBuffer =
     unsafe extern "C" fn(device: Device, buffer: Buffer, allocator: *const AllocationCallbacks);
 
 /// VkBufferCopy
+#[derive(Debug)]
 #[repr(C)]
 pub struct BufferCopy {
     pub src_offset: u64,
@@ -1131,6 +1167,7 @@ pub(crate) type CmdUpdateBuffer = unsafe extern "C" fn(
 def_ndh!(BufferViewT, BufferView);
 
 /// VkBufferViewCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct BufferViewCreateInfo {
     pub s_type: StructureType,
@@ -1159,6 +1196,7 @@ pub(crate) type DestroyBufferView =
 def_ndh!(ImageT, Image);
 
 /// VkImageCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct ImageCreateInfo {
     pub s_type: StructureType,
@@ -1316,6 +1354,7 @@ pub(crate) type DestroyImage =
     unsafe extern "C" fn(device: Device, image: Image, allocator: *const AllocationCallbacks);
 
 /// VkImageCopy
+#[derive(Debug)]
 #[repr(C)]
 pub struct ImageCopy {
     pub src_subresource: ImageSubresourceLayers,
@@ -1326,6 +1365,7 @@ pub struct ImageCopy {
 }
 
 /// VkImageSubresourceLayers
+#[derive(Debug)]
 #[repr(C)]
 pub struct ImageSubresourceLayers {
     pub aspect_mask: ImageAspectFlags,
@@ -1368,6 +1408,7 @@ pub(crate) type CmdClearDepthStencilImage = unsafe extern "C" fn(
 def_ndh!(ImageViewT, ImageView);
 
 /// VkImageViewCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct ImageViewCreateInfo {
     pub s_type: StructureType,
@@ -1399,6 +1440,7 @@ def_ids!(
 );
 
 /// VkComponentMapping
+#[derive(Debug)]
 #[repr(C)]
 pub struct ComponentMapping {
     pub r: ComponentSwizzle,
@@ -1419,6 +1461,7 @@ def_ids!(
 );
 
 /// VkImageSubresourceRange
+#[derive(Debug)]
 #[repr(C)]
 pub struct ImageSubresourceRange {
     pub aspect_mask: ImageAspectFlags,
@@ -1462,6 +1505,7 @@ pub(crate) type DestroyImageView =
     unsafe extern "C" fn(device: Device, view: ImageView, allocator: *const AllocationCallbacks);
 
 /// VkBufferImageCopy
+#[derive(Debug)]
 #[repr(C)]
 pub struct BufferImageCopy {
     pub buffer_offset: u64,
@@ -1495,6 +1539,7 @@ pub(crate) type CmdCopyImageToBuffer = unsafe extern "C" fn(
 def_ndh!(SamplerT, Sampler);
 
 /// VkSamplerCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct SamplerCreateInfo {
     pub s_type: StructureType,
@@ -1589,6 +1634,7 @@ pub(crate) type DestroySampler =
 def_ndh!(RenderPassT, RenderPass);
 
 /// VkRenderPassCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct RenderPassCreateInfo {
     pub s_type: StructureType,
@@ -1609,6 +1655,7 @@ def_flags!(
 );
 
 /// VkAttachmentDescription
+#[derive(Debug)]
 #[repr(C)]
 pub struct AttachmentDescription {
     pub flags: AttachmentDescriptionFlags,
@@ -1647,6 +1694,7 @@ def_ids!(
 );
 
 /// VkSubpassDescription
+#[derive(Debug)]
 #[repr(C)]
 pub struct SubpassDescription {
     pub flags: SubpassDescriptionFlags,
@@ -1681,6 +1729,7 @@ def_flags!(
 );
 
 /// VkAttachmentReference
+#[derive(Debug)]
 #[repr(C)]
 pub struct AttachmentReference {
     pub attachment: u32,
@@ -1688,6 +1737,7 @@ pub struct AttachmentReference {
 }
 
 /// VkSubpassDependency
+#[derive(Debug)]
 #[repr(C)]
 pub struct SubpassDependency {
     pub src_subpass: u32,
@@ -1717,6 +1767,7 @@ pub(crate) type DestroyRenderPass = unsafe extern "C" fn(
 def_ndh!(FramebufferT, Framebuffer);
 
 /// VkFramebufferCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct FramebufferCreateInfo {
     pub s_type: StructureType,
@@ -1753,6 +1804,7 @@ pub(crate) type DestroyFramebuffer = unsafe extern "C" fn(
 );
 
 /// VkRenderPassBeginInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct RenderPassBeginInfo {
     pub s_type: StructureType,
@@ -1773,6 +1825,12 @@ pub union ClearColorValue {
     pub uint32: [u32; 4],
 }
 
+impl fmt::Debug for ClearColorValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "<ClearColorValue>")
+    }
+}
+
 /// VkClearDepthStencilValue
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -1787,6 +1845,12 @@ pub struct ClearDepthStencilValue {
 pub union ClearValue {
     pub color: ClearColorValue,
     pub depth_stencil: ClearDepthStencilValue,
+}
+
+impl fmt::Debug for ClearValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "<ClearValue>")
+    }
 }
 
 def_ids!(
@@ -1811,6 +1875,7 @@ pub(crate) type CmdEndRenderPass = unsafe extern "C" fn(cmd_buf: CommandBuffer);
 
 /// VkRenderingInfo
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct RenderingInfo {
     pub s_type: StructureType,
@@ -1840,6 +1905,7 @@ def_flags!(
 
 /// VkRenderingAttachmentInfo
 /// [v1.3]
+#[derive(Debug)]
 #[repr(C)]
 pub struct RenderingAttachmentInfo {
     pub s_type: StructureType,
@@ -1926,6 +1992,7 @@ pub(crate) type CmdPushConstants = unsafe extern "C" fn(
 );
 
 /// VkWriteDescriptorSet
+#[derive(Debug)]
 #[repr(C)]
 pub struct WriteDescriptorSet {
     pub s_type: StructureType,
@@ -1941,6 +2008,7 @@ pub struct WriteDescriptorSet {
 }
 
 /// VkCopyDescriptorSet
+#[derive(Debug)]
 #[repr(C)]
 pub struct CopyDescriptorSet {
     pub s_type: StructureType,
@@ -1955,6 +2023,7 @@ pub struct CopyDescriptorSet {
 }
 
 /// VkDescriptorImageInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct DescriptorImageInfo {
     pub sampler: Sampler,
@@ -1963,6 +2032,7 @@ pub struct DescriptorImageInfo {
 }
 
 /// VkDescriptorBufferInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct DescriptorBufferInfo {
     pub buffer: Buffer,
@@ -1982,6 +2052,7 @@ pub(crate) type UpdateDescriptorSets = unsafe extern "C" fn(
 def_ndh!(DescriptorSetLayoutT, DescriptorSetLayout);
 
 /// VkDescriptorSetLayoutCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct DescriptorSetLayoutCreateInfo {
     pub s_type: StructureType,
@@ -2004,6 +2075,7 @@ def_flags!(
 );
 
 /// VkDescriptorSetLayoutBinding
+#[derive(Debug)]
 #[repr(C)]
 pub struct DescriptorSetLayoutBinding {
     pub binding: u32,
@@ -2031,6 +2103,7 @@ pub(crate) type DestroyDescriptorSetLayout = unsafe extern "C" fn(
 def_ndh!(DescriptorPoolT, DescriptorPool);
 
 /// VkDescriptorPoolCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct DescriptorPoolCreateInfo {
     pub s_type: StructureType,
@@ -2052,6 +2125,7 @@ def_flags!(
 );
 
 /// VkDescriptorPoolSize
+#[derive(Debug)]
 #[repr(C)]
 pub struct DescriptorPoolSize {
     pub descriptor_type: DescriptorType,
@@ -2061,6 +2135,7 @@ pub struct DescriptorPoolSize {
 def_flags!(DescriptorPoolResetFlags, DescriptorPoolResetFlagBits,);
 
 /// VkDescriptorSetAllocateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct DescriptorSetAllocateInfo {
     pub s_type: StructureType,
@@ -2110,6 +2185,7 @@ pub(crate) type FreeDescriptorSets = unsafe extern "C" fn(
 def_ndh!(ShaderModuleT, ShaderModule);
 
 /// VkShaderModuleCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct ShaderModuleCreateInfo {
     pub s_type: StructureType,
@@ -2251,6 +2327,7 @@ def_flags!(
 );
 
 /// VkPipelineShaderStageCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineShaderStageCreateInfo {
     pub s_type: StructureType,
@@ -2274,6 +2351,7 @@ def_flags!(
 );
 
 /// VkSpecializationInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct SpecializationInfo {
     pub map_entry_count: u32,
@@ -2283,6 +2361,7 @@ pub struct SpecializationInfo {
 }
 
 /// VkSpecializationMapEntry
+#[derive(Debug)]
 #[repr(C)]
 pub struct SpecializationMapEntry {
     pub constant_id: u32,
@@ -2291,6 +2370,7 @@ pub struct SpecializationMapEntry {
 }
 
 /// VkGraphicsPipelineCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct GraphicsPipelineCreateInfo {
     pub s_type: StructureType,
@@ -2371,6 +2451,7 @@ def_flags!(
 );
 
 /// VkPipelineVertexInputStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineVertexInputStateCreateInfo {
     pub s_type: StructureType,
@@ -2383,6 +2464,7 @@ pub struct PipelineVertexInputStateCreateInfo {
 }
 
 /// VkVertexInputBindingDescription
+#[derive(Debug)]
 #[repr(C)]
 pub struct VertexInputBindingDescription {
     pub binding: u32,
@@ -2391,6 +2473,7 @@ pub struct VertexInputBindingDescription {
 }
 
 /// VkVertexInputAttributeDescription
+#[derive(Debug)]
 #[repr(C)]
 pub struct VertexInputAttributeDescription {
     pub location: u32,
@@ -2406,6 +2489,7 @@ def_ids!(
 );
 
 /// VkPipelineInputAssemblyStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineInputAssemblyStateCreateInfo {
     pub s_type: StructureType,
@@ -2440,6 +2524,7 @@ def_ids!(
 );
 
 /// VkDrawIndirectCommand
+#[derive(Debug)]
 #[repr(C)]
 pub struct DrawIndirectCommand {
     pub vertex_count: u32,
@@ -2449,6 +2534,7 @@ pub struct DrawIndirectCommand {
 }
 
 /// VkDrawIndexedIndirectCommand
+#[derive(Debug)]
 #[repr(C)]
 pub struct DrawIndexedIndirectCommand {
     pub index_count: u32,
@@ -2503,6 +2589,7 @@ pub(crate) type CmdDrawIndirect = unsafe extern "C" fn(
 pub(crate) type CmdDrawIndexedIndirect = CmdDrawIndirect;
 
 /// VkPipelineTessellationStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineTessellationStateCreateInfo {
     pub s_type: StructureType,
@@ -2512,6 +2599,7 @@ pub struct PipelineTessellationStateCreateInfo {
 }
 
 /// VkPipelineViewportStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineViewportStateCreateInfo {
     pub s_type: StructureType,
@@ -2524,6 +2612,7 @@ pub struct PipelineViewportStateCreateInfo {
 }
 
 /// VkViewport
+#[derive(Debug)]
 #[repr(C)]
 pub struct Viewport {
     pub x: f32,
@@ -2551,6 +2640,7 @@ pub(crate) type CmdSetScissor = unsafe extern "C" fn(
 );
 
 /// VkPipelineRasterizationStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineRasterizationStateCreateInfo {
     pub s_type: StructureType,
@@ -2603,6 +2693,7 @@ pub(crate) type CmdSetDepthBias = unsafe extern "C" fn(
 );
 
 /// VkPipelineMultisampleStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineMultisampleStateCreateInfo {
     pub s_type: StructureType,
@@ -2617,6 +2708,7 @@ pub struct PipelineMultisampleStateCreateInfo {
 }
 
 /// VkPipelineDepthStencilStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineDepthStencilStateCreateInfo {
     pub s_type: StructureType,
@@ -2634,6 +2726,7 @@ pub struct PipelineDepthStencilStateCreateInfo {
 }
 
 /// VkStencilOpState
+#[derive(Debug)]
 #[repr(C)]
 pub struct StencilOpState {
     pub fail_op: StencilOp,
@@ -2683,6 +2776,7 @@ pub(crate) type CmdSetStencilReference =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, face_mask: StencilFaceFlags, reference: u32);
 
 /// VkPipelineColorBlendStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineColorBlendStateCreateInfo {
     pub s_type: StructureType,
@@ -2696,6 +2790,7 @@ pub struct PipelineColorBlendStateCreateInfo {
 }
 
 /// VkPipelineColorBlendAttachmentState
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineColorBlendAttachmentState {
     pub blend_enable: Bool32,
@@ -2820,6 +2915,7 @@ pub(crate) type CmdSetBlendConstants =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, blend_consts: *const f32);
 
 /// VkPipelineDynamicStateCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineDynamicStateCreateInfo {
     pub s_type: StructureType,
@@ -2917,6 +3013,7 @@ def_ids!(
 );
 
 /// VkComputePipelineCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct ComputePipelineCreateInfo {
     pub s_type: StructureType,
@@ -2929,6 +3026,7 @@ pub struct ComputePipelineCreateInfo {
 }
 
 /// VkDispatchIndirectCommand
+#[derive(Debug)]
 #[repr(C)]
 pub struct DispatchIndirectCommand {
     pub x: u32,
@@ -2951,6 +3049,7 @@ pub(crate) type CmdDispatchIndirect =
 def_ndh!(PipelineLayoutT, PipelineLayout);
 
 /// VkPipelineLayoutCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineLayoutCreateInfo {
     pub s_type: StructureType,
@@ -2969,6 +3068,7 @@ def_flags!(
 );
 
 /// VkPushConstantRange
+#[derive(Debug)]
 #[repr(C)]
 pub struct PushConstantRange {
     pub stage_flags: ShaderStageFlags,
@@ -2994,6 +3094,7 @@ pub(crate) type DestroyPipelineLayout = unsafe extern "C" fn(
 def_ndh!(PipelineCacheT, PipelineCache);
 
 /// VkPipelineCacheCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineCacheCreateInfo {
     pub s_type: StructureType,
@@ -3012,6 +3113,7 @@ def_flags!(
 );
 
 /// VkPipelineCacheHeaderVersionOne
+#[derive(Debug)]
 #[repr(C)]
 pub struct PipelineCacheHeaderVersionOne {
     pub header_size: u32,
@@ -3060,6 +3162,7 @@ pub(crate) type DestroyPipelineCache = unsafe extern "C" fn(
 def_ndh!(QueryPoolT, QueryPool);
 
 /// VkQueryPoolCreateInfo
+#[derive(Debug)]
 #[repr(C)]
 pub struct QueryPoolCreateInfo {
     pub s_type: StructureType,
