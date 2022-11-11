@@ -539,7 +539,7 @@ impl DeviceFp {
     }
 
     /// vkCreateFramebuffer
-    pub unsafe fn create_frambuffer(
+    pub unsafe fn create_framebuffer(
         &self,
         device: Device,
         create_info: *const FramebufferCreateInfo,
