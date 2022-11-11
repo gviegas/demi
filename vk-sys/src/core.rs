@@ -3057,8 +3057,8 @@ pub struct PipelineLayoutCreateInfo {
     pub flags: PipelineLayoutCreateFlags,
     pub set_layout_count: u32,
     pub set_layouts: *const DescriptorSetLayout,
-    pub constant_range_count: u32,
-    pub constant_ranges: *const PushConstantRange,
+    pub push_constant_range_count: u32,
+    pub push_constant_ranges: *const PushConstantRange,
 }
 
 def_flags!(
