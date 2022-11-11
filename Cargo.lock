@@ -22,6 +22,7 @@ name = "vk-sys"
 version = "0.1.0"
 dependencies = [
  "dl",
+ "wlcli-sys",
 ]
 
 [[package]]
