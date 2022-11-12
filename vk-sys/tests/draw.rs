@@ -2,7 +2,6 @@
 
 // TODO:
 // - multiple frames
-// - separate queues
 // - swapchain out of date
 // - calls to destroy/free
 // - win32
@@ -16,21 +15,22 @@ use std::time::{Duration, Instant};
 use vk_sys::{
     ApplicationInfo, AttachmentDescription, AttachmentReference, Buffer, BufferCreateInfo,
     ClearColorValue, ClearValue, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
-    CommandPool, CommandPoolCreateInfo, ComponentMapping, DescriptorBufferInfo, DescriptorPool,
-    DescriptorPoolCreateInfo, DescriptorPoolSize, DescriptorSet, DescriptorSetAllocateInfo,
-    DescriptorSetLayout, DescriptorSetLayoutBinding, DescriptorSetLayoutCreateInfo, Device,
-    DeviceCreateInfo, DeviceFp, DeviceMemory, DeviceQueueCreateInfo, Extent2d, Fence,
-    FenceCreateInfo, Format, Framebuffer, FramebufferCreateInfo, GraphicsPipelineCreateInfo,
-    ImageSubresourceRange, ImageView, ImageViewCreateInfo, Instance, InstanceCreateInfo,
-    InstanceFp, MemoryAllocateInfo, MemoryRequirements, Offset2d, PhysicalDevice,
-    PhysicalDeviceProperties, Pipeline, PipelineColorBlendAttachmentState,
-    PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo, PipelineLayout,
-    PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
-    PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
-    PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PresentInfoKhr, Queue,
-    Rect2d, RenderPass, RenderPassBeginInfo, RenderPassCreateInfo, Semaphore, SemaphoreCreateInfo,
-    ShaderModule, ShaderModuleCreateInfo, SubmitInfo, SubpassDescription, SurfaceCapabilitiesKhr,
-    SurfaceKhr, SwapchainCreateInfoKhr, SwapchainKhr, VertexInputAttributeDescription,
+    CommandPool, CommandPoolCreateInfo, ComponentMapping, CompositeAlphaFlagBitsKhr,
+    DescriptorBufferInfo, DescriptorPool, DescriptorPoolCreateInfo, DescriptorPoolSize,
+    DescriptorSet, DescriptorSetAllocateInfo, DescriptorSetLayout, DescriptorSetLayoutBinding,
+    DescriptorSetLayoutCreateInfo, Device, DeviceCreateInfo, DeviceFp, DeviceMemory,
+    DeviceQueueCreateInfo, Extent2d, Fence, FenceCreateInfo, Format, Framebuffer,
+    FramebufferCreateInfo, GraphicsPipelineCreateInfo, ImageSubresourceRange, ImageView,
+    ImageViewCreateInfo, Instance, InstanceCreateInfo, InstanceFp, MemoryAllocateInfo,
+    MemoryRequirements, Offset2d, PhysicalDevice, PhysicalDeviceProperties, Pipeline,
+    PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo,
+    PipelineInputAssemblyStateCreateInfo, PipelineLayout, PipelineLayoutCreateInfo,
+    PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo,
+    PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo,
+    PipelineViewportStateCreateInfo, PresentInfoKhr, Queue, Rect2d, RenderPass,
+    RenderPassBeginInfo, RenderPassCreateInfo, Semaphore, SemaphoreCreateInfo, ShaderModule,
+    ShaderModuleCreateInfo, SubmitInfo, SubpassDescription, SurfaceCapabilitiesKhr, SurfaceKhr,
+    SwapchainCreateInfoKhr, SwapchainKhr, VertexInputAttributeDescription,
     VertexInputBindingDescription, Viewport, WriteDescriptorSet,
 };
 
@@ -540,32 +540,29 @@ struct ScState {
 }
 
 impl ScState {
-    #[cfg(target_os = "linux")]
     fn new(inst_state: &InstState, dev_state: &DevState) -> Self {
-        plat::init();
+        let sf = Self::new_sf(inst_state);
 
-        let sf_info = WaylandSurfaceCreateInfoKhr {
-            s_type: vk_sys::STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
-            next: ptr::null(),
-            flags: 0,
-            display: unsafe { plat::DISPLAY.cast() },
-            surface: unsafe { plat::SURFACE.cast() },
-        };
-        let mut sf = vk_sys::null_handle();
-        assert_eq!(
-            unsafe {
-                inst_state.fp.create_wayland_surface_khr(
-                    inst_state.inst,
-                    &sf_info,
-                    ptr::null(),
-                    &mut sf,
-                )
-            },
-            vk_sys::SUCCESS
-        );
-
-        // TODO: Check support.
-        let pres_fam = dev_state.rend_fam;
+        let mut pres_fam = dev_state.rend_fam;
+        loop {
+            let mut supported = vk_sys::FALSE;
+            assert_eq!(
+                unsafe {
+                    inst_state.fp.get_physical_device_surface_support_khr(
+                        dev_state.phys_dev,
+                        pres_fam,
+                        sf,
+                        &mut supported,
+                    )
+                },
+                vk_sys::SUCCESS
+            );
+            if supported == vk_sys::TRUE {
+                break;
+            }
+            pres_fam = (pres_fam + 1) % dev_state.queues.len() as u32;
+            assert_ne!(pres_fam, dev_state.rend_fam);
+        }
 
         let mut capab: SurfaceCapabilitiesKhr = unsafe { mem::zeroed() };
         assert_eq!(
@@ -614,8 +611,21 @@ impl ScState {
             width: 640,
             height: 384,
         };
-        // TODO
-        let comp_alpha = vk_sys::COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+        let (shar_mode, queue_fams) = if pres_fam == dev_state.rend_fam {
+            (vk_sys::SHARING_MODE_EXCLUSIVE, vec![])
+        } else {
+            (
+                vk_sys::SHARING_MODE_CONCURRENT,
+                vec![pres_fam, dev_state.rend_fam],
+            )
+        };
+
+        let mut comp_alpha: CompositeAlphaFlagBitsKhr = 1;
+        assert_ne!(capab.supported_composite_alpha, 0);
+        while comp_alpha & capab.supported_composite_alpha == 0 {
+            comp_alpha <<= 1;
+        }
 
         let sc_info = SwapchainCreateInfoKhr {
             s_type: vk_sys::STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -628,9 +638,9 @@ impl ScState {
             image_extent: extent,
             image_array_layers: 1,
             image_usage: vk_sys::IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-            image_sharing_mode: vk_sys::SHARING_MODE_EXCLUSIVE,
-            queue_family_index_count: 0,
-            queue_family_indices: ptr::null(),
+            image_sharing_mode: shar_mode,
+            queue_family_index_count: queue_fams.len() as u32,
+            queue_family_indices: queue_fams.as_ptr(),
             pre_transform: vk_sys::SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
             composite_alpha: comp_alpha,
             present_mode: vk_sys::PRESENT_MODE_FIFO_KHR,
@@ -726,8 +736,35 @@ impl ScState {
         }
     }
 
+    #[cfg(target_os = "linux")]
+    fn new_sf(inst_state: &InstState) -> SurfaceKhr {
+        plat::init();
+
+        let sf_info = WaylandSurfaceCreateInfoKhr {
+            s_type: vk_sys::STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+            next: ptr::null(),
+            flags: 0,
+            display: unsafe { plat::DISPLAY.cast() },
+            surface: unsafe { plat::SURFACE.cast() },
+        };
+        let mut sf = vk_sys::null_handle();
+        assert_eq!(
+            unsafe {
+                inst_state.fp.create_wayland_surface_khr(
+                    inst_state.inst,
+                    &sf_info,
+                    ptr::null(),
+                    &mut sf,
+                )
+            },
+            vk_sys::SUCCESS
+        );
+
+        sf
+    }
+
     #[cfg(windows)]
-    fn new(inst_state: &InstState, dev_state: &DevState) -> Self {
+    fn new_sf(inst_state: &InstState) -> SurfaceKhr {
         todo!();
     }
 }
