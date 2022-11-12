@@ -3,9 +3,7 @@
 // TODO:
 // - multiple frames
 // - swapchain out of date
-// - calls to destroy/free
 // - win32
-// - tidy up
 
 use std::ffi::c_char;
 use std::mem;
@@ -40,6 +38,7 @@ use vk_sys::WaylandSurfaceCreateInfoKhr;
 #[cfg(windows)]
 use vk_sys::Win32SurfaceCreateInfoKhr;
 
+// Draws a triangle and presents the result.
 #[test]
 fn test_draw() {
     init_global();
@@ -55,10 +54,12 @@ fn test_draw() {
     }
 }
 
+// Initializes the library and get global procs.
 fn init_global() {
     vk_sys::init().unwrap();
 }
 
+// Render state.
 #[derive(Debug)]
 struct State {
     inst: InstState,
@@ -73,6 +74,7 @@ struct State {
 }
 
 impl State {
+    // Intializes the render state.
     fn new() -> Self {
         let inst = InstState::new();
         println!("{inst:#?}");
@@ -116,6 +118,7 @@ impl State {
 }
 
 impl State {
+    // Renders a frame and presents it.
     fn render(&mut self) {
         unsafe {
             match self.dev.fp.wait_for_fences(
@@ -259,6 +262,27 @@ impl State {
     }
 }
 
+impl Drop for State {
+    fn drop(&mut self) {
+        // Ensure correct ordering of destruction.
+        println!("device_wait_idle()");
+        unsafe {
+            self.dev.fp.device_wait_idle(self.dev.dev);
+        }
+        self.cmd.destroy(&self.dev);
+        self.sc.destroy(&self.inst, &self.dev);
+        self.pass.destroy(&self.dev);
+        self.buf.destroy(&self.dev);
+        self.desc.destroy(&self.dev);
+        self.shd.destroy(&self.dev);
+        self.pl.destroy(&self.dev);
+        self.dev.destroy();
+        self.inst.destroy();
+        plat::finish();
+    }
+}
+
+// Instance state.
 #[derive(Debug)]
 struct InstState {
     inst: Instance,
@@ -266,6 +290,7 @@ struct InstState {
 }
 
 impl InstState {
+    // Creates the instance and gets instance-level procs.
     fn new() -> Self {
         let app_info = ApplicationInfo {
             s_type: vk_sys::STRUCTURE_TYPE_APPLICATION_INFO,
@@ -312,8 +337,16 @@ impl InstState {
 
         Self { inst, fp }
     }
+
+    fn destroy(&mut self) {
+        unsafe {
+            println!("destroy_instance()");
+            self.fp.destroy_instance(self.inst, ptr::null());
+        }
+    }
 }
 
+// Device state.
 #[derive(Debug)]
 struct DevState {
     phys_dev: PhysicalDevice,
@@ -324,6 +357,8 @@ struct DevState {
 }
 
 impl DevState {
+    // Selects a physical device, creates a logical device and
+    // gets device-level procs.
     fn new(inst_state: &InstState) -> Self {
         let mut dev_count = 0u32;
         let mut phys_devs;
@@ -442,8 +477,16 @@ impl DevState {
             queues,
         }
     }
+
+    fn destroy(&mut self) {
+        unsafe {
+            println!("destroy_device()");
+            self.fp.destroy_device(self.dev, ptr::null());
+        }
+    }
 }
 
+// Command buffer state.
 #[derive(Debug)]
 struct CmdState {
     cmd_pool: CommandPool,
@@ -453,6 +496,8 @@ struct CmdState {
 }
 
 impl CmdState {
+    // Creates a command pool, the semaphore/fence to wait on,
+    // and allocates a command buffer from the pool.
     fn new(dev_state: &DevState) -> Self {
         let pool_info = CommandPoolCreateInfo {
             s_type: vk_sys::STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -527,8 +572,26 @@ impl CmdState {
             wait_fence,
         }
     }
+
+    fn destroy(&mut self, dev_state: &DevState) {
+        unsafe {
+            println!("destroy_command_pool()");
+            dev_state
+                .fp
+                .destroy_command_pool(dev_state.dev, self.cmd_pool, ptr::null());
+            println!("destroy_semaphore()");
+            dev_state
+                .fp
+                .destroy_semaphore(dev_state.dev, self.wait_sem, ptr::null());
+            println!("destroy_fence()");
+            dev_state
+                .fp
+                .destroy_fence(dev_state.dev, self.wait_fence, ptr::null());
+        }
+    }
 }
 
+// Swapchain state.
 #[derive(Debug)]
 struct ScState {
     pres_fam: u32,
@@ -540,6 +603,8 @@ struct ScState {
 }
 
 impl ScState {
+    // Selects the presentation queue family and crates a surface,
+    // swapchain and image views.
     fn new(inst_state: &InstState, dev_state: &DevState) -> Self {
         let sf = Self::new_sf(inst_state);
 
@@ -767,8 +832,28 @@ impl ScState {
     fn new_sf(inst_state: &InstState) -> SurfaceKhr {
         todo!();
     }
+
+    fn destroy(&mut self, inst_state: &InstState, dev_state: &DevState) {
+        unsafe {
+            for i in self.views.iter().enumerate() {
+                println!("destroy_image_view() [{}]", i.0);
+                dev_state
+                    .fp
+                    .destroy_image_view(dev_state.dev, *i.1, ptr::null());
+            }
+            println!("destroy_swapchain_khr()");
+            dev_state
+                .fp
+                .destroy_swapchain_khr(dev_state.dev, self.sc, ptr::null());
+            println!("destroy_surface_khr()");
+            inst_state
+                .fp
+                .destroy_surface_khr(inst_state.inst, self.sf, ptr::null());
+        }
+    }
 }
 
+// Render pass state.
 #[derive(Debug)]
 struct PassState {
     pass: RenderPass,
@@ -776,6 +861,8 @@ struct PassState {
 }
 
 impl PassState {
+    // Creates a render pass and one framebuffer for each
+    // swapchain image.
     fn new(dev_state: &DevState, sc_state: &ScState) -> Self {
         let attach = AttachmentDescription {
             flags: 0,
@@ -858,8 +945,24 @@ impl PassState {
 
         Self { pass, fbs }
     }
+
+    fn destroy(&mut self, dev_state: &DevState) {
+        unsafe {
+            println!("destroy_render_pass()");
+            dev_state
+                .fp
+                .destroy_render_pass(dev_state.dev, self.pass, ptr::null());
+            for i in self.fbs.iter().enumerate() {
+                println!("destroy_framebuffer() [{}]", i.0);
+                dev_state
+                    .fp
+                    .destroy_framebuffer(dev_state.dev, *i.1, ptr::null());
+            }
+        }
+    }
 }
 
+// Buffer state.
 #[derive(Debug)]
 struct BufState {
     buf: Buffer,
@@ -867,6 +970,8 @@ struct BufState {
 }
 
 impl BufState {
+    // Creates a buffer, allocates memory, copies vertex/uniform data
+    // and binds buffer memory.
     fn new(inst_state: &InstState, dev_state: &DevState, sc_state: &ScState) -> Self {
         let buf_info = BufferCreateInfo {
             s_type: vk_sys::STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -976,8 +1081,22 @@ impl BufState {
 
         Self { buf, mem }
     }
+
+    fn destroy(&mut self, dev_state: &DevState) {
+        unsafe {
+            println!("destroy_buffer()");
+            dev_state
+                .fp
+                .destroy_buffer(dev_state.dev, self.buf, ptr::null());
+            println!("free_memory()");
+            dev_state
+                .fp
+                .free_memory(dev_state.dev, self.mem, ptr::null());
+        }
+    }
 }
 
+// Descriptor set state.
 #[derive(Debug)]
 struct DescState {
     set_layout: DescriptorSetLayout,
@@ -986,6 +1105,8 @@ struct DescState {
 }
 
 impl DescState {
+    // Creates a descriptor set layout, a descriptor pool, allocates
+    // a descriptor set and updates it with uniform buffer.
     fn new(dev_state: &DevState, buf_state: &BufState) -> Self {
         let layout_info = DescriptorSetLayoutCreateInfo {
             s_type: vk_sys::STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
@@ -1086,8 +1207,22 @@ impl DescState {
             desc_set,
         }
     }
+
+    fn destroy(&mut self, dev_state: &DevState) {
+        unsafe {
+            println!("destroy_descriptor_set_layout()");
+            dev_state
+                .fp
+                .destroy_descriptor_set_layout(dev_state.dev, self.set_layout, ptr::null());
+            println!("destroy_descriptor_pool()");
+            dev_state
+                .fp
+                .destroy_descriptor_pool(dev_state.dev, self.desc_pool, ptr::null());
+        }
+    }
 }
 
+// Shader module state.
 #[derive(Debug)]
 struct ShdState {
     vert: ShaderModule,
@@ -1095,6 +1230,7 @@ struct ShdState {
 }
 
 impl ShdState {
+    // Creates vertex and fragment shader modules.
     fn new(dev_state: &DevState) -> Self {
         let mut info = ShaderModuleCreateInfo {
             s_type: vk_sys::STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -1130,8 +1266,24 @@ impl ShdState {
 
         Self { vert, frag }
     }
+
+    fn destroy(&mut self, dev_state: &DevState) {
+        unsafe {
+            // Note that these could have been destroyed
+            // right after creating the pipeline.
+            println!("destroy_shader_module() [vert]");
+            dev_state
+                .fp
+                .destroy_shader_module(dev_state.dev, self.vert, ptr::null());
+            println!("destroy_shader_module() [frag]");
+            dev_state
+                .fp
+                .destroy_shader_module(dev_state.dev, self.frag, ptr::null());
+        }
+    }
 }
 
+// Pipeline state.
 #[derive(Debug)]
 struct PlState {
     layout: PipelineLayout,
@@ -1139,6 +1291,7 @@ struct PlState {
 }
 
 impl PlState {
+    // Creates a graphics pipeline with a single color attachment.
     fn new(
         dev_state: &DevState,
         sc_state: &ScState,
@@ -1222,40 +1375,8 @@ impl PlState {
             flags: 0,
             vertex_binding_description_count: 2,
             vertex_binding_descriptions: vertex_bindings.as_ptr(),
-            /*
-            vertex_binding_descriptions: [
-                VertexInputBindingDescription {
-                    binding: 0,
-                    stride: 3 * 3,
-                    input_rate: vk_sys::VERTEX_INPUT_RATE_VERTEX,
-                },
-                VertexInputBindingDescription {
-                    binding: 1,
-                    stride: 3 * 4,
-                    input_rate: vk_sys::VERTEX_INPUT_RATE_VERTEX,
-                },
-            ]
-            .as_ptr(),
-            */
             vertex_attribute_description_count: 2,
             vertex_attribute_descriptions: vertex_attributes.as_ptr(),
-            /*
-            vertex_attribute_descriptions: [
-                VertexInputAttributeDescription {
-                    location: 0,
-                    binding: 0,
-                    format: vk_sys::FORMAT_R32G32B32_SFLOAT,
-                    offset: 0,
-                },
-                VertexInputAttributeDescription {
-                    location: 1,
-                    binding: 1,
-                    format: vk_sys::FORMAT_R32G32B32A32_SFLOAT,
-                    offset: 0,
-                },
-            ]
-            .as_ptr(),
-            */
         };
 
         let input_assembly = PipelineInputAssemblyStateCreateInfo {
@@ -1376,12 +1497,42 @@ impl PlState {
 
         Self { layout, pl }
     }
+
+    fn destroy(&mut self, dev_state: &DevState) {
+        unsafe {
+            println!("destroy_pipeline_layout()");
+            dev_state
+                .fp
+                .destroy_pipeline_layout(dev_state.dev, self.layout, ptr::null());
+            println!("destroy_pipeline()");
+            dev_state
+                .fp
+                .destroy_pipeline(dev_state.dev, self.pl, ptr::null());
+        }
+    }
 }
 
 const POSITIONS: [f32; 3 * 3] = [-1.0, 1.0, 0.5, 1.0, 1.0, 0.5, 0.0, -1.0, 0.5];
 
 const COLORS: [f32; 3 * 4] = [1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0];
 
+// #version 450 core
+//
+// layout(set = 0, binding = 0) uniform Ubuffer {
+//     mat4 transform;
+// } ubuffer;
+//
+// layout(location = 0) in vec3 position;
+// layout(location = 1) in vec4 color;
+//
+// layout(location = 0) out Vertex {
+//     vec4 color;
+// } vertex;
+//
+// void main() {
+//     gl_Position = ubuffer.transform * vec4(position, 1.0);
+//     vertex.color = color;
+// }
 const VS: [u32; 261] = [
     0x07230203, 0x00010000, 0x0008000a, 0x0000002a, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,
     0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e, 0x00000000, 0x00000001,
@@ -1418,6 +1569,17 @@ const VS: [u32; 261] = [
     0x0003003e, 0x00000029, 0x00000028, 0x000100fd, 0x00010038,
 ];
 
+// #version 450 core
+//
+// layout(location = 0) in Vertex {
+//     vec4 color;
+// } vertex;
+//
+// layout(location = 0) out vec4 color;
+//
+// void main() {
+//     color = vertex.color;
+// }
 const FS: [u32; 101] = [
     0x07230203, 0x00010000, 0x0008000a, 0x00000012, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,
     0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e, 0x00000000, 0x00000001,
