@@ -1,6 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use std::ptr;
+use std::thread;
 
 use vk_sys::{
     self, Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo, Instance, InstanceCreateInfo,
@@ -9,6 +10,9 @@ use vk_sys::{
 
 #[test]
 fn test_init() {
+    for _ in 0..3 {
+        thread::spawn(|| vk_sys::init().unwrap());
+    }
     vk_sys::init().unwrap();
 
     let mut version = 0u32;
@@ -36,6 +40,11 @@ fn test_init() {
         device_fp.destroy_device(device, ptr::null());
         instance_fp.destroy_instance(instance, ptr::null());
     }
+
+    for _ in 0..3 {
+        thread::spawn(|| vk_sys::fini());
+    }
+    vk_sys::fini();
 }
 
 fn create_instance() -> Instance {

@@ -23,7 +23,7 @@ static mut GLOBAL_FP: Option<GlobalFp> = None;
 /// Initializes the library.
 pub fn init() -> Result<(), &'static str> {
     static INIT: Once = Once::new();
-    static mut ERR: Option<String> = None;
+    static mut ERR: String = String::new();
     unsafe {
         INIT.call_once(|| match Proc::new() {
             Ok(proc) => match GlobalFp::new(proc.fp()) {
@@ -31,15 +31,27 @@ pub fn init() -> Result<(), &'static str> {
                     PROC = Some(proc);
                     GLOBAL_FP = Some(globl);
                 }
-                Err(e) => ERR = Some(e),
+                Err(e) => ERR = e,
             },
-            Err(e) => ERR = Some(e),
+            Err(e) => ERR = e,
         });
-        if let Some(ref e) = ERR {
-            Err(e)
-        } else {
+        if PROC.is_some() {
             Ok(())
+        } else {
+            Err(&ERR)
         }
+    }
+}
+
+/// Finalizes the library.
+pub fn fini() {
+    static FINI: Once = Once::new();
+    unsafe {
+        // Ensure that `drop` is called only once.
+        FINI.call_once(|| {
+            PROC = None;
+            GLOBAL_FP = None;
+        });
     }
 }
 
@@ -87,12 +99,13 @@ pub(crate) type GetDeviceProcAddr =
 
 #[cfg(unix)]
 mod proc {
-    use super::GetInstanceProcAddr;
-    use dl::Dl;
     use std::mem;
 
+    use crate::GetInstanceProcAddr;
+    use dl::Dl;
+
     pub struct Proc {
-        lib: Dl,
+        _lib: Dl,
         get_instance_proc_addr: GetInstanceProcAddr,
     }
 
@@ -104,8 +117,8 @@ mod proc {
                 match Dl::new(i, dl::LAZY | dl::LOCAL) {
                     Ok(lib) => match lib.get("vkGetInstanceProcAddr") {
                         Ok(fp) => {
-                            return Ok(Proc {
-                                lib,
+                            return Ok(Self {
+                                _lib: lib,
                                 get_instance_proc_addr: unsafe { mem::transmute(fp) },
                             })
                         }

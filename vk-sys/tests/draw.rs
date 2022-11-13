@@ -278,7 +278,8 @@ impl Drop for State {
         self.pl.destroy(&self.dev);
         self.dev.destroy();
         self.inst.destroy();
-        plat::finish();
+        plat::fini();
+        vk_sys::fini();
     }
 }
 
@@ -1630,7 +1631,7 @@ mod plat {
         }
     }
 
-    pub fn finish() {
+    pub fn fini() {
         unsafe {
             wlcli_sys::display_disconnect(DISPLAY);
         }
