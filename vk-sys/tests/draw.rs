@@ -1635,6 +1635,7 @@ mod plat {
         unsafe {
             wlcli_sys::display_disconnect(DISPLAY);
         }
+        wlcli_sys::fini();
     }
 
     pub fn poll() {

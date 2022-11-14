@@ -21,10 +21,10 @@ use wlcli_sys::{
 
 #[test]
 fn test_client() {
-    match wlcli_sys::init() {
-        Ok(()) => (),
-        Err(e) => panic!("{e}"),
+    for _ in 0..3 {
+        thread::spawn(|| wlcli_sys::init().unwrap());
     }
+    wlcli_sys::init().unwrap();
 
     let display = connect();
 
@@ -88,6 +88,11 @@ fn test_client() {
     wait_wm_ping(display, Duration::new(30, 0));
 
     disconnect(display);
+
+    for _ in 0..3 {
+        thread::spawn(wlcli_sys::fini);
+    }
+    wlcli_sys::fini();
 }
 
 static mut QUIT: bool = false;

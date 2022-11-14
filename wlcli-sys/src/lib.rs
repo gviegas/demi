@@ -189,26 +189,35 @@ static mut LIB: Option<(Dl, Fp)> = None;
 /// Initializes the library.
 pub fn init() -> Result<(), &'static str> {
     static INIT: Once = Once::new();
-    static mut ERR: Option<String> = None;
+    static mut ERR: String = String::new();
     unsafe {
         INIT.call_once(|| {
             let lib = match Dl::new(LIB_NAME, dl::LAZY | dl::LOCAL) {
                 Ok(x) => x,
                 Err(e) => {
-                    ERR = Some(e);
+                    ERR = e;
                     return;
                 }
             };
             match get_fp(&lib) {
                 Ok(x) => LIB = Some((lib, x)),
-                Err(e) => ERR = Some(e),
+                Err(e) => ERR = e,
             }
         });
-        if let Some(ref err) = ERR {
-            Err(err)
-        } else {
+        if LIB.is_some() {
             Ok(())
+        } else {
+            Err(&ERR)
         }
+    }
+}
+
+/// Finalizes the library.
+pub fn fini() {
+    static FINI: Once = Once::new();
+    unsafe {
+        // Ensure that `drop` is called only once.
+        FINI.call_once(|| LIB = None);
     }
 }
 

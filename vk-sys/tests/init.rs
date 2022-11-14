@@ -42,7 +42,7 @@ fn test_init() {
     }
 
     for _ in 0..3 {
-        thread::spawn(|| vk_sys::fini());
+        thread::spawn(vk_sys::fini);
     }
     vk_sys::fini();
 }
