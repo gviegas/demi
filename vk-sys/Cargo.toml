@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 dl = { path = "../dl" }
-wlcli-sys = { path = "../wlcli-sys" }
+wlc-sys = { path = "../wlc-sys" }

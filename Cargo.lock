@@ -22,11 +22,11 @@ name = "vk-sys"
 version = "0.1.0"
 dependencies = [
  "dl",
- "wlcli-sys",
+ "wlc-sys",
 ]
 
 [[package]]
-name = "wlcli-sys"
+name = "wlc-sys"
 version = "0.1.0"
 dependencies = [
  "dl",
