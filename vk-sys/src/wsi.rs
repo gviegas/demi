@@ -9,95 +9,22 @@ use crate::{
 
 def_ndh!(SurfaceKhrT, SurfaceKhr);
 
-/// VkWaylandSurfaceCreateInfoKHR (VK_KHR_wayland_surface)
+mod wayland;
 #[cfg(target_os = "linux")]
-#[derive(Debug)]
-#[repr(C)]
-pub struct WaylandSurfaceCreateInfoKhr {
-    pub s_type: StructureType,
-    pub next: *const c_void,
-    pub flags: WaylandSurfaceCreateFlagsKhr,
-    pub display: *mut c_void, // TODO: struct wl_display *
-    pub surface: *mut c_void, // TODO: struct wl_surface *
-}
+pub use crate::wsi::wayland::*;
 
-#[cfg(target_os = "linux")]
-def_flags!(
-    WaylandSurfaceCreateFlagsKhr,
-    WaylandSurfaceCreateFlagBitsKhr,
-);
-
-/// PFN_vkCreateWaylandSurfaceKHR (VK_KHR_wayland_surface)
-#[cfg(target_os = "linux")]
-pub(crate) type CreateWaylandSurfaceKhr = unsafe extern "C" fn(
-    instance: Instance,
-    info: *const WaylandSurfaceCreateInfoKhr,
-    allocator: *const AllocationCallbacks,
-    surface: *mut SurfaceKhr,
-) -> Result;
-
-/// VkWin32SurfaceCreateInfoKHR (VK_KHR_win32_surface)
+mod win32;
 #[cfg(windows)]
-#[derive(Debug)]
-#[repr(C)]
-pub struct Win32SurfaceCreateInfoKhr {
-    pub s_type: StructureType,
-    pub next: *const c_void,
-    pub flags: Win32SurfaceCreateFlagsKhr,
-    pub h_instance: *mut c_void, // TODO: HINSTANCE
-    pub h_wnd: *mut c_void,      // TODO: HWND
-}
+pub use crate::wsi::win32::*;
 
-#[cfg(windows)]
-def_flags!(Win32SurfaceCreateFlagsKhr, Win32SurfaceCreateFlagBitsKhr,);
-
-/// PFN_vkCreateWin32SurfaceKHR (VK_KHR_win32_surface)
-#[cfg(windows)]
-pub(crate) type CreateWin32SurfaceKhr = unsafe extern "C" fn(
-    instance: Instance,
-    info: *const Win32SurfaceCreateInfoKhr,
-    allocator: *const AllocationCallbacks,
-    surface: *mut SurfaceKhr,
-) -> Result;
-
-/// VkXcbSurfaceCreateInfoKHR (VK_KHR_xcb_surface)
+mod xcb;
 #[cfg(all(
     unix,
     not(target_os = "android"),
     not(target_os = "ios"),
     not(target_os = "macos")
 ))]
-#[derive(Debug)]
-#[repr(C)]
-pub struct XcbSurfaceCreateInfoKhr {
-    pub s_type: StructureType,
-    pub next: *const c_void,
-    pub flags: XcbSurfaceCreateFlagsKhr,
-    pub xcb_connection: *mut c_void, // TODO: xcb_connection_t *
-    pub xcb_window: u32,             // TODO: xcb_window_t
-}
-
-#[cfg(all(
-    unix,
-    not(target_os = "android"),
-    not(target_os = "ios"),
-    not(target_os = "macos")
-))]
-def_flags!(XcbSurfaceCreateFlagsKhr, XcbSurfaceCreateFlagBitsKhr,);
-
-/// PFN_vkCreateXcbSurfaceKHR (VK_KHR_xcb_surface)
-#[cfg(all(
-    unix,
-    not(target_os = "android"),
-    not(target_os = "ios"),
-    not(target_os = "macos")
-))]
-pub(crate) type CreateXcbSurfaceKhr = unsafe extern "C" fn(
-    instance: Instance,
-    info: *const XcbSurfaceCreateInfoKhr,
-    allocator: *const AllocationCallbacks,
-    surface: *mut SurfaceKhr,
-) -> Result;
+pub use crate::wsi::xcb::*;
 
 /// VkSurfaceCapabilitiesKHR (VK_KHR_surface)
 #[derive(Debug)]
