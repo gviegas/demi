@@ -10,13 +10,13 @@ use crate::{
     DeviceCreateInfo, EnumeratePhysicalDeviceGroups, EnumeratePhysicalDevices, Format,
     FormatProperties, GetDeviceProcAddr, GetPhysicalDeviceFeatures, GetPhysicalDeviceFeatures2,
     GetPhysicalDeviceFormatProperties, GetPhysicalDeviceMemoryProperties,
-    GetPhysicalDeviceProperties, GetPhysicalDeviceQueueFamilyProperties,
-    GetPhysicalDeviceSurfaceCapabilitiesKhr, GetPhysicalDeviceSurfaceFormatsKhr,
-    GetPhysicalDeviceSurfacePresentModesKhr, GetPhysicalDeviceSurfaceSupportKhr, Instance,
-    PhysicalDevice, PhysicalDeviceFeatures, PhysicalDeviceFeatures2, PhysicalDeviceGroupProperties,
-    PhysicalDeviceMemoryProperties, PhysicalDeviceProperties, PresentModeKhr,
-    QueueFamilyProperties, Result, SurfaceCapabilitiesKhr, SurfaceFormatKhr, SurfaceKhr,
-    VoidFunction,
+    GetPhysicalDeviceProperties, GetPhysicalDeviceProperties2,
+    GetPhysicalDeviceQueueFamilyProperties, GetPhysicalDeviceSurfaceCapabilitiesKhr,
+    GetPhysicalDeviceSurfaceFormatsKhr, GetPhysicalDeviceSurfacePresentModesKhr,
+    GetPhysicalDeviceSurfaceSupportKhr, Instance, PhysicalDevice, PhysicalDeviceFeatures,
+    PhysicalDeviceFeatures2, PhysicalDeviceGroupProperties, PhysicalDeviceMemoryProperties,
+    PhysicalDeviceProperties, PhysicalDeviceProperties2, PresentModeKhr, QueueFamilyProperties,
+    Result, SurfaceCapabilitiesKhr, SurfaceFormatKhr, SurfaceKhr, VoidFunction,
 };
 
 #[cfg(target_os = "linux")]
@@ -48,6 +48,7 @@ pub struct InstanceFp {
     get_device_proc_addr: GetDeviceProcAddr,
 
     // v1.1
+    get_physical_device_properties_2: Option<GetPhysicalDeviceProperties2>,
     enumerate_physical_device_groups: Option<EnumeratePhysicalDeviceGroups>,
     get_physical_device_features_2: Option<GetPhysicalDeviceFeatures2>,
 
@@ -108,7 +109,10 @@ impl InstanceFp {
             get_physical_device_features: get!(b"vkGetPhysicalDeviceFeatures\0")?,
             get_physical_device_format_properties: get!(b"vkGetPhysicalDeviceFormatProperties\0")?,
             create_device: get!(b"vkCreateDevice\0")?,
+
             get_device_proc_addr: get!(b"vkGetDeviceProcAddr\0")?,
+
+            get_physical_device_properties_2: get!(b"vkGetPhysicalDeviceProperties2\0").ok(),
             enumerate_physical_device_groups: get!(b"vkEnumeratePhysicalDeviceGroups\0").ok(),
             get_physical_device_features_2: get!(b"vkGetPhysicalDeviceFeatures2\0").ok(),
 
@@ -268,6 +272,16 @@ impl InstanceFp {
         properties: *mut PhysicalDeviceProperties,
     ) {
         (self.get_physical_device_properties)(physical_device, properties);
+    }
+
+    /// vkGetPhysicalDeviceProperties2 (v1.1)
+    pub unsafe fn get_physical_device_properties_2(
+        &self,
+        physical_device: PhysicalDevice,
+        properties: *mut PhysicalDeviceProperties2,
+    ) {
+        debug_assert!(self.get_physical_device_properties_2.is_some());
+        (self.get_physical_device_properties_2.unwrap_unchecked())(physical_device, properties);
     }
 
     /// vkGetPhysicalDeviceQueueFamilyProperties

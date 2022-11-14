@@ -8,7 +8,7 @@ use crate::{
     PhysicalDeviceLimits, Rect2d, Result, StructureType,
 };
 
-// TODO: Sparse API, events, physical device properties #2, ...
+// TODO: Sparse API, events, ...
 
 def_dh!(InstanceT, Instance);
 
@@ -70,6 +70,15 @@ pub struct PhysicalDeviceProperties {
     pub pipeline_cache_uuid: [u8; 16],
     pub limits: PhysicalDeviceLimits,
     pub sparse_properties: PhysicalDeviceSparseProperties,
+}
+
+/// VkPhysicalDeviceProperties2 (v1.1)
+#[derive(Debug)]
+#[repr(C)]
+pub struct PhysicalDeviceProperties2 {
+    pub s_type: StructureType,
+    pub next: *mut c_void,
+    pub properties: PhysicalDeviceProperties,
 }
 
 def_ids!(
@@ -181,7 +190,11 @@ pub(crate) type EnumeratePhysicalDevices = unsafe extern "C" fn(
 
 /// PFN_vkGetPhysicalDeviceProperties
 pub(crate) type GetPhysicalDeviceProperties =
-    unsafe extern "C" fn(phys_dev: PhysicalDevice, properties: *const PhysicalDeviceProperties);
+    unsafe extern "C" fn(phys_dev: PhysicalDevice, properties: *mut PhysicalDeviceProperties);
+
+/// PFN_vkGetPhysicalDeviceProperties2 (v1.1)
+pub(crate) type GetPhysicalDeviceProperties2 =
+    unsafe extern "C" fn(phys_dev: PhysicalDevice, properties: *mut PhysicalDeviceProperties2);
 
 /// PFN_vkGetPhysicalDeviceQueueFamilyProperties
 pub(crate) type GetPhysicalDeviceQueueFamilyProperties = unsafe extern "C" fn(
