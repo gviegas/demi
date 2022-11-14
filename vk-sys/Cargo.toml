@@ -3,8 +3,13 @@ name = "vk-sys"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-dl = { path = "../dl" }
-wlc-sys = { path = "../wlc-sys" }
+
+[target.'cfg(unix)'.dependencies]
+dl.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+wlc-sys.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+# TODO
