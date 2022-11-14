@@ -20,10 +20,16 @@ macro_rules! def_dh {
 }
 
 // Defines a non-dispatchable handle.
-// TODO: Pointer instead in 64-bit archs.
+#[cfg(not(target_pointer_width = "64"))]
 macro_rules! def_ndh {
     ($opq:ident, $hdl:ident) => {
         pub type $hdl = u64;
+    };
+}
+#[cfg(target_pointer_width = "64")]
+macro_rules! def_ndh {
+    ($opq:ident, $hdl:ident) => {
+        def_dh!($opq, $hdl);
     };
 }
 
@@ -75,17 +81,25 @@ mod wsi;
 pub use crate::wsi::*;
 
 /// VK_NULL_HANDLE
-// TODO: Pointer instead in 64-bit archs.
-#[inline]
-pub fn null_handle() -> u64 {
+#[cfg(not(target_pointer_width = "64"))]
+pub const fn null_handle() -> u64 {
     0
+}
+/// VK_NULL_HANDLE
+#[cfg(target_pointer_width = "64")]
+pub const fn null_handle<T>() -> *mut T {
+    std::ptr::null_mut()
 }
 
 /// Checks whether `ndh` is equal to `null_handle()`.
-// TODO: Pointer instead in 64-bit archs.
-#[inline]
-pub fn is_null_handle(ndh: u64) -> bool {
+#[cfg(not(target_pointer_width = "64"))]
+pub const fn is_null_handle(ndh: u64) -> bool {
     ndh == 0
+}
+/// Checks whether `ndh` is equal to `null_handle()`.
+#[cfg(target_pointer_width = "64")]
+pub fn is_null_handle<T>(ndh: *mut T) -> bool {
+    ndh.is_null()
 }
 
 /// VkBool32
