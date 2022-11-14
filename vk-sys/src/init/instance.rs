@@ -179,8 +179,7 @@ impl InstanceFp {
         (self.enumerate_physical_devices)(instance, physical_device_count, physical_devices)
     }
 
-    /// vkEnumeratePhysicalDeviceGroups
-    /// [v1.1]
+    /// vkEnumeratePhysicalDeviceGroups (v1.1)
     pub unsafe fn enumerate_physical_device_groups(
         &self,
         instance: Instance,
@@ -195,8 +194,7 @@ impl InstanceFp {
         )
     }
 
-    /// vkCreateWaylandInstanceKHR
-    /// [VK_KHR_wayland_surface]
+    /// vkCreateWaylandInstanceKHR (VK_KHR_wayland_surface)
     #[cfg(target_os = "linux")]
     pub unsafe fn create_wayland_surface_khr(
         &self,
@@ -214,8 +212,7 @@ impl InstanceFp {
         )
     }
 
-    /// vkCreateWin32SurfaceKHR
-    /// [VK_KHR_win32_surface]
+    /// vkCreateWin32SurfaceKHR (VK_KHR_win32_surface)
     #[cfg(windows)]
     pub unsafe fn create_win32_surface_khr(
         &self,
@@ -233,8 +230,7 @@ impl InstanceFp {
         )
     }
 
-    /// vkCreateXcbSurfaceKHR
-    /// [VK_KHR_xcb_surface]
+    /// vkCreateXcbSurfaceKHR (VK_KHR_xcb_surface)
     #[cfg(all(
         unix,
         not(target_os = "android"),
@@ -252,8 +248,7 @@ impl InstanceFp {
         (self.create_xcb_surface_khr.unwrap_unchecked())(instance, create_info, allocator, surface)
     }
 
-    /// vkDestroySurfaceKHR
-    /// [VK_KHR_surface]
+    /// vkDestroySurfaceKHR (VK_KHR_surface)
     pub unsafe fn destroy_surface_khr(
         &self,
         instance: Instance,
@@ -307,8 +302,7 @@ impl InstanceFp {
         (self.get_physical_device_features)(physical_device, features);
     }
 
-    /// vkGetPhysicalDeviceFeatures2
-    /// [v1.1]
+    /// vkGetPhysicalDeviceFeatures2 (v1.1)
     pub unsafe fn get_physical_device_features_2(
         &self,
         physical_device: PhysicalDevice,
@@ -328,8 +322,7 @@ impl InstanceFp {
         (self.get_physical_device_format_properties)(physical_device, format, format_properties);
     }
 
-    /// vkGetPhysicalDeviceSurfaceSupportKHR
-    /// [VK_KHR_surface]
+    /// vkGetPhysicalDeviceSurfaceSupportKHR (VK_KHR_surface)
     pub unsafe fn get_physical_device_surface_support_khr(
         &self,
         physical_device: PhysicalDevice,
@@ -343,8 +336,7 @@ impl InstanceFp {
             .unwrap_unchecked())(physical_device, queue_family_index, surface, supported)
     }
 
-    /// vkGetPhysicalDeviceSurfaceCapabilitiesKHR
-    /// [VK_KHR_surface]
+    /// vkGetPhysicalDeviceSurfaceCapabilitiesKHR (VK_KHR_surface)
     pub unsafe fn get_physical_device_surface_capabilities_khr(
         &self,
         physical_device: PhysicalDevice,
@@ -357,8 +349,7 @@ impl InstanceFp {
             .unwrap_unchecked())(physical_device, surface, surface_capabilities)
     }
 
-    /// vkGetPhysicalDeviceSurfaceFormatsKHR
-    /// [VK_KHR_surface]
+    /// vkGetPhysicalDeviceSurfaceFormatsKHR (VK_KHR_surface)
     pub unsafe fn get_physical_device_surface_formats_khr(
         &self,
         physical_device: PhysicalDevice,
@@ -377,8 +368,7 @@ impl InstanceFp {
         )
     }
 
-    /// vkGetPhysicalDeviceSurfacePresentModesKHR
-    /// [VK_KHR_surface]
+    /// vkGetPhysicalDeviceSurfacePresentModesKHR (VK_KHR_surface)
     pub unsafe fn get_physical_device_surface_present_modes_khr(
         &self,
         physical_device: PhysicalDevice,

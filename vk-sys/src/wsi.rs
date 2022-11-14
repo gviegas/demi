@@ -9,8 +9,7 @@ use crate::{
 
 def_ndh!(SurfaceKhrT, SurfaceKhr);
 
-/// VkWaylandSurfaceCreateInfoKHR
-/// [VK_KHR_wayland_surface]
+/// VkWaylandSurfaceCreateInfoKHR (VK_KHR_wayland_surface)
 #[cfg(target_os = "linux")]
 #[derive(Debug)]
 #[repr(C)]
@@ -28,8 +27,7 @@ def_flags!(
     WaylandSurfaceCreateFlagBitsKhr,
 );
 
-/// PFN_vkCreateWaylandSurfaceKHR
-/// [VK_KHR_wayland_surface]
+/// PFN_vkCreateWaylandSurfaceKHR (VK_KHR_wayland_surface)
 #[cfg(target_os = "linux")]
 pub(crate) type CreateWaylandSurfaceKhr = unsafe extern "C" fn(
     instance: Instance,
@@ -38,8 +36,7 @@ pub(crate) type CreateWaylandSurfaceKhr = unsafe extern "C" fn(
     surface: *mut SurfaceKhr,
 ) -> Result;
 
-/// VkWin32SurfaceCreateInfoKHR
-/// [VK_KHR_win32_surface]
+/// VkWin32SurfaceCreateInfoKHR (VK_KHR_win32_surface)
 #[cfg(windows)]
 #[derive(Debug)]
 #[repr(C)]
@@ -54,8 +51,7 @@ pub struct Win32SurfaceCreateInfoKhr {
 #[cfg(windows)]
 def_flags!(Win32SurfaceCreateFlagsKhr, Win32SurfaceCreateFlagBitsKhr,);
 
-/// PFN_vkCreateWin32SurfaceKHR
-/// [VK_KHR_win32_surface]
+/// PFN_vkCreateWin32SurfaceKHR (VK_KHR_win32_surface)
 #[cfg(windows)]
 pub(crate) type CreateWin32SurfaceKhr = unsafe extern "C" fn(
     instance: Instance,
@@ -64,8 +60,7 @@ pub(crate) type CreateWin32SurfaceKhr = unsafe extern "C" fn(
     surface: *mut SurfaceKhr,
 ) -> Result;
 
-/// VkXcbSurfaceCreateInfoKHR
-/// [VK_KHR_xcb_surface]
+/// VkXcbSurfaceCreateInfoKHR (VK_KHR_xcb_surface)
 #[cfg(all(
     unix,
     not(target_os = "android"),
@@ -90,8 +85,7 @@ pub struct XcbSurfaceCreateInfoKhr {
 ))]
 def_flags!(XcbSurfaceCreateFlagsKhr, XcbSurfaceCreateFlagBitsKhr,);
 
-/// PFN_vkCreateXcbSurfaceKHR
-/// [VK_KHR_xcb_surface]
+/// PFN_vkCreateXcbSurfaceKHR (VK_KHR_xcb_surface)
 #[cfg(all(
     unix,
     not(target_os = "android"),
@@ -105,8 +99,7 @@ pub(crate) type CreateXcbSurfaceKhr = unsafe extern "C" fn(
     surface: *mut SurfaceKhr,
 ) -> Result;
 
-/// VkSurfaceCapabilitiesKHR
-/// [VK_KHR_surface]
+/// VkSurfaceCapabilitiesKHR (VK_KHR_surface)
 #[derive(Debug)]
 #[repr(C)]
 pub struct SurfaceCapabilitiesKhr {
@@ -145,8 +138,7 @@ def_flags!(
     COMPOSITE_ALPHA_INHERIT_BIT_KHR = 0x00000008
 );
 
-/// VkSurfaceFormatKHR
-/// [VK_KHR_surface]
+/// VkSurfaceFormatKHR (VK_KHR_surface)
 #[derive(Debug)]
 #[repr(C)]
 pub struct SurfaceFormatKhr {
@@ -186,16 +178,14 @@ def_ids!(
     PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR = 1000111001
 );
 
-/// PFN_vkDestroySurfaceKHR
-/// [VK_KHR_surface]
+/// PFN_vkDestroySurfaceKHR (VK_KHR_surface)
 pub(crate) type DestroySurfaceKhr = unsafe extern "C" fn(
     instance: Instance,
     surface: SurfaceKhr,
     allocator: *const AllocationCallbacks,
 );
 
-/// PFN_vkGetPhysicalDeviceSurfaceSupportKHR
-/// [VK_KHR_surface]
+/// PFN_vkGetPhysicalDeviceSurfaceSupportKHR (VK_KHR_surface)
 pub(crate) type GetPhysicalDeviceSurfaceSupportKhr = unsafe extern "C" fn(
     phys_dev: PhysicalDevice,
     fam_idx: u32,
@@ -203,16 +193,14 @@ pub(crate) type GetPhysicalDeviceSurfaceSupportKhr = unsafe extern "C" fn(
     supported: *mut Bool32,
 ) -> Result;
 
-/// PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR
-/// [VK_KHR_surface]
+/// PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR (VK_KHR_surface)
 pub(crate) type GetPhysicalDeviceSurfaceCapabilitiesKhr = unsafe extern "C" fn(
     phys_dev: PhysicalDevice,
     surface: SurfaceKhr,
     capabilities: *mut SurfaceCapabilitiesKhr,
 ) -> Result;
 
-/// PFN_vkGetPhysicalDeviceSurfaceFormatsKHR
-/// [VK_KHR_surface]
+/// PFN_vkGetPhysicalDeviceSurfaceFormatsKHR (VK_KHR_surface)
 pub(crate) type GetPhysicalDeviceSurfaceFormatsKhr = unsafe extern "C" fn(
     phys_dev: PhysicalDevice,
     surface: SurfaceKhr,
@@ -220,8 +208,7 @@ pub(crate) type GetPhysicalDeviceSurfaceFormatsKhr = unsafe extern "C" fn(
     formats: *mut SurfaceFormatKhr,
 ) -> Result;
 
-/// PFN_vkGetPhysicalDeviceSurfacePresentModesKHR
-/// [VK_KHR_surface]
+/// PFN_vkGetPhysicalDeviceSurfacePresentModesKHR (VK_KHR_surface)
 pub(crate) type GetPhysicalDeviceSurfacePresentModesKhr = unsafe extern "C" fn(
     phys_dev: PhysicalDevice,
     surface: SurfaceKhr,
@@ -231,8 +218,7 @@ pub(crate) type GetPhysicalDeviceSurfacePresentModesKhr = unsafe extern "C" fn(
 
 def_ndh!(SwapchainKhrT, SwapchainKhr);
 
-/// VkSwapchainCreateInfoKHR
-/// [VK_KHR_swapchain]
+/// VkSwapchainCreateInfoKHR (VK_KHR_swapchain)
 #[derive(Debug)]
 #[repr(C)]
 pub struct SwapchainCreateInfoKhr {
@@ -264,8 +250,7 @@ def_flags!(
     SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR = 0x00000004
 );
 
-/// PFN_vkCreateSwapchainKHR
-/// [VK_KHR_swapchain]
+/// PFN_vkCreateSwapchainKHR (VK_KHR_swapchain)
 pub(crate) type CreateSwapchainKhr = unsafe extern "C" fn(
     device: Device,
     info: *const SwapchainCreateInfoKhr,
@@ -273,16 +258,14 @@ pub(crate) type CreateSwapchainKhr = unsafe extern "C" fn(
     swapchain: *mut SwapchainKhr,
 ) -> Result;
 
-/// PFN_vkDestroySwapchainKHR
-/// [VK_KHR_swapchain]
+/// PFN_vkDestroySwapchainKHR (VK_KHR_swapchain)
 pub(crate) type DestroySwapchainKhr = unsafe extern "C" fn(
     device: Device,
     swapchain: SwapchainKhr,
     allocator: *const AllocationCallbacks,
 ) -> Result;
 
-/// PFN_vkGetSwapchainImagesKHR
-/// [VK_KHR_swapchain]
+/// PFN_vkGetSwapchainImagesKHR (VK_KHR_swapchain)
 pub(crate) type GetSwapchainImagesKhr = unsafe extern "C" fn(
     device: Device,
     swapchain: SwapchainKhr,
@@ -290,8 +273,7 @@ pub(crate) type GetSwapchainImagesKhr = unsafe extern "C" fn(
     images: *mut Image,
 ) -> Result;
 
-/// PFN_vkAcquireNextImageKHR
-/// [VK_KHR_swapchain]
+/// PFN_vkAcquireNextImageKHR (VK_KHR_swapchain)
 pub(crate) type AcquireNextImageKhr = unsafe extern "C" fn(
     device: Device,
     swapchain: SwapchainKhr,
@@ -301,8 +283,7 @@ pub(crate) type AcquireNextImageKhr = unsafe extern "C" fn(
     index: *mut u32,
 ) -> Result;
 
-/// VkPresentInfoKHR
-/// [VK_KHR_swapchain]
+/// VkPresentInfoKHR (VK_KHR_swapchain)
 #[derive(Debug)]
 #[repr(C)]
 pub struct PresentInfoKhr {
@@ -316,7 +297,6 @@ pub struct PresentInfoKhr {
     pub results: *mut Result,
 }
 
-/// PFN_vkQueuePresentKHR
-/// [VK_KHR_swapchain]
+/// PFN_vkQueuePresentKHR (VK_KHR_swapchain)
 pub(crate) type QueuePresentKhr =
     unsafe extern "C" fn(queue: Queue, info: *const PresentInfoKhr) -> Result;

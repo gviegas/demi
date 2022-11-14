@@ -3,8 +3,7 @@
 use crate::init::GLOBAL_FP;
 use crate::{AllocationCallbacks, Instance, InstanceCreateInfo, Result, API_VERSION_1_0, SUCCESS};
 
-/// vkEnumerateInstanceVersion
-/// [v1.1]
+/// vkEnumerateInstanceVersion (v1.1)
 pub unsafe fn enumerate_instance_version(api_version: *mut u32) -> Result {
     debug_assert!(GLOBAL_FP.is_some());
     if let Some(fp) = GLOBAL_FP

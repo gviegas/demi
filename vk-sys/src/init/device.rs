@@ -355,8 +355,7 @@ impl DeviceFp {
         (self.create_command_pool)(device, create_info, allocator, command_pool)
     }
 
-    /// vkTrimCommandPool
-    /// [v1.1]
+    /// vkTrimCommandPool (v1.1)
     pub unsafe fn trim_command_pool(
         &self,
         device: Device,
@@ -467,8 +466,7 @@ impl DeviceFp {
         (self.create_semaphore)(device, create_info, allocator, semaphore)
     }
 
-    /// vkGetSemaphoreCounterValue
-    /// [v1.2]
+    /// vkGetSemaphoreCounterValue (v1.2)
     pub unsafe fn get_semaphore_counter_value(
         &self,
         device: Device,
@@ -479,8 +477,7 @@ impl DeviceFp {
         (self.get_semaphore_counter_value.unwrap_unchecked())(device, semaphore, value)
     }
 
-    /// vkWaitSemaphores
-    /// [v1.2]
+    /// vkWaitSemaphores (v1.2)
     pub unsafe fn wait_semaphores(
         &self,
         device: Device,
@@ -491,8 +488,7 @@ impl DeviceFp {
         (self.wait_semaphores.unwrap_unchecked())(device, wait_info, timeout)
     }
 
-    /// vkSignalSemaphore
-    /// [v1.2]
+    /// vkSignalSemaphore (v1.2)
     pub unsafe fn signal_semaphore(
         &self,
         device: Device,
@@ -1041,8 +1037,7 @@ impl DeviceFp {
         (self.destroy_query_pool)(device, query_pool, allocator);
     }
 
-    /// vkCreateSwapchainKHR
-    /// [VK_KHR_swapchain]
+    /// vkCreateSwapchainKHR (VK_KHR_swapchain)
     pub unsafe fn create_swapchain_khr(
         &self,
         device: Device,
@@ -1054,8 +1049,7 @@ impl DeviceFp {
         (self.create_swapchain_khr.unwrap_unchecked())(device, create_info, allocator, swapchain)
     }
 
-    /// vkDestroySwapchainKHR
-    /// [VK_KHR_swapchain]
+    /// vkDestroySwapchainKHR (VK_KHR_swapchain)
     pub unsafe fn destroy_swapchain_khr(
         &self,
         device: Device,
@@ -1066,8 +1060,7 @@ impl DeviceFp {
         (self.destroy_swapchain_khr.unwrap_unchecked())(device, swapchain, allocator);
     }
 
-    /// vkGetSwapchainImagesKHR
-    /// [VK_KHR_swapchain]
+    /// vkGetSwapchainImagesKHR (VK_KHR_swapchain)
     pub unsafe fn get_swapchain_images_khr(
         &self,
         device: Device,
@@ -1084,8 +1077,7 @@ impl DeviceFp {
         )
     }
 
-    /// vkAcquireNextImageKHR
-    /// [VK_KHR_swapchain]
+    /// vkAcquireNextImageKHR (VK_KHR_swapchain)
     pub unsafe fn acquire_next_image_khr(
         &self,
         device: Device,
@@ -1119,8 +1111,7 @@ impl DeviceFp {
         (self.queue_submit)(queue, submit_count, submits, fence)
     }
 
-    /// vkQueueSubmit2
-    /// [v1.3]
+    /// vkQueueSubmit2 (v1.3)
     pub unsafe fn queue_submit_2(
         &self,
         queue: Queue,
@@ -1132,8 +1123,7 @@ impl DeviceFp {
         (self.queue_submit_2.unwrap_unchecked())(queue, submit_count, submits, fence)
     }
 
-    /// vkQueuePresentKHR
-    /// [VK_KHR_swapchain]
+    /// vkQueuePresentKHR (VK_KHR_swapchain)
     pub unsafe fn queue_present_khr(
         &self,
         queue: Queue,
@@ -1211,8 +1201,7 @@ impl DeviceFp {
         );
     }
 
-    /// vkCmdPipelineBarrier2
-    /// [v1.3]
+    /// vkCmdPipelineBarrier2 (v1.3)
     pub unsafe fn cmd_pipeline_barrier_2(
         &self,
         command_buffer: CommandBuffer,
@@ -1246,8 +1235,7 @@ impl DeviceFp {
         (self.cmd_end_render_pass)(command_buffer);
     }
 
-    /// vkCmdBeginRendering
-    /// [v1.3]
+    /// vkCmdBeginRendering (v1.3)
     pub unsafe fn cmd_begin_rendering(
         &self,
         command_buffer: CommandBuffer,
@@ -1257,8 +1245,7 @@ impl DeviceFp {
         (self.cmd_begin_rendering.unwrap_unchecked())(command_buffer, rendering_info);
     }
 
-    /// vkCmdEndRendering
-    /// [v1.3]
+    /// vkCmdEndRendering (v1.3)
     pub unsafe fn cmd_end_rendering(&self, command_buffer: CommandBuffer) {
         debug_assert!(self.cmd_end_rendering.is_some());
         (self.cmd_end_rendering.unwrap_unchecked())(command_buffer);

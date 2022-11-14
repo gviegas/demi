@@ -12,8 +12,7 @@ use crate::{
 
 def_dh!(InstanceT, Instance);
 
-/// PFN_vkEnumerateInstanceVersion
-/// [v1.1]
+/// PFN_vkEnumerateInstanceVersion (v1.1)
 pub(crate) type EnumerateInstanceVersion = unsafe extern "C" fn(api_version: *mut u32) -> Result;
 
 /// VkInstanceCreateInfo
@@ -162,8 +161,7 @@ def_flags!(
     MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV = 0x00000100
 );
 
-/// VkPhysicalDeviceGroupProperties
-/// [v1.1]
+/// VkPhysicalDeviceGroupProperties (v1.1)
 #[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceGroupProperties {
@@ -196,8 +194,7 @@ pub(crate) type GetPhysicalDeviceQueueFamilyProperties = unsafe extern "C" fn(
 pub(crate) type GetPhysicalDeviceMemoryProperties =
     unsafe extern "C" fn(phys_dev: PhysicalDevice, mem_props: *mut PhysicalDeviceMemoryProperties);
 
-/// PFN_vkEnumeratePhysicalDeviceGroups
-/// [v1.1]
+/// PFN_vkEnumeratePhysicalDeviceGroups (v1.1)
 pub(crate) type EnumeratePhysicalDeviceGroups = unsafe extern "C" fn(
     instance: Instance,
     count: *mut u32,
@@ -271,8 +268,7 @@ pub struct SubmitInfo {
     pub signal_semaphores: *const Semaphore,
 }
 
-/// VkSubmitInfo2
-/// [v1.3]
+/// VkSubmitInfo2 (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct SubmitInfo2 {
@@ -294,8 +290,7 @@ def_flags!(
     SUBMIT_PROTECTED_BIT_KHR = SUBMIT_PROTECTED_BIT
 );
 
-/// VkSemaphoreSubmitInfo
-/// [v1.3]
+/// VkSemaphoreSubmitInfo (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct SemaphoreSubmitInfo {
@@ -307,8 +302,7 @@ pub struct SemaphoreSubmitInfo {
     pub device_index: u32,
 }
 
-/// VkCommandBufferSubmitInfo
-/// [v1.3]
+/// VkCommandBufferSubmitInfo (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct CommandBufferSubmitInfo {
@@ -446,8 +440,7 @@ pub(crate) type CreateCommandPool = unsafe extern "C" fn(
     cmd_pool: *mut CommandPool,
 ) -> Result;
 
-/// PFN_vkTrimCommandPool
-/// [v1.1]
+/// PFN_vkTrimCommandPool (v1.1)
 pub(crate) type TrimCommandPool =
     unsafe extern "C" fn(device: Device, cmd_pool: CommandPool, flags: CommandPoolTrimFlags);
 
@@ -538,8 +531,7 @@ pub struct SemaphoreCreateInfo {
 
 def_flags!(SemaphoreCreateFlags, SemaphoreCreateFlagBits,);
 
-/// VkSemaphoreWaitInfo
-/// [v1.2]
+/// VkSemaphoreWaitInfo (v1.2)
 #[derive(Debug)]
 #[repr(C)]
 pub struct SemaphoreWaitInfo {
@@ -558,8 +550,7 @@ def_flags!(
     SEMAPHORE_WAIT_ANY_BIT_KHR = SEMAPHORE_WAIT_ANY_BIT
 );
 
-/// VkSemaphoreSignalInfo
-/// [v1.2]
+/// VkSemaphoreSignalInfo (v1.2)
 #[derive(Debug)]
 #[repr(C)]
 pub struct SemaphoreSignalInfo {
@@ -577,21 +568,18 @@ pub(crate) type CreateSemaphore = unsafe extern "C" fn(
     semaphore: *mut Semaphore,
 ) -> Result;
 
-/// PFN_vkGetSemaphoreCounterValue
-/// [v1.2]
+/// PFN_vkGetSemaphoreCounterValue (v1.2)
 pub(crate) type GetSemaphoreCounterValue =
     unsafe extern "C" fn(device: Device, semaphore: Semaphore, value: *mut u64) -> Result;
 
-/// PFN_vkWaitSemaphores
-/// [v1.2]
+/// PFN_vkWaitSemaphores (v1.2)
 pub(crate) type WaitSemaphores = unsafe extern "C" fn(
     device: Device,
     wait_info: *const SemaphoreWaitInfo,
     timeout: u64,
 ) -> Result;
 
-/// PFN_vkSignalSemaphore
-/// [v1.2]
+/// PFN_vkSignalSemaphore (v1.2)
 pub(crate) type SignalSemaphore =
     unsafe extern "C" fn(device: Device, signal_info: *const SemaphoreSignalInfo) -> Result;
 
@@ -657,8 +645,7 @@ pub(crate) type CmdPipelineBarrier = unsafe extern "C" fn(
     img_barriers: *const ImageMemoryBarrier,
 );
 
-/// VkDependencyInfo
-/// [v1.3]
+/// VkDependencyInfo (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct DependencyInfo {
@@ -673,8 +660,7 @@ pub struct DependencyInfo {
     pub image_memory_barriers: *const ImageMemoryBarrier2,
 }
 
-/// VkMemoryBarrier2
-/// [v1.3]
+/// VkMemoryBarrier2 (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct MemoryBarrier2 {
@@ -686,8 +672,7 @@ pub struct MemoryBarrier2 {
     pub dst_access_mask: AccessFlags2,
 }
 
-/// VkImageMemoryBarrier2
-/// [v1.3]
+/// VkImageMemoryBarrier2 (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct ImageMemoryBarrier2 {
@@ -705,8 +690,7 @@ pub struct ImageMemoryBarrier2 {
     pub subresource_range: ImageSubresourceRange,
 }
 
-/// VkBufferMemoryBarrier2
-/// [v1.3]
+/// VkBufferMemoryBarrier2 (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct BufferMemoryBarrier2 {
@@ -723,8 +707,7 @@ pub struct BufferMemoryBarrier2 {
     pub size: u64,
 }
 
-/// PFN_vkCmdPipelineBarrier2
-/// [v1.3]
+/// PFN_vkCmdPipelineBarrier2 (v1.3)
 pub(crate) type CmdPipelineBarrier2 =
     unsafe extern "C" fn(command_buffer: CommandBuffer, dependency_info: *const DependencyInfo);
 
@@ -1873,8 +1856,7 @@ pub(crate) type CmdNextSubpass =
 /// PFN_vkCmdEndRenderPass
 pub(crate) type CmdEndRenderPass = unsafe extern "C" fn(cmd_buf: CommandBuffer);
 
-/// VkRenderingInfo
-/// [v1.3]
+/// VkRenderingInfo (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct RenderingInfo {
@@ -1903,8 +1885,7 @@ def_flags!(
     RENDERING_RESUMING_BIT_KHR = RENDERING_RESUMING_BIT
 );
 
-/// VkRenderingAttachmentInfo
-/// [v1.3]
+/// VkRenderingAttachmentInfo (v1.3)
 #[derive(Debug)]
 #[repr(C)]
 pub struct RenderingAttachmentInfo {
@@ -1935,13 +1916,11 @@ def_flags!(
     RESOLVE_MODE_MAX_BIT_KHR = RESOLVE_MODE_MAX_BIT
 );
 
-/// PFN_vkCmdBeginRendering
-/// [v1.3]
+/// PFN_vkCmdBeginRendering (v1.3)
 pub(crate) type CmdBeginRendering =
     unsafe extern "C" fn(command_buffer: CommandBuffer, rendering_info: *const RenderingInfo);
 
-/// PFN_vkCmdEndRendering
-/// [v1.3]
+/// PFN_vkCmdEndRendering (v1.3)
 pub(crate) type CmdEndRendering = unsafe extern "C" fn(command_buffer: CommandBuffer);
 
 def_ndh!(DescriptorSetT, DescriptorSet);

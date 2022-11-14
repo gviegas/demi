@@ -71,8 +71,7 @@ pub struct PhysicalDeviceFeatures {
 pub(crate) type GetPhysicalDeviceFeatures =
     unsafe extern "C" fn(phys_dev: PhysicalDevice, features: *mut PhysicalDeviceFeatures);
 
-/// VkPhysicalDeviceFeatures2
-/// [v1.1]
+/// VkPhysicalDeviceFeatures2 (v1.1)
 #[derive(Debug)]
 #[repr(C)]
 pub struct PhysicalDeviceFeatures2 {
@@ -81,7 +80,6 @@ pub struct PhysicalDeviceFeatures2 {
     pub features: PhysicalDeviceFeatures,
 }
 
-/// PFN_vkGetPhysicalDeviceFeatures2
-/// [v1.1]
+/// PFN_vkGetPhysicalDeviceFeatures2 (v1.1)
 pub(crate) type GetPhysicalDeviceFeatures2 =
     unsafe extern "C" fn(phys_dev: PhysicalDevice, features: *mut PhysicalDeviceFeatures2);
