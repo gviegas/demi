@@ -810,8 +810,8 @@ impl ScState {
             s_type: vk_sys::STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
             next: ptr::null(),
             flags: 0,
-            display: unsafe { plat::DISPLAY.cast() },
-            surface: unsafe { plat::SURFACE.cast() },
+            display: unsafe { plat::DISPLAY },
+            surface: unsafe { plat::SURFACE },
         };
         let mut sf = vk_sys::null_handle();
         assert_eq!(

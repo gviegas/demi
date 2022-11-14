@@ -13,8 +13,8 @@ pub struct WaylandSurfaceCreateInfoKhr {
     pub s_type: StructureType,
     pub next: *const c_void,
     pub flags: WaylandSurfaceCreateFlagsKhr,
-    pub display: *mut c_void, // TODO: struct wl_display *
-    pub surface: *mut c_void, // TODO: struct wl_surface *
+    pub display: *mut wlc_sys::Display,
+    pub surface: *mut wlc_sys::Surface,
 }
 
 def_flags!(
