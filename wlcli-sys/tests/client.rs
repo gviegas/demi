@@ -15,8 +15,7 @@ use wlcli_sys::{
     self, Buffer, BufferListener, Compositor, Display, Keyboard, KeyboardListener, Output, Pointer,
     PointerListener, Registry, RegistryListener, Seat, SeatListener, Shm, ShmPool, Surface,
     SurfaceListener, Toplevel, ToplevelListener, Touch, WmBase, WmBaseListener, XdgSurface,
-    XdgSurfaceListener, COMPOSITOR_INTERFACE, OUTPUT_INTERFACE, SEAT_INTERFACE, SHM_INTERFACE,
-    WM_BASE_INTERFACE,
+    XdgSurfaceListener,
 };
 
 #[test]
@@ -57,22 +56,22 @@ fn test_client() {
         .create(true)
         .open("/var/tmp/demi.wlcli-sys.test.0")
         .unwrap();
-    let data = vec![0u8; SIZE as usize];
+    let mut data = vec![0u8; SIZE as usize];
+    data.chunks_exact_mut((BPP / 8 * 4) as usize)
+        .for_each(|x| x[..(BPP / 8 * 2) as usize].copy_from_slice(&[255; (BPP / 8 * 2) as usize]));
     file.write(&data).unwrap();
     file.flush().unwrap();
     let fd = file.as_raw_fd();
     let shm_pool = global.create_pool(fd, SIZE);
     println!("shm_pool: {:#?}", shm_pool);
 
-    // TODO: Define formats in `wl.rs`.
-    const SHM_FORMAT_XRGB8888: u32 = 1;
     let buffer = create_buffer(
         shm_pool,
         0,
         WIDTH,
         HEIGHT,
         WIDTH * BPP / 8,
-        SHM_FORMAT_XRGB8888,
+        wlcli_sys::SHM_FORMAT_XRGB8888,
     );
     println!("buffer: {:#?}", buffer);
 
@@ -85,7 +84,7 @@ fn test_client() {
         dispatch(display);
     }
 
-    wait_wm_ping(display, Duration::new(30, 0));
+    //wait_wm_ping(display, Duration::new(30, 0));
 
     disconnect(display);
 
@@ -384,27 +383,31 @@ unsafe extern "C" fn rty_global(
 
     match CStr::from_ptr(interface).to_str().unwrap() {
         "wl_compositor" => {
-            let cpt = wlcli_sys::registry_bind(registry, name, &COMPOSITOR_INTERFACE, version);
+            let cpt =
+                wlcli_sys::registry_bind(registry, name, &wlcli_sys::COMPOSITOR_INTERFACE, version);
             assert!(!cpt.is_null());
             data.compositor = (cpt.cast(), name);
         }
         "xdg_wm_base" => {
-            let wm = wlcli_sys::registry_bind(registry, name, &WM_BASE_INTERFACE, version);
+            let wm =
+                wlcli_sys::registry_bind(registry, name, &wlcli_sys::WM_BASE_INTERFACE, version);
             assert!(!wm.is_null());
             data.wm_base = (wm.cast(), name);
         }
         "wl_shm" => {
-            let shm = wlcli_sys::registry_bind(registry, name, &SHM_INTERFACE, version);
+            let shm = wlcli_sys::registry_bind(registry, name, &wlcli_sys::SHM_INTERFACE, version);
             assert!(!shm.is_null());
             data.shm = (shm.cast(), name);
         }
         "wl_seat" => {
-            let seat = wlcli_sys::registry_bind(registry, name, &SEAT_INTERFACE, version);
+            let seat =
+                wlcli_sys::registry_bind(registry, name, &wlcli_sys::SEAT_INTERFACE, version);
             assert!(!seat.is_null());
             data.seat = (seat.cast(), name);
         }
         "wl_output" => {
-            let out = wlcli_sys::registry_bind(registry, name, &OUTPUT_INTERFACE, version);
+            let out =
+                wlcli_sys::registry_bind(registry, name, &wlcli_sys::OUTPUT_INTERFACE, version);
             assert!(!out.is_null());
             data.output = (out.cast(), name);
         }
@@ -515,22 +518,17 @@ unsafe extern "C" fn seat_capabilities(data: *mut c_void, seat: *mut Seat, capab
         data, seat, capabilities
     );
 
-    // TODO: Define capabilities in `wl.rs`.
-    const SEAT_CAPABILITY_POINTER: u32 = 1 << 0;
-    const SEAT_CAPABILITY_KEYBOARD: u32 = 1 << 1;
-    const SEAT_CAPABILITY_TOUCH: u32 = 1 << 2;
-
     let data: &mut Input = &mut *data.cast();
 
-    if capabilities & SEAT_CAPABILITY_POINTER != 0 {
+    if capabilities & wlcli_sys::SEAT_CAPABILITY_POINTER != 0 {
         data.pointer = wlcli_sys::seat_get_pointer(seat);
         assert!(!data.pointer.is_null());
     }
-    if capabilities & SEAT_CAPABILITY_KEYBOARD != 0 {
+    if capabilities & wlcli_sys::SEAT_CAPABILITY_KEYBOARD != 0 {
         data.keyboard = wlcli_sys::seat_get_keyboard(seat);
         assert!(!data.keyboard.is_null());
     }
-    if capabilities & SEAT_CAPABILITY_TOUCH != 0 {
+    if capabilities & wlcli_sys::SEAT_CAPABILITY_TOUCH != 0 {
         data.touch = wlcli_sys::seat_get_touch(seat);
         assert!(!data.touch.is_null());
     }
