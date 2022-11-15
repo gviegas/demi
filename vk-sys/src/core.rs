@@ -2543,6 +2543,14 @@ def_ids!(
     PRIMITIVE_TOPOLOGY_PATCH_LIST = 10
 );
 
+/// PFN_vkCmdSetPrimitiveToppology
+pub(crate) type CmdSetPrimitiveTopology =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, topology: PrimitiveTopology);
+
+/// PFN_vkCmdSetPrimitiveRestartEnable (v1.3)
+pub(crate) type CmdSetPrimitiveRestartEnable =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, enable: Bool32);
+
 def_ids!(
     IndexType,
     INDEX_TYPE_UINT16 = 0,
@@ -2660,6 +2668,10 @@ pub(crate) type CmdSetViewport = unsafe extern "C" fn(
     viewports: *const Viewport,
 );
 
+/// PFN_vkCmdSetViewportWithCount (v1.3)
+pub(crate) type CmdSetViewportWithCount =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, vport_count: u32, viewports: *const Viewport);
+
 /// PFN_vkCmdSetScissor
 pub(crate) type CmdSetScissor = unsafe extern "C" fn(
     cmd_buf: CommandBuffer,
@@ -2667,6 +2679,10 @@ pub(crate) type CmdSetScissor = unsafe extern "C" fn(
     sciss_count: u32,
     scissors: *const Rect2d,
 );
+
+/// PFN_vkCmdSetScissorWithCount (v1.3)
+pub(crate) type CmdSetScissorWithCount =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, sciss_count: u32, scissors: *const Rect2d);
 
 /// VkPipelineRasterizationStateCreateInfo
 #[derive(Debug)]
@@ -2710,8 +2726,24 @@ def_ids!(
     FRONT_FACE_CLOCKWISE = 1
 );
 
+/// PFN_vkCmdSetCullMode (v1.3)
+pub(crate) type CmdSetCullMode =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, cull_mode: CullModeFlags);
+
+/// PFN_vkCmdSetFrontFace (v1.3)
+pub(crate) type CmdSetFrontFace =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, front_face: FrontFace);
+
+/// PFN_vkCmdSetRasterizerDiscarEnable (v1.3)
+pub(crate) type CmdSetRasterizerDiscardEnable =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, enable: Bool32);
+
 /// PFN_vkCmdSetLineWidth
 pub(crate) type CmdSetLineWidth = unsafe extern "C" fn(cmd_buf: CommandBuffer, line_width: f32);
+
+/// PFN_vkCmdSetSetDepthBiasEnable (v1.3)
+pub(crate) type CmdSetDepthBiasEnable =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, enable: Bool32);
 
 /// PFN_vkCmdSetDepthBias
 pub(crate) type CmdSetDepthBias = unsafe extern "C" fn(
@@ -2788,9 +2820,39 @@ def_flags!(
     STENCIL_FRONT_AND_BACK = STENCIL_FACE_FRONT_AND_BACK
 );
 
+/// PFN_vkCmdSetDepthTestEnable (v1.3)
+pub(crate) type CmdSetDepthTestEnable =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, enable: Bool32);
+
+/// PFN_vkCmdSetDepthWriteEnable (v1.3)
+pub(crate) type CmdSetDepthWriteEnable =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, enable: Bool32);
+
+/// PFN_vkCmdSetDepthCompareOp (v1.3)
+pub(crate) type CmdSetDepthCompareOp =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, cmp_op: CompareOp);
+
+/// PFN_vkCmdSetDepthBoundsTestEnable (v1.3)
+pub(crate) type CmdSetDepthBoundsTestEnable =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, enable: Bool32);
+
 /// PFN_vkCmdSetDepthBounds
 pub(crate) type CmdSetDepthBounds =
     unsafe extern "C" fn(cmd_buf: CommandBuffer, min: f32, max: f32);
+
+/// PFN_vkCmdSetStencilTestEnable (v1.3)
+pub(crate) type CmdSetStencilTestEnable =
+    unsafe extern "C" fn(cmd_buf: CommandBuffer, enable: Bool32);
+
+/// PFN_vkCmdSetStencilop
+pub(crate) type CmdSetStencilOp = unsafe extern "C" fn(
+    cmd_buf: CommandBuffer,
+    face_mask: StencilFaceFlags,
+    fail_op: StencilOp,
+    pass_op: StencilOp,
+    depth_fail_op: StencilOp,
+    cmp_op: CompareOp,
+);
 
 /// PFN_vkCmdSetStencilCompareMask
 pub(crate) type CmdSetStencilCompareMask =

@@ -15,39 +15,44 @@ use crate::{
     CmdDispatchIndirect, CmdDraw, CmdDrawIndexed, CmdDrawIndexedIndirect, CmdDrawIndirect,
     CmdEndQuery, CmdEndRenderPass, CmdEndRendering, CmdExecuteCommands, CmdFillBuffer,
     CmdNextSubpass, CmdPipelineBarrier, CmdPipelineBarrier2, CmdPushConstants, CmdResetQueryPool,
-    CmdSetBlendConstants, CmdSetDepthBias, CmdSetDepthBounds, CmdSetLineWidth, CmdSetScissor,
-    CmdSetStencilCompareMask, CmdSetStencilReference, CmdSetStencilWriteMask, CmdSetViewport,
-    CmdUpdateBuffer, CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo,
-    CommandBufferResetFlags, CommandPool, CommandPoolCreateInfo, CommandPoolResetFlags,
-    CommandPoolTrimFlags, ComputePipelineCreateInfo, CopyDescriptorSet, CreateBuffer,
-    CreateBufferView, CreateCommandPool, CreateComputePipelines, CreateDescriptorPool,
-    CreateDescriptorSetLayout, CreateFence, CreateFramebuffer, CreateGraphicsPipelines,
-    CreateImage, CreateImageView, CreatePipelineCache, CreatePipelineLayout, CreateQueryPool,
-    CreateRenderPass, CreateSampler, CreateSemaphore, CreateShaderModule, CreateSwapchainKhr,
-    DependencyFlags, DependencyInfo, DescriptorPool, DescriptorPoolCreateInfo,
-    DescriptorPoolResetFlags, DescriptorSet, DescriptorSetAllocateInfo, DescriptorSetLayout,
-    DescriptorSetLayoutCreateInfo, DestroyBuffer, DestroyBufferView, DestroyCommandPool,
-    DestroyDescriptorPool, DestroyDescriptorSetLayout, DestroyDevice, DestroyFence,
-    DestroyFramebuffer, DestroyImage, DestroyImageView, DestroyPipeline, DestroyPipelineCache,
-    DestroyPipelineLayout, DestroyQueryPool, DestroyRenderPass, DestroySampler, DestroySemaphore,
-    DestroyShaderModule, DestroySwapchainKhr, Device, DeviceMemory, DeviceWaitIdle,
-    EndCommandBuffer, Fence, FenceCreateInfo, FlushMappedMemoryRanges, Framebuffer,
-    FramebufferCreateInfo, FreeCommandBuffers, FreeDescriptorSets, FreeMemory,
-    GetBufferMemoryRequirements, GetDeviceQueue, GetFenceStatus, GetImageMemoryRequirements,
-    GetPipelineCacheData, GetQueryPoolResults, GetSemaphoreCounterValue, GetSwapchainImagesKhr,
+    CmdSetBlendConstants, CmdSetCullMode, CmdSetDepthBias, CmdSetDepthBiasEnable,
+    CmdSetDepthBounds, CmdSetDepthBoundsTestEnable, CmdSetDepthCompareOp, CmdSetDepthTestEnable,
+    CmdSetDepthWriteEnable, CmdSetFrontFace, CmdSetLineWidth, CmdSetPrimitiveRestartEnable,
+    CmdSetPrimitiveTopology, CmdSetRasterizerDiscardEnable, CmdSetScissor, CmdSetScissorWithCount,
+    CmdSetStencilCompareMask, CmdSetStencilOp, CmdSetStencilReference, CmdSetStencilTestEnable,
+    CmdSetStencilWriteMask, CmdSetViewport, CmdSetViewportWithCount, CmdUpdateBuffer,
+    CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferResetFlags,
+    CommandPool, CommandPoolCreateInfo, CommandPoolResetFlags, CommandPoolTrimFlags, CompareOp,
+    ComputePipelineCreateInfo, CopyDescriptorSet, CreateBuffer, CreateBufferView,
+    CreateCommandPool, CreateComputePipelines, CreateDescriptorPool, CreateDescriptorSetLayout,
+    CreateFence, CreateFramebuffer, CreateGraphicsPipelines, CreateImage, CreateImageView,
+    CreatePipelineCache, CreatePipelineLayout, CreateQueryPool, CreateRenderPass, CreateSampler,
+    CreateSemaphore, CreateShaderModule, CreateSwapchainKhr, CullModeFlags, DependencyFlags,
+    DependencyInfo, DescriptorPool, DescriptorPoolCreateInfo, DescriptorPoolResetFlags,
+    DescriptorSet, DescriptorSetAllocateInfo, DescriptorSetLayout, DescriptorSetLayoutCreateInfo,
+    DestroyBuffer, DestroyBufferView, DestroyCommandPool, DestroyDescriptorPool,
+    DestroyDescriptorSetLayout, DestroyDevice, DestroyFence, DestroyFramebuffer, DestroyImage,
+    DestroyImageView, DestroyPipeline, DestroyPipelineCache, DestroyPipelineLayout,
+    DestroyQueryPool, DestroyRenderPass, DestroySampler, DestroySemaphore, DestroyShaderModule,
+    DestroySwapchainKhr, Device, DeviceMemory, DeviceWaitIdle, EndCommandBuffer, Fence,
+    FenceCreateInfo, FlushMappedMemoryRanges, Framebuffer, FramebufferCreateInfo,
+    FreeCommandBuffers, FreeDescriptorSets, FreeMemory, FrontFace, GetBufferMemoryRequirements,
+    GetDeviceQueue, GetFenceStatus, GetImageMemoryRequirements, GetPipelineCacheData,
+    GetQueryPoolResults, GetSemaphoreCounterValue, GetSwapchainImagesKhr,
     GraphicsPipelineCreateInfo, Image, ImageCopy, ImageCreateInfo, ImageLayout, ImageMemoryBarrier,
     ImageSubresourceRange, ImageView, ImageViewCreateInfo, IndexType, InstanceFp,
     InvalidateMappedMemoryRanges, MapMemory, MappedMemoryRange, MemoryAllocateInfo, MemoryBarrier,
     MemoryMapFlags, MemoryRequirements, MergePipelineCaches, Pipeline, PipelineBindPoint,
     PipelineCache, PipelineCacheCreateInfo, PipelineLayout, PipelineLayoutCreateInfo,
-    PipelineStageFlags, PresentInfoKhr, QueryControlFlags, QueryPool, QueryPoolCreateInfo,
-    QueryResultFlags, Queue, QueuePresentKhr, QueueSubmit, QueueSubmit2, QueueWaitIdle, Rect2d,
-    RenderPass, RenderPassBeginInfo, RenderPassCreateInfo, RenderingInfo, ResetCommandBuffer,
-    ResetCommandPool, ResetDescriptorPool, ResetFences, Result, Sampler, SamplerCreateInfo,
-    Semaphore, SemaphoreCreateInfo, SemaphoreSignalInfo, SemaphoreWaitInfo, ShaderModule,
-    ShaderModuleCreateInfo, ShaderStageFlags, SignalSemaphore, StencilFaceFlags, SubmitInfo,
-    SubmitInfo2, SubpassContents, SwapchainCreateInfoKhr, SwapchainKhr, TrimCommandPool,
-    UnmapMemory, UpdateDescriptorSets, Viewport, WaitForFences, WaitSemaphores, WriteDescriptorSet,
+    PipelineStageFlags, PresentInfoKhr, PrimitiveTopology, QueryControlFlags, QueryPool,
+    QueryPoolCreateInfo, QueryResultFlags, Queue, QueuePresentKhr, QueueSubmit, QueueSubmit2,
+    QueueWaitIdle, Rect2d, RenderPass, RenderPassBeginInfo, RenderPassCreateInfo, RenderingInfo,
+    ResetCommandBuffer, ResetCommandPool, ResetDescriptorPool, ResetFences, Result, Sampler,
+    SamplerCreateInfo, Semaphore, SemaphoreCreateInfo, SemaphoreSignalInfo, SemaphoreWaitInfo,
+    ShaderModule, ShaderModuleCreateInfo, ShaderStageFlags, SignalSemaphore, StencilFaceFlags,
+    StencilOp, SubmitInfo, SubmitInfo2, SubpassContents, SwapchainCreateInfoKhr, SwapchainKhr,
+    TrimCommandPool, UnmapMemory, UpdateDescriptorSets, Viewport, WaitForFences, WaitSemaphores,
+    WriteDescriptorSet,
 };
 
 /// Device-level commands.
@@ -171,6 +176,20 @@ pub struct DeviceFp {
     cmd_pipeline_barrier_2: Option<CmdPipelineBarrier2>,
     cmd_begin_rendering: Option<CmdBeginRendering>,
     cmd_end_rendering: Option<CmdEndRendering>,
+    cmd_set_primitive_topology: Option<CmdSetPrimitiveTopology>,
+    cmd_set_primitive_restart_enable: Option<CmdSetPrimitiveRestartEnable>,
+    cmd_set_viewport_with_count: Option<CmdSetViewportWithCount>,
+    cmd_set_scissor_with_count: Option<CmdSetScissorWithCount>,
+    cmd_set_cull_mode: Option<CmdSetCullMode>,
+    cmd_set_front_face: Option<CmdSetFrontFace>,
+    cmd_set_rasterizer_discard_enable: Option<CmdSetRasterizerDiscardEnable>,
+    cmd_set_depth_bias_enable: Option<CmdSetDepthBiasEnable>,
+    cmd_set_depth_test_enable: Option<CmdSetDepthTestEnable>,
+    cmd_set_depth_write_enable: Option<CmdSetDepthWriteEnable>,
+    cmd_set_depth_compare_op: Option<CmdSetDepthCompareOp>,
+    cmd_set_depth_bounds_test_enable: Option<CmdSetDepthBoundsTestEnable>,
+    cmd_set_stencil_test_enable: Option<CmdSetStencilTestEnable>,
+    cmd_set_stencil_op: Option<CmdSetStencilOp>,
 
     // VK_KHR_swapchain
     create_swapchain_khr: Option<CreateSwapchainKhr>,
@@ -315,6 +334,20 @@ impl DeviceFp {
             cmd_pipeline_barrier_2: get!(b"vkCmdPipelineBarrier2\0").ok(),
             cmd_begin_rendering: get!(b"vkCmdBeginRendering\0").ok(),
             cmd_end_rendering: get!(b"vkCmdEndRendering\0").ok(),
+            cmd_set_primitive_topology: get!(b"vkCmdSetPrimitiveTopology\0").ok(),
+            cmd_set_primitive_restart_enable: get!(b"vkCmdSetPrimitiveRestartEnable\0").ok(),
+            cmd_set_viewport_with_count: get!(b"vkCmdSetViewportWithCount\0").ok(),
+            cmd_set_scissor_with_count: get!(b"vkCmdSetScissorWithCount\0").ok(),
+            cmd_set_cull_mode: get!(b"vkCmdSetCullMode\0").ok(),
+            cmd_set_front_face: get!(b"vkCmdSetFrontFace\0").ok(),
+            cmd_set_rasterizer_discard_enable: get!(b"vkCmdSetRasterizerDiscardEnable\0").ok(),
+            cmd_set_depth_bias_enable: get!(b"vkCmdSetDepthBiasEnable\0").ok(),
+            cmd_set_depth_test_enable: get!(b"vkCmdSetDepthTestEnable\0").ok(),
+            cmd_set_depth_write_enable: get!(b"vkCmdSetDepthWriteEnable\0").ok(),
+            cmd_set_depth_compare_op: get!(b"vkCmdSetDepthCompareOp\0").ok(),
+            cmd_set_depth_bounds_test_enable: get!(b"vkCmdSetDepthBoundsTestEnable\0").ok(),
+            cmd_set_stencil_test_enable: get!(b"vkCmdSetStencilTestEnable\0").ok(),
+            cmd_set_stencil_op: get!(b"vkCmdSetStencilOp\0").ok(),
 
             create_swapchain_khr: get!(b"vkCreateSwapchainKHR\0").ok(),
             destroy_swapchain_khr: get!(b"vkDestroySwapchainKHR\0").ok(),
@@ -1565,6 +1598,29 @@ impl DeviceFp {
         (self.cmd_draw_indexed_indirect)(command_buffer, buffer, offset, draw_count, stride);
     }
 
+    /// vkCmdSetPrimitiveTopology (v1.3)
+    pub unsafe fn cmd_set_primitive_topology(
+        &self,
+        command_buffer: CommandBuffer,
+        primitive_topology: PrimitiveTopology,
+    ) {
+        debug_assert!(self.cmd_set_primitive_topology.is_some());
+        (self.cmd_set_primitive_topology.unwrap_unchecked())(command_buffer, primitive_topology);
+    }
+
+    /// vkCmdSetPrimitiveRestartEnable (v1.3)
+    pub unsafe fn cmd_set_primitive_restart_enable(
+        &self,
+        command_buffer: CommandBuffer,
+        primitive_restart_enable: Bool32,
+    ) {
+        debug_assert!(self.cmd_set_primitive_restart_enable.is_some());
+        (self.cmd_set_primitive_restart_enable.unwrap_unchecked())(
+            command_buffer,
+            primitive_restart_enable,
+        );
+    }
+
     /// vkCmdSetViewport
     pub unsafe fn cmd_set_viewport(
         &self,
@@ -1574,6 +1630,21 @@ impl DeviceFp {
         viewports: *const Viewport,
     ) {
         (self.cmd_set_viewport)(command_buffer, first_viewport, viewport_count, viewports);
+    }
+
+    /// vkCmdSetViewportWithCount (v1.3)
+    pub unsafe fn cmd_set_viewport_with_count(
+        &self,
+        command_buffer: CommandBuffer,
+        viewport_count: u32,
+        viewports: *const Viewport,
+    ) {
+        debug_assert!(self.cmd_set_viewport_with_count.is_some());
+        (self.cmd_set_viewport_with_count.unwrap_unchecked())(
+            command_buffer,
+            viewport_count,
+            viewports,
+        );
     }
 
     /// vkCmdSetScissor
@@ -1587,9 +1658,63 @@ impl DeviceFp {
         (self.cmd_set_scissor)(command_buffer, first_scissor, scissor_count, scissors);
     }
 
+    /// vkCmdSetScissorWithCount (v1.3)
+    pub unsafe fn cmd_set_scissor_with_count(
+        &self,
+        command_buffer: CommandBuffer,
+        scissor_count: u32,
+        scissors: *const Rect2d,
+    ) {
+        debug_assert!(self.cmd_set_scissor_with_count.is_some());
+        (self.cmd_set_scissor_with_count.unwrap_unchecked())(
+            command_buffer,
+            scissor_count,
+            scissors,
+        );
+    }
+
+    /// vkCmdSetCullMode (v1.3)
+    pub unsafe fn cmd_set_cull_mode(
+        &self,
+        command_buffer: CommandBuffer,
+        cull_mode: CullModeFlags,
+    ) {
+        debug_assert!(self.cmd_set_cull_mode.is_some());
+        (self.cmd_set_cull_mode.unwrap_unchecked())(command_buffer, cull_mode);
+    }
+
+    /// vkCmdSetFrontFace (v1.3)
+    pub unsafe fn cmd_set_front_face(&self, command_buffer: CommandBuffer, front_face: FrontFace) {
+        debug_assert!(self.cmd_set_front_face.is_some());
+        (self.cmd_set_front_face.unwrap_unchecked())(command_buffer, front_face);
+    }
+
+    /// vkCmdSetRasterizerDiscardEnable (v1.3)
+    pub unsafe fn cmd_set_rasterizer_discard_enable(
+        &self,
+        command_buffer: CommandBuffer,
+        rasterizer_discard_enable: Bool32,
+    ) {
+        debug_assert!(self.cmd_set_rasterizer_discard_enable.is_some());
+        (self.cmd_set_rasterizer_discard_enable.unwrap_unchecked())(
+            command_buffer,
+            rasterizer_discard_enable,
+        );
+    }
+
     /// vkCmdSetLineWidth
     pub unsafe fn cmd_set_line_width(&self, command_buffer: CommandBuffer, line_width: f32) {
         (self.cmd_set_line_width)(command_buffer, line_width);
+    }
+
+    /// vkCmdSetDepthBiasEnable (v1.3)
+    pub unsafe fn cmd_set_depth_bias_enable(
+        &self,
+        command_buffer: CommandBuffer,
+        depth_bias_enable: Bool32,
+    ) {
+        debug_assert!(self.cmd_set_depth_bias_enable.is_some());
+        (self.cmd_set_depth_bias_enable.unwrap_unchecked())(command_buffer, depth_bias_enable);
     }
 
     /// vkCmdSetDepthBias
@@ -1608,6 +1733,49 @@ impl DeviceFp {
         );
     }
 
+    /// vkCmdSetDepthTestEnable (v1.3)
+    pub unsafe fn cmd_set_depth_test_enable(
+        &self,
+        command_buffer: CommandBuffer,
+        depth_test_enable: Bool32,
+    ) {
+        debug_assert!(self.cmd_set_depth_test_enable.is_some());
+        (self.cmd_set_depth_test_enable.unwrap_unchecked())(command_buffer, depth_test_enable);
+    }
+
+    /// vkCmdSetDepthWriteEnable (v1.3)
+    pub unsafe fn cmd_set_depth_write_enable(
+        &self,
+        command_buffer: CommandBuffer,
+        depth_write_enable: Bool32,
+    ) {
+        debug_assert!(self.cmd_set_depth_write_enable.is_some());
+        (self.cmd_set_depth_write_enable.unwrap_unchecked())(command_buffer, depth_write_enable);
+    }
+
+    /// vkCmdSetDepthCompareOp (v1.3)
+    pub unsafe fn cmd_set_depth_compare_op(
+        &self,
+        command_buffer: CommandBuffer,
+        depth_compare_op: CompareOp,
+    ) {
+        debug_assert!(self.cmd_set_depth_compare_op.is_some());
+        (self.cmd_set_depth_compare_op.unwrap_unchecked())(command_buffer, depth_compare_op);
+    }
+
+    /// vkCmdSetDepthBoundsTestEnable (v1.3)
+    pub unsafe fn cmd_set_depth_bounds_test_enable(
+        &self,
+        command_buffer: CommandBuffer,
+        depth_bounds_test_enable: Bool32,
+    ) {
+        debug_assert!(self.cmd_set_depth_bounds_test_enable.is_some());
+        (self.cmd_set_depth_bounds_test_enable.unwrap_unchecked())(
+            command_buffer,
+            depth_bounds_test_enable,
+        );
+    }
+
     /// vkCmdSetDepthBounds
     pub unsafe fn cmd_set_depth_bounds(
         &self,
@@ -1616,6 +1784,37 @@ impl DeviceFp {
         max_depth_bounds: f32,
     ) {
         (self.cmd_set_depth_bounds)(command_buffer, min_depth_bounds, max_depth_bounds);
+    }
+
+    /// vkCmdSetStencilTestEnable (v1.3)
+    pub unsafe fn cmd_set_stencil_test_enable(
+        &self,
+        command_buffer: CommandBuffer,
+        stencil_test_enable: Bool32,
+    ) {
+        debug_assert!(self.cmd_set_stencil_test_enable.is_some());
+        (self.cmd_set_stencil_test_enable.unwrap_unchecked())(command_buffer, stencil_test_enable);
+    }
+
+    /// vkCmdSetStencilop (v1.3)
+    pub unsafe fn cmd_set_stencil_op(
+        &self,
+        command_buffer: CommandBuffer,
+        face_mask: StencilFaceFlags,
+        fail_op: StencilOp,
+        pass_op: StencilOp,
+        depth_fail_op: StencilOp,
+        compare_op: CompareOp,
+    ) {
+        debug_assert!(self.cmd_set_stencil_op.is_some());
+        (self.cmd_set_stencil_op.unwrap_unchecked())(
+            command_buffer,
+            face_mask,
+            fail_op,
+            pass_op,
+            depth_fail_op,
+            compare_op,
+        );
     }
 
     /// vkCmdSetStencilCompareMask
