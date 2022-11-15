@@ -1,7 +1,37 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+use std::ffi::c_char;
+
 use crate::init::GLOBAL_FP;
-use crate::{AllocationCallbacks, Instance, InstanceCreateInfo, Result, API_VERSION_1_0, SUCCESS};
+use crate::{
+    AllocationCallbacks, ExtensionProperties, Instance, InstanceCreateInfo, LayerProperties,
+    Result, API_VERSION_1_0, SUCCESS,
+};
+
+/// vkEnumerateInstanceLayerProperties
+pub unsafe fn enumerate_instance_layer_properties(
+    property_count: *mut u32,
+    properties: *mut LayerProperties,
+) -> Result {
+    debug_assert!(GLOBAL_FP.is_some());
+    (GLOBAL_FP
+        .as_ref()
+        .unwrap_unchecked()
+        .enumerate_instance_layer_properties)(property_count, properties)
+}
+
+/// vkEnumerateInstanceExtensionProperties
+pub unsafe fn enumerate_instance_extension_properties(
+    layer_name: *const c_char,
+    property_count: *mut u32,
+    properties: *mut ExtensionProperties,
+) -> Result {
+    debug_assert!(GLOBAL_FP.is_some());
+    (GLOBAL_FP
+        .as_ref()
+        .unwrap_unchecked()
+        .enumerate_instance_extension_properties)(layer_name, property_count, properties)
+}
 
 /// vkEnumerateInstanceVersion (v1.1)
 pub unsafe fn enumerate_instance_version(api_version: *mut u32) -> Result {

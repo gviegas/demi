@@ -1,5 +1,6 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+use std::ffi::CStr;
 use std::ptr;
 use std::thread;
 
@@ -28,13 +29,19 @@ fn test_init() {
         vk_sys::api_version_variant(version)
     );
 
+    print_instance_layers();
+    print_instance_extensions();
+
     let instance = create_instance();
     let mut instance_fp = unsafe { InstanceFp::new(instance).unwrap() };
-    println!("{instance_fp:#?}");
+
+    print_device_extensions(instance, &instance_fp);
 
     let device = create_device(instance, &instance_fp);
     let mut device_fp = unsafe { DeviceFp::new(device, &instance_fp).unwrap() };
-    println!("{device_fp:#?}");
+
+    println!("\n<{instance:?}>\n{instance_fp:#?}");
+    println!("\n<{device:?}>\n{device_fp:#?}");
 
     unsafe {
         device_fp.destroy_device(device, ptr::null());
@@ -45,6 +52,60 @@ fn test_init() {
         thread::spawn(vk_sys::fini);
     }
     vk_sys::fini();
+}
+
+fn print_instance_layers() {
+    unsafe {
+        let mut count = 0u32;
+        assert_eq!(
+            vk_sys::enumerate_instance_layer_properties(&mut count, ptr::null_mut()),
+            vk_sys::SUCCESS
+        );
+        if count > 0 {
+            let mut props = Vec::with_capacity(count as usize);
+            assert_eq!(
+                vk_sys::enumerate_instance_layer_properties(&mut count, props.as_mut_ptr()),
+                vk_sys::SUCCESS
+            );
+            props.set_len(count as usize);
+            println!("\nInstance layers:");
+            for i in props {
+                let s = CStr::from_ptr(i.layer_name.as_ptr());
+                println!("\t{:?}", s);
+            }
+        }
+    }
+}
+
+fn print_instance_extensions() {
+    unsafe {
+        let mut count = 0u32;
+        assert_eq!(
+            vk_sys::enumerate_instance_extension_properties(
+                ptr::null(),
+                &mut count,
+                ptr::null_mut()
+            ),
+            vk_sys::SUCCESS
+        );
+        if count > 0 {
+            let mut props = Vec::with_capacity(count as usize);
+            assert_eq!(
+                vk_sys::enumerate_instance_extension_properties(
+                    ptr::null(),
+                    &mut count,
+                    props.as_mut_ptr()
+                ),
+                vk_sys::SUCCESS
+            );
+            props.set_len(count as usize);
+            println!("\nInstance extensions (impl.):");
+            for i in props {
+                let s = CStr::from_ptr(i.extension_name.as_ptr());
+                println!("\t{:?}", s);
+            }
+        }
+    }
 }
 
 fn create_instance() -> Instance {
@@ -66,6 +127,56 @@ fn create_instance() -> Instance {
         }
     }
     instance
+}
+
+fn print_device_extensions(instance: Instance, instance_fp: &InstanceFp) {
+    let mut phys_devs;
+    unsafe {
+        let mut count = 0u32;
+        assert_eq!(
+            instance_fp.enumerate_physical_devices(instance, &mut count, ptr::null_mut()),
+            vk_sys::SUCCESS
+        );
+        phys_devs = Vec::with_capacity(count as usize);
+        assert_eq!(
+            instance_fp.enumerate_physical_devices(instance, &mut count, phys_devs.as_mut_ptr()),
+            vk_sys::SUCCESS
+        );
+        phys_devs.set_len(count as usize);
+    }
+    assert!(!phys_devs.is_empty());
+    for i in phys_devs {
+        unsafe {
+            let mut count = 0u32;
+            assert_eq!(
+                instance_fp.enumerate_device_extension_properties(
+                    i,
+                    ptr::null(),
+                    &mut count,
+                    ptr::null_mut()
+                ),
+                vk_sys::SUCCESS
+            );
+            if count > 0 {
+                let mut props = Vec::with_capacity(count as usize);
+                assert_eq!(
+                    instance_fp.enumerate_device_extension_properties(
+                        i,
+                        ptr::null(),
+                        &mut count,
+                        props.as_mut_ptr()
+                    ),
+                    vk_sys::SUCCESS
+                );
+                props.set_len(count as usize);
+                println!("\nDevice extensions ({:?}):", i);
+                for i in props {
+                    let s = CStr::from_ptr(i.extension_name.as_ptr());
+                    println!("\t{:?}", s);
+                }
+            }
+        }
+    }
 }
 
 fn create_device(instance: Instance, instance_fp: &InstanceFp) -> Device {

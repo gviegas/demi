@@ -7,10 +7,10 @@ use std::result;
 use crate::init::PROC;
 use crate::{
     AllocationCallbacks, Bool32, CreateDevice, DestroyInstance, DestroySurfaceKhr, Device,
-    DeviceCreateInfo, EnumeratePhysicalDeviceGroups, EnumeratePhysicalDevices, Format,
-    FormatProperties, GetDeviceProcAddr, GetPhysicalDeviceFeatures, GetPhysicalDeviceFeatures2,
-    GetPhysicalDeviceFormatProperties, GetPhysicalDeviceMemoryProperties,
-    GetPhysicalDeviceProperties, GetPhysicalDeviceProperties2,
+    DeviceCreateInfo, EnumerateDeviceExtensionProperties, EnumeratePhysicalDeviceGroups,
+    EnumeratePhysicalDevices, ExtensionProperties, Format, FormatProperties, GetDeviceProcAddr,
+    GetPhysicalDeviceFeatures, GetPhysicalDeviceFeatures2, GetPhysicalDeviceFormatProperties,
+    GetPhysicalDeviceMemoryProperties, GetPhysicalDeviceProperties, GetPhysicalDeviceProperties2,
     GetPhysicalDeviceQueueFamilyProperties, GetPhysicalDeviceSurfaceCapabilitiesKhr,
     GetPhysicalDeviceSurfaceFormatsKhr, GetPhysicalDeviceSurfacePresentModesKhr,
     GetPhysicalDeviceSurfaceSupportKhr, Instance, PhysicalDevice, PhysicalDeviceFeatures,
@@ -43,13 +43,14 @@ pub struct InstanceFp {
     get_physical_device_memory_properties: GetPhysicalDeviceMemoryProperties,
     get_physical_device_features: GetPhysicalDeviceFeatures,
     get_physical_device_format_properties: GetPhysicalDeviceFormatProperties,
+    enumerate_device_extension_properties: EnumerateDeviceExtensionProperties,
     create_device: CreateDevice,
 
     get_device_proc_addr: GetDeviceProcAddr,
 
     // v1.1
-    get_physical_device_properties_2: Option<GetPhysicalDeviceProperties2>,
     enumerate_physical_device_groups: Option<EnumeratePhysicalDeviceGroups>,
+    get_physical_device_properties_2: Option<GetPhysicalDeviceProperties2>,
     get_physical_device_features_2: Option<GetPhysicalDeviceFeatures2>,
 
     // VK_KHR_wayland_surface
@@ -108,12 +109,13 @@ impl InstanceFp {
             get_physical_device_memory_properties: get!(b"vkGetPhysicalDeviceMemoryProperties\0")?,
             get_physical_device_features: get!(b"vkGetPhysicalDeviceFeatures\0")?,
             get_physical_device_format_properties: get!(b"vkGetPhysicalDeviceFormatProperties\0")?,
+            enumerate_device_extension_properties: get!(b"vkEnumerateDeviceExtensionProperties\0")?,
             create_device: get!(b"vkCreateDevice\0")?,
 
             get_device_proc_addr: get!(b"vkGetDeviceProcAddr\0")?,
 
-            get_physical_device_properties_2: get!(b"vkGetPhysicalDeviceProperties2\0").ok(),
             enumerate_physical_device_groups: get!(b"vkEnumeratePhysicalDeviceGroups\0").ok(),
+            get_physical_device_properties_2: get!(b"vkGetPhysicalDeviceProperties2\0").ok(),
             get_physical_device_features_2: get!(b"vkGetPhysicalDeviceFeatures2\0").ok(),
 
             #[cfg(target_os = "linux")]
@@ -394,6 +396,22 @@ impl InstanceFp {
         (self
             .get_physical_device_surface_present_modes_khr
             .unwrap_unchecked())(physical_device, surface, present_mode_count, present_modes)
+    }
+
+    /// vkEnumerateDeviceExtensionProperties
+    pub unsafe fn enumerate_device_extension_properties(
+        &self,
+        physical_device: PhysicalDevice,
+        layer_name: *const c_char,
+        property_count: *mut u32,
+        properties: *mut ExtensionProperties,
+    ) -> Result {
+        (self.enumerate_device_extension_properties)(
+            physical_device,
+            layer_name,
+            property_count,
+            properties,
+        )
     }
 
     /// vkCreateDevice

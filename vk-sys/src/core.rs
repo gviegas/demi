@@ -10,10 +10,39 @@ use crate::{
 
 // TODO: Sparse API, events, ...
 
-def_dh!(InstanceT, Instance);
+/// VkLayerProperties
+#[derive(Debug)]
+#[repr(C)]
+pub struct LayerProperties {
+    pub layer_name: [c_char; 256],
+    pub spec_version: u32,
+    pub implementation_version: u32,
+    pub description: [c_char; 256],
+}
+
+/// VkExtensionProperties
+#[derive(Debug)]
+#[repr(C)]
+pub struct ExtensionProperties {
+    pub extension_name: [c_char; 256],
+    pub spec_version: u32,
+}
+
+/// PFN_vkEnumerateInstanceLayerProperties
+pub(crate) type EnumerateInstanceLayerProperties =
+    unsafe extern "C" fn(count: *mut u32, properties: *mut LayerProperties) -> Result;
+
+/// PFN_vkEnumerateInstanceExtensionProperties
+pub(crate) type EnumerateInstanceExtensionProperties = unsafe extern "C" fn(
+    layer_name: *const c_char,
+    count: *mut u32,
+    properties: *mut ExtensionProperties,
+) -> Result;
 
 /// PFN_vkEnumerateInstanceVersion (v1.1)
 pub(crate) type EnumerateInstanceVersion = unsafe extern "C" fn(api_version: *mut u32) -> Result;
+
+def_dh!(InstanceT, Instance);
 
 /// VkInstanceCreateInfo
 #[derive(Debug)]
@@ -79,6 +108,17 @@ pub struct PhysicalDeviceProperties2 {
     pub s_type: StructureType,
     pub next: *mut c_void,
     pub properties: PhysicalDeviceProperties,
+}
+
+/// VkPhysicalDeviceGroupProperties (v1.1)
+#[derive(Debug)]
+#[repr(C)]
+pub struct PhysicalDeviceGroupProperties {
+    pub s_type: StructureType,
+    pub next: *mut c_void,
+    pub physical_device_count: u32,
+    pub physical_devices: [PhysicalDevice; 32],
+    pub subset_allocation: Bool32,
 }
 
 def_ids!(
@@ -170,22 +210,18 @@ def_flags!(
     MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV = 0x00000100
 );
 
-/// VkPhysicalDeviceGroupProperties (v1.1)
-#[derive(Debug)]
-#[repr(C)]
-pub struct PhysicalDeviceGroupProperties {
-    pub s_type: StructureType,
-    pub next: *mut c_void,
-    pub physical_device_count: u32,
-    pub physical_devices: [PhysicalDevice; 32],
-    pub subset_allocation: Bool32,
-}
-
 /// PFN_vkEnumeratePhysicalDevices
 pub(crate) type EnumeratePhysicalDevices = unsafe extern "C" fn(
     instance: Instance,
     count: *mut u32,
     phys_devs: *mut PhysicalDevice,
+) -> Result;
+
+/// PFN_vkEnumeratePhysicalDeviceGroups (v1.1)
+pub(crate) type EnumeratePhysicalDeviceGroups = unsafe extern "C" fn(
+    instance: Instance,
+    count: *mut u32,
+    grp_props: *mut PhysicalDeviceGroupProperties,
 ) -> Result;
 
 /// PFN_vkGetPhysicalDeviceProperties
@@ -207,11 +243,12 @@ pub(crate) type GetPhysicalDeviceQueueFamilyProperties = unsafe extern "C" fn(
 pub(crate) type GetPhysicalDeviceMemoryProperties =
     unsafe extern "C" fn(phys_dev: PhysicalDevice, mem_props: *mut PhysicalDeviceMemoryProperties);
 
-/// PFN_vkEnumeratePhysicalDeviceGroups (v1.1)
-pub(crate) type EnumeratePhysicalDeviceGroups = unsafe extern "C" fn(
-    instance: Instance,
+/// PFN_vkEnumerateDeviceExtensionProperties
+pub(crate) type EnumerateDeviceExtensionProperties = unsafe extern "C" fn(
+    phys_dev: PhysicalDevice,
+    layer_name: *const c_char,
     count: *mut u32,
-    grp_props: *mut PhysicalDeviceGroupProperties,
+    properties: *mut ExtensionProperties,
 ) -> Result;
 
 def_dh!(DeviceT, Device);

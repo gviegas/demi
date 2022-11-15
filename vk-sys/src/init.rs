@@ -6,7 +6,10 @@ use std::ptr;
 use std::sync::Once;
 
 use crate::init::proc::Proc;
-use crate::{CreateInstance, Device, EnumerateInstanceVersion, Instance};
+use crate::{
+    CreateInstance, Device, EnumerateInstanceExtensionProperties, EnumerateInstanceLayerProperties,
+    EnumerateInstanceVersion, Instance,
+};
 
 mod global;
 pub use crate::init::global::*;
@@ -57,6 +60,8 @@ pub fn fini() {
 
 // Global commands.
 struct GlobalFp {
+    enumerate_instance_layer_properties: EnumerateInstanceLayerProperties,
+    enumerate_instance_extension_properties: EnumerateInstanceExtensionProperties,
     create_instance: CreateInstance,
 
     // v1.1
@@ -80,7 +85,12 @@ impl GlobalFp {
         }
 
         Ok(Self {
+            enumerate_instance_layer_properties: get!(b"vkEnumerateInstanceLayerProperties\0")?,
+            enumerate_instance_extension_properties: get!(
+                b"vkEnumerateInstanceExtensionProperties\0"
+            )?,
             create_instance: get!(b"vkCreateInstance\0")?,
+
             enumerate_instance_version: get!(b"vkEnumerateInstanceVersion\0").ok(),
         })
     }
