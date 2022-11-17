@@ -2103,6 +2103,24 @@ pub struct DescriptorSetLayoutBinding {
     pub immutable_samplers: *const Sampler,
 }
 
+/// VkDescriptorSetLayoutSupport (v1.1)
+#[derive(Debug)]
+#[repr(C)]
+pub struct DescriptorSetLayoutSupport {
+    pub s_type: StructureType,
+    pub next: *mut c_void,
+    pub supported: *mut Bool32,
+}
+
+/// VkDescriptorSetVariableDescriptorCountLayoutSupport (v1.2)
+#[derive(Debug)]
+#[repr(C)]
+pub struct DescriptorSetVariableDescriptorCountLayoutSupport {
+    pub s_type: StructureType,
+    pub next: *mut c_void,
+    pub max_variable_descriptor_count: u32,
+}
+
 /// PFN_vkCreateDescriptorSetLayout
 pub(crate) type CreateDescriptorSetLayout = unsafe extern "C" fn(
     device: Device,
@@ -2116,6 +2134,13 @@ pub(crate) type DestroyDescriptorSetLayout = unsafe extern "C" fn(
     device: Device,
     set_layout: DescriptorSetLayout,
     allocator: *const AllocationCallbacks,
+);
+
+/// PFN_vkGetDescriptorSetLayoutSupport (v1.1)
+pub(crate) type GetDescriptorSetLayoutSupport = unsafe extern "C" fn(
+    device: Device,
+    create_info: *const DescriptorSetLayoutCreateInfo,
+    support: *mut DescriptorSetLayoutSupport,
 );
 
 def_ndh!(DescriptorPoolT, DescriptorPool);

@@ -30,27 +30,28 @@ use crate::{
     CreateSemaphore, CreateShaderModule, CreateSwapchainKhr, CullModeFlags, DependencyFlags,
     DependencyInfo, DescriptorPool, DescriptorPoolCreateInfo, DescriptorPoolResetFlags,
     DescriptorSet, DescriptorSetAllocateInfo, DescriptorSetLayout, DescriptorSetLayoutCreateInfo,
-    DestroyBuffer, DestroyBufferView, DestroyCommandPool, DestroyDescriptorPool,
-    DestroyDescriptorSetLayout, DestroyDevice, DestroyFence, DestroyFramebuffer, DestroyImage,
-    DestroyImageView, DestroyPipeline, DestroyPipelineCache, DestroyPipelineLayout,
-    DestroyQueryPool, DestroyRenderPass, DestroySampler, DestroySemaphore, DestroyShaderModule,
-    DestroySwapchainKhr, Device, DeviceMemory, DeviceWaitIdle, EndCommandBuffer, Fence,
-    FenceCreateInfo, FlushMappedMemoryRanges, Framebuffer, FramebufferCreateInfo,
-    FreeCommandBuffers, FreeDescriptorSets, FreeMemory, FrontFace, GetBufferMemoryRequirements,
-    GetDeviceQueue, GetFenceStatus, GetImageMemoryRequirements, GetPipelineCacheData,
-    GetQueryPoolResults, GetSemaphoreCounterValue, GetSwapchainImagesKhr,
-    GraphicsPipelineCreateInfo, Image, ImageCopy, ImageCreateInfo, ImageLayout, ImageMemoryBarrier,
-    ImageSubresourceRange, ImageView, ImageViewCreateInfo, IndexType, InstanceFp,
-    InvalidateMappedMemoryRanges, MapMemory, MappedMemoryRange, MemoryAllocateInfo, MemoryBarrier,
-    MemoryMapFlags, MemoryRequirements, MergePipelineCaches, Pipeline, PipelineBindPoint,
-    PipelineCache, PipelineCacheCreateInfo, PipelineLayout, PipelineLayoutCreateInfo,
-    PipelineStageFlags, PresentInfoKhr, PrimitiveTopology, QueryControlFlags, QueryPool,
-    QueryPoolCreateInfo, QueryResultFlags, Queue, QueuePresentKhr, QueueSubmit, QueueSubmit2,
-    QueueWaitIdle, Rect2d, RenderPass, RenderPassBeginInfo, RenderPassCreateInfo, RenderingInfo,
-    ResetCommandBuffer, ResetCommandPool, ResetDescriptorPool, ResetFences, Result, Sampler,
-    SamplerCreateInfo, Semaphore, SemaphoreCreateInfo, SemaphoreSignalInfo, SemaphoreWaitInfo,
-    ShaderModule, ShaderModuleCreateInfo, ShaderStageFlags, SignalSemaphore, StencilFaceFlags,
-    StencilOp, SubmitInfo, SubmitInfo2, SubpassContents, SwapchainCreateInfoKhr, SwapchainKhr,
+    DescriptorSetLayoutSupport, DestroyBuffer, DestroyBufferView, DestroyCommandPool,
+    DestroyDescriptorPool, DestroyDescriptorSetLayout, DestroyDevice, DestroyFence,
+    DestroyFramebuffer, DestroyImage, DestroyImageView, DestroyPipeline, DestroyPipelineCache,
+    DestroyPipelineLayout, DestroyQueryPool, DestroyRenderPass, DestroySampler, DestroySemaphore,
+    DestroyShaderModule, DestroySwapchainKhr, Device, DeviceMemory, DeviceWaitIdle,
+    EndCommandBuffer, Fence, FenceCreateInfo, FlushMappedMemoryRanges, Framebuffer,
+    FramebufferCreateInfo, FreeCommandBuffers, FreeDescriptorSets, FreeMemory, FrontFace,
+    GetBufferMemoryRequirements, GetDescriptorSetLayoutSupport, GetDeviceQueue, GetFenceStatus,
+    GetImageMemoryRequirements, GetPipelineCacheData, GetQueryPoolResults,
+    GetSemaphoreCounterValue, GetSwapchainImagesKhr, GraphicsPipelineCreateInfo, Image, ImageCopy,
+    ImageCreateInfo, ImageLayout, ImageMemoryBarrier, ImageSubresourceRange, ImageView,
+    ImageViewCreateInfo, IndexType, InstanceFp, InvalidateMappedMemoryRanges, MapMemory,
+    MappedMemoryRange, MemoryAllocateInfo, MemoryBarrier, MemoryMapFlags, MemoryRequirements,
+    MergePipelineCaches, Pipeline, PipelineBindPoint, PipelineCache, PipelineCacheCreateInfo,
+    PipelineLayout, PipelineLayoutCreateInfo, PipelineStageFlags, PresentInfoKhr,
+    PrimitiveTopology, QueryControlFlags, QueryPool, QueryPoolCreateInfo, QueryResultFlags, Queue,
+    QueuePresentKhr, QueueSubmit, QueueSubmit2, QueueWaitIdle, Rect2d, RenderPass,
+    RenderPassBeginInfo, RenderPassCreateInfo, RenderingInfo, ResetCommandBuffer, ResetCommandPool,
+    ResetDescriptorPool, ResetFences, Result, Sampler, SamplerCreateInfo, Semaphore,
+    SemaphoreCreateInfo, SemaphoreSignalInfo, SemaphoreWaitInfo, ShaderModule,
+    ShaderModuleCreateInfo, ShaderStageFlags, SignalSemaphore, StencilFaceFlags, StencilOp,
+    SubmitInfo, SubmitInfo2, SubpassContents, SwapchainCreateInfoKhr, SwapchainKhr,
     TrimCommandPool, UnmapMemory, UpdateDescriptorSets, Viewport, WaitForFences, WaitSemaphores,
     WriteDescriptorSet,
 };
@@ -165,6 +166,7 @@ pub struct DeviceFp {
 
     // v1.1
     trim_command_pool: Option<TrimCommandPool>,
+    get_descriptor_set_layout_support: Option<GetDescriptorSetLayoutSupport>,
 
     // v1.2
     get_semaphore_counter_value: Option<GetSemaphoreCounterValue>,
@@ -325,6 +327,7 @@ impl DeviceFp {
             cmd_dispatch_indirect: get!(b"vkCmdDispatchIndirect\0")?,
 
             trim_command_pool: get!(b"vkTrimCommandPool\0").ok(),
+            get_descriptor_set_layout_support: get!(b"vkGetDescriptorSetLayoutSupport\0").ok(),
 
             get_semaphore_counter_value: get!(b"vkGetSemaphoreCounterValue\0").ok(),
             wait_semaphores: get!(b"vkWaitSemaphores\0").ok(),
@@ -927,6 +930,17 @@ impl DeviceFp {
         allocator: *const AllocationCallbacks,
     ) {
         (self.destroy_descriptor_set_layout)(device, set_layout, allocator);
+    }
+
+    /// vkGetDescriptorSetLayoutSupport (v1.1)
+    pub unsafe fn get_descriptor_set_layout_support(
+        &self,
+        device: Device,
+        create_info: *const DescriptorSetLayoutCreateInfo,
+        support: *mut DescriptorSetLayoutSupport,
+    ) {
+        debug_assert!(self.get_descriptor_set_layout_support.is_some());
+        (self.get_descriptor_set_layout_support.unwrap_unchecked())(device, create_info, support);
     }
 
     /// vkCreatePipelineLayout
