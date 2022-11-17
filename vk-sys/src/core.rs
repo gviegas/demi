@@ -2247,6 +2247,23 @@ pub(crate) type FreeDescriptorSets = unsafe extern "C" fn(
     desc_sets: *const DescriptorSet,
 ) -> Result;
 
+/// VkBufferDeviceAddressInfo (v1.2)
+#[derive(Debug)]
+#[repr(C)]
+pub struct BufferDeviceAddressInfo {
+    pub s_type: StructureType,
+    pub next: *const c_void,
+    pub buffer: Buffer,
+}
+
+/// VkGetBufferDeviceAddress (v1.2)
+pub(crate) type GetBufferDeviceAddress =
+    unsafe extern "C" fn(device: Device, info: *const BufferDeviceAddressInfo) -> u64;
+
+/// VkGetBufferOpaqueCaptureAddress (v1.2)
+pub(crate) type GetBufferOpaqueCaptureAddress =
+    unsafe extern "C" fn(device: Device, info: *const BufferDeviceAddressInfo) -> u64;
+
 def_ndh!(ShaderModuleT, ShaderModule);
 
 /// VkShaderModuleCreateInfo

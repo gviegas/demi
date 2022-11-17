@@ -7,8 +7,8 @@ use std::result;
 use crate::{
     c_size_t, AcquireNextImageKhr, AllocateCommandBuffers, AllocateDescriptorSets, AllocateMemory,
     AllocationCallbacks, BeginCommandBuffer, BindBufferMemory, BindImageMemory, Bool32, Buffer,
-    BufferCopy, BufferCreateInfo, BufferImageCopy, BufferMemoryBarrier, BufferView,
-    BufferViewCreateInfo, ClearColorValue, ClearDepthStencilValue, CmdBeginQuery,
+    BufferCopy, BufferCreateInfo, BufferDeviceAddressInfo, BufferImageCopy, BufferMemoryBarrier,
+    BufferView, BufferViewCreateInfo, ClearColorValue, ClearDepthStencilValue, CmdBeginQuery,
     CmdBeginRenderPass, CmdBeginRendering, CmdBindDescriptorSets, CmdBindIndexBuffer,
     CmdBindPipeline, CmdBindVertexBuffers, CmdBlitImage, CmdClearColorImage,
     CmdClearDepthStencilImage, CmdCopyBuffer, CmdCopyBufferToImage, CmdCopyImage,
@@ -38,23 +38,23 @@ use crate::{
     DestroyShaderModule, DestroySwapchainKhr, Device, DeviceMemory, DeviceWaitIdle,
     EndCommandBuffer, Fence, FenceCreateInfo, Filter, FlushMappedMemoryRanges, Framebuffer,
     FramebufferCreateInfo, FreeCommandBuffers, FreeDescriptorSets, FreeMemory, FrontFace,
-    GetBufferMemoryRequirements, GetDescriptorSetLayoutSupport, GetDeviceQueue, GetFenceStatus,
-    GetImageMemoryRequirements, GetPipelineCacheData, GetQueryPoolResults,
-    GetSemaphoreCounterValue, GetSwapchainImagesKhr, GraphicsPipelineCreateInfo, Image, ImageBlit,
-    ImageCopy, ImageCreateInfo, ImageLayout, ImageMemoryBarrier, ImageSubresourceRange, ImageView,
-    ImageViewCreateInfo, IndexType, InstanceFp, InvalidateMappedMemoryRanges, MapMemory,
-    MappedMemoryRange, MemoryAllocateInfo, MemoryBarrier, MemoryMapFlags, MemoryRequirements,
-    MergePipelineCaches, Pipeline, PipelineBindPoint, PipelineCache, PipelineCacheCreateInfo,
-    PipelineLayout, PipelineLayoutCreateInfo, PipelineStageFlags, PresentInfoKhr,
-    PrimitiveTopology, QueryControlFlags, QueryPool, QueryPoolCreateInfo, QueryResultFlags, Queue,
-    QueuePresentKhr, QueueSubmit, QueueSubmit2, QueueWaitIdle, Rect2d, RenderPass,
-    RenderPassBeginInfo, RenderPassCreateInfo, RenderingInfo, ResetCommandBuffer, ResetCommandPool,
-    ResetDescriptorPool, ResetFences, Result, Sampler, SamplerCreateInfo, Semaphore,
-    SemaphoreCreateInfo, SemaphoreSignalInfo, SemaphoreWaitInfo, ShaderModule,
-    ShaderModuleCreateInfo, ShaderStageFlags, SignalSemaphore, StencilFaceFlags, StencilOp,
-    SubmitInfo, SubmitInfo2, SubpassContents, SwapchainCreateInfoKhr, SwapchainKhr,
-    TrimCommandPool, UnmapMemory, UpdateDescriptorSets, Viewport, WaitForFences, WaitSemaphores,
-    WriteDescriptorSet,
+    GetBufferDeviceAddress, GetBufferMemoryRequirements, GetBufferOpaqueCaptureAddress,
+    GetDescriptorSetLayoutSupport, GetDeviceQueue, GetFenceStatus, GetImageMemoryRequirements,
+    GetPipelineCacheData, GetQueryPoolResults, GetSemaphoreCounterValue, GetSwapchainImagesKhr,
+    GraphicsPipelineCreateInfo, Image, ImageBlit, ImageCopy, ImageCreateInfo, ImageLayout,
+    ImageMemoryBarrier, ImageSubresourceRange, ImageView, ImageViewCreateInfo, IndexType,
+    InstanceFp, InvalidateMappedMemoryRanges, MapMemory, MappedMemoryRange, MemoryAllocateInfo,
+    MemoryBarrier, MemoryMapFlags, MemoryRequirements, MergePipelineCaches, Pipeline,
+    PipelineBindPoint, PipelineCache, PipelineCacheCreateInfo, PipelineLayout,
+    PipelineLayoutCreateInfo, PipelineStageFlags, PresentInfoKhr, PrimitiveTopology,
+    QueryControlFlags, QueryPool, QueryPoolCreateInfo, QueryResultFlags, Queue, QueuePresentKhr,
+    QueueSubmit, QueueSubmit2, QueueWaitIdle, Rect2d, RenderPass, RenderPassBeginInfo,
+    RenderPassCreateInfo, RenderingInfo, ResetCommandBuffer, ResetCommandPool, ResetDescriptorPool,
+    ResetFences, Result, Sampler, SamplerCreateInfo, Semaphore, SemaphoreCreateInfo,
+    SemaphoreSignalInfo, SemaphoreWaitInfo, ShaderModule, ShaderModuleCreateInfo, ShaderStageFlags,
+    SignalSemaphore, StencilFaceFlags, StencilOp, SubmitInfo, SubmitInfo2, SubpassContents,
+    SwapchainCreateInfoKhr, SwapchainKhr, TrimCommandPool, UnmapMemory, UpdateDescriptorSets,
+    Viewport, WaitForFences, WaitSemaphores, WriteDescriptorSet,
 };
 
 /// Device-level commands.
@@ -174,6 +174,8 @@ pub struct DeviceFp {
     get_semaphore_counter_value: Option<GetSemaphoreCounterValue>,
     wait_semaphores: Option<WaitSemaphores>,
     signal_semaphore: Option<SignalSemaphore>,
+    get_buffer_device_address: Option<GetBufferDeviceAddress>,
+    get_buffer_opaque_capture_address: Option<GetBufferOpaqueCaptureAddress>,
 
     // v1.3
     queue_submit_2: Option<QueueSubmit2>,
@@ -335,6 +337,8 @@ impl DeviceFp {
             get_semaphore_counter_value: get!(b"vkGetSemaphoreCounterValue\0").ok(),
             wait_semaphores: get!(b"vkWaitSemaphores\0").ok(),
             signal_semaphore: get!(b"vkSignalSemaphore\0").ok(),
+            get_buffer_device_address: get!(b"vkGetBufferDeviceAddress\0").ok(),
+            get_buffer_opaque_capture_address: get!(b"vkGetBufferOpaqueCaptureAddress\0").ok(),
 
             queue_submit_2: get!(b"vkQueueSubmit2\0").ok(),
             cmd_pipeline_barrier_2: get!(b"vkCmdPipelineBarrier2\0").ok(),
@@ -1040,6 +1044,26 @@ impl DeviceFp {
             descriptor_set_count,
             descriptor_sets,
         )
+    }
+
+    /// vkGetBufferDeviceAddress (v1.2)
+    pub unsafe fn get_buffer_device_address(
+        &self,
+        device: Device,
+        info: *const BufferDeviceAddressInfo,
+    ) -> u64 {
+        debug_assert!(self.get_buffer_device_address.is_some());
+        (self.get_buffer_device_address.unwrap_unchecked())(device, info)
+    }
+
+    /// vkGetBufferOpaqueCaptureAddress (v1.2)
+    pub unsafe fn get_buffer_opaque_capture_address(
+        &self,
+        device: Device,
+        info: *const BufferDeviceAddressInfo,
+    ) -> u64 {
+        debug_assert!(self.get_buffer_opaque_capture_address.is_some());
+        (self.get_buffer_opaque_capture_address.unwrap_unchecked())(device, info)
     }
 
     /// vkCreateQueryPool
