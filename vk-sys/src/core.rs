@@ -1386,6 +1386,16 @@ pub struct ImageCopy {
     pub extent: Extent3d,
 }
 
+/// VkImageBlit
+#[derive(Debug)]
+#[repr(C)]
+pub struct ImageBlit {
+    pub src_subresource: ImageSubresourceLayers,
+    pub src_offsets: [Offset3d; 2],
+    pub dst_subresource: ImageSubresourceLayers,
+    pub dst_offsets: [Offset3d; 2],
+}
+
 /// VkImageSubresourceLayers
 #[derive(Debug)]
 #[repr(C)]
@@ -1405,6 +1415,18 @@ pub(crate) type CmdCopyImage = unsafe extern "C" fn(
     dst_layout: ImageLayout,
     region_count: u32,
     regions: *const ImageCopy,
+);
+
+/// PFN_vkCmdBlitImage
+pub(crate) type CmdBlitImage = unsafe extern "C" fn(
+    cmd_buf: CommandBuffer,
+    src_img: Image,
+    src_layout: ImageLayout,
+    dst_img: Image,
+    dst_layout: ImageLayout,
+    region_count: u32,
+    regions: *const ImageBlit,
+    filter: Filter,
 );
 
 /// PFN_vkCmdClearColorImage
