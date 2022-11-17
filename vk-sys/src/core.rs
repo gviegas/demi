@@ -5,7 +5,7 @@ use std::fmt;
 
 use crate::{
     c_size_t, AllocationCallbacks, Bool32, Extent3d, Format, Offset3d, PhysicalDeviceFeatures,
-    PhysicalDeviceLimits, Rect2d, Result, StructureType,
+    PhysicalDeviceLimits, PhysicalDeviceSparseProperties, Rect2d, Result, StructureType,
 };
 
 // TODO: Sparse API, events, ...
@@ -129,17 +129,6 @@ def_ids!(
     PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU = 3,
     PHYSICAL_DEVICE_TYPE_CPU = 4
 );
-
-/// VkPhysicalDeviceSparseProperties
-#[derive(Debug)]
-#[repr(C)]
-pub struct PhysicalDeviceSparseProperties {
-    pub residency_standard_2d_block_shape: Bool32,
-    pub residency_standard_2d_multisample_block_shape: Bool32,
-    pub residency_standard_3d_block_shape: Bool32,
-    pub residency_aligned_mip_size: Bool32,
-    pub residency_non_resident_strict: Bool32,
-}
 
 /// VkQueueFamilyProperties
 #[derive(Debug)]
