@@ -6,10 +6,10 @@ edition = "2021"
 [dependencies]
 
 [workspace]
-members = ["vk-sys"]
+members = ["platform/vk-sys"]
 
 [workspace.dependencies]
-dl-sys = { path = "dl-sys" }
-dl = { path = "dl" }
-vk-sys = { path = "vk-sys" }
-wlc-sys = { path = "wlc-sys" }
+dl-sys = { path = "platform/dl-sys" }
+dl = { path = "platform/dl" }
+vk-sys = { path = "platform/vk-sys" }
+wlc-sys = { path = "platform/wlc-sys" }
