@@ -44,12 +44,12 @@ pub enum DataType {
     U8x4,
 }
 
-/// Primitive assembly modes.
-pub enum Mode {
-    PointList,
-    LineList,
+/// Primitive topology values.
+pub enum Topology {
+    Point,
+    Line,
     LineStrip,
-    TriangleList,
+    Triangle,
     TriangleStrip,
     TriangleFan,
 }
@@ -100,7 +100,7 @@ impl Builder {
         todo!();
     }
 
-    pub fn push_primitive(&mut self, mode: Mode) -> io::Result<&mut Self> {
+    pub fn push_primitive(&mut self, topology: Topology) -> io::Result<&mut Self> {
         todo!();
     }
 
