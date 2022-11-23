@@ -7,13 +7,6 @@ pub struct Material {
     // TODO
 }
 
-/// Material model.
-pub enum Model {
-    Pbrmr { metallic: f32, roughness: f32 },
-    Unlit,
-    // TODO
-}
-
 /// Reference to a texture and sampler.
 pub struct TexRef {
     // TODO
@@ -37,43 +30,28 @@ impl Builder {
         todo!();
     }
 
-    pub fn set_model(&mut self, model: Model) -> &mut Self {
+    pub fn set_base_color(&mut self, texture: Option<&TexRef>, factor: [f32; 4]) -> &mut Self {
         todo!();
     }
 
-    pub fn set_color_texture(&mut self, texture: Option<&TexRef>) -> &mut Self {
+    pub fn set_metallic_roughness(
+        &mut self,
+        texture: Option<&TexRef>,
+        metalness: f32,
+        roughness: f32,
+    ) -> &mut Self {
         todo!();
     }
 
-    pub fn set_color_factor(&mut self, factor: [f32; 4]) -> &mut Self {
+    pub fn set_normal(&mut self, texture: Option<&TexRef>, scale: f32) -> &mut Self {
         todo!();
     }
 
-    pub fn set_specular_texture(&mut self, texture: Option<&TexRef>) -> &mut Self {
+    pub fn set_occlusion(&mut self, texture: Option<&TexRef>, strength: f32) -> &mut Self {
         todo!();
     }
 
-    pub fn set_normal_texture(&mut self, texture: Option<&TexRef>) -> &mut Self {
-        todo!();
-    }
-
-    pub fn set_normal_scale(&mut self, scale: f32) -> &mut Self {
-        todo!();
-    }
-
-    pub fn set_occlusion_texture(&mut self, texture: Option<&TexRef>) -> &mut Self {
-        todo!();
-    }
-
-    pub fn set_occlusion_strength(&mut self, strength: f32) -> &mut Self {
-        todo!();
-    }
-
-    pub fn set_emissive_texture(&mut self, texture: Option<&TexRef>) -> &mut Self {
-        todo!();
-    }
-
-    pub fn set_emissive_factor(&mut self, factor: [f32; 3]) -> &mut Self {
+    pub fn set_emissive(&mut self, texture: Option<&TexRef>, factor: [f32; 3]) -> &mut Self {
         todo!();
     }
 
@@ -86,6 +64,10 @@ impl Builder {
     }
 
     pub fn create(&mut self) -> io::Result<Material> {
+        todo!();
+    }
+
+    pub fn create_unlit(&mut self) -> io::Result<Material> {
         todo!();
     }
 }
