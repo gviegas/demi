@@ -209,3 +209,63 @@ macro_rules! neg_impl {
 neg_impl!(Vec2<T>);
 neg_impl!(Vec3<T>);
 neg_impl!(Vec4<T>);
+
+macro_rules! dot_impl {
+    ($t:ty) => {
+        impl<T: Copy + Default + Mul<Output = T> + Add<Output = T>> $t {
+            pub fn dot(&self, other: &Self) -> T {
+                // TODO: Compare to a simple for loop.
+                self.0
+                    .iter()
+                    .zip(&other.0)
+                    .fold(T::default(), |acc, (a, b)| acc + *a * *b)
+            }
+        }
+    };
+}
+
+dot_impl!(Vec2<T>);
+dot_impl!(Vec3<T>);
+dot_impl!(Vec4<T>);
+
+// NOTE: Floating-point only.
+macro_rules! length_impl {
+    ($($v:tt<$f:ty>),+) => {$(
+        impl $v<$f> {
+            pub fn length(&self) -> $f {
+                self.dot(self).sqrt()
+            }
+        }
+    )+};
+}
+
+length_impl!(Vec2<f32>, Vec2<f64>);
+length_impl!(Vec3<f32>, Vec3<f64>);
+length_impl!(Vec4<f32>, Vec4<f64>);
+
+// NOTE: Floating-point only.
+macro_rules! norm_impl {
+    ($($t:ty),+) => {$(
+        impl $t {
+            #[must_use]
+            pub fn norm(&self) -> Self {
+                self / self.length()
+            }
+        }
+    )+};
+}
+
+norm_impl!(Vec2<f32>, Vec2<f64>);
+norm_impl!(Vec3<f32>, Vec3<f64>);
+norm_impl!(Vec4<f32>, Vec4<f64>);
+
+impl<T: Copy + Sub<Output = T> + Mul<Output = T>> Vec3<T> {
+    #[must_use]
+    pub fn cross(&self, other: &Self) -> Self {
+        Self([
+            self[1] * other[2] - other[1] * self[2],
+            self[2] * other[0] - other[2] * self[0],
+            self[0] * other[1] - other[0] * self[1],
+        ])
+    }
+}
