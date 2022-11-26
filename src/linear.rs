@@ -8,3 +8,6 @@ pub use crate::linear::matn::{Mat3, Mat4};
 
 mod quat;
 pub use crate::linear::quat::Quat;
+
+#[cfg(test)]
+mod tests;
