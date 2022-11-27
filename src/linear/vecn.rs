@@ -5,15 +5,15 @@ use std::ops::{
 };
 
 /// 2-component vector.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Vec2<T>([T; 2]);
 
 /// 3-component vector.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Vec3<T>([T; 3]);
 
 /// 4-component vector.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Vec4<T>([T; 4]);
 
 macro_rules! new_impl {
@@ -110,7 +110,7 @@ sub_impl!(Vec4<T>, 4);
 
 macro_rules! sub_assign_impl {
     ($t:ty, $n:literal) => {
-        impl<T: Copy + Default + SubAssign> SubAssign<&$t> for $t {
+        impl<T: Copy + SubAssign> SubAssign<&$t> for $t {
             fn sub_assign(&mut self, other: &Self) {
                 for i in 0..$n {
                     self[i] -= other[i];
