@@ -1,6 +1,6 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
-use crate::linear::{Vec2, Vec3, Vec4};
+use crate::linear::{Mat2, Mat3, Mat4, Quat, Vec2, Vec3, Vec4};
 
 #[test]
 fn vec_index() {
@@ -188,4 +188,173 @@ fn vec_cross() {
     assert_eq!(w[0], 0.0);
     assert_eq!(w[1], 0.0);
     assert_eq!(w[2], 0.0);
+}
+
+#[test]
+fn mat_index() {
+    let a = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let m = Mat3::new(&a);
+    let mut n = Mat3::<i32>::default();
+    n[0] = m[2];
+    n[1] = m[1];
+    n[2] = m[0];
+    for i in a.into_iter().rev().enumerate() {
+        for j in i.1.into_iter().enumerate() {
+            assert_eq!(j.1, n[i.0][j.0]);
+        }
+    }
+}
+
+#[test]
+fn mat_add() {
+    let m = Mat2::new(&[[-1, 4], [8, -256]]);
+    let n = Mat2::new(&[[-1, 2], [10, 202]]);
+    let o = &m + &n;
+    for i in 0..2 {
+        for j in 0..2 {
+            assert_eq!(o[i][j], m[i][j] + n[i][j]);
+        }
+    }
+}
+
+#[test]
+fn mat_add_assign() {
+    let mut m = Mat2::new(&[[-1, 4], [8, -256]]);
+    let n = Mat2::new(&[[-1, 2], [10, 202]]);
+    let o = m.clone();
+    m += &n;
+    for i in 0..2 {
+        for j in 0..2 {
+            assert_eq!(m[i][j], o[i][j] + n[i][j]);
+        }
+    }
+}
+
+#[test]
+fn mat_sub() {
+    let m = Mat2::new(&[[-1, 4], [8, -256]]);
+    let n = Mat2::new(&[[-1, 2], [10, 202]]);
+    let o = &m - &n;
+    for i in 0..2 {
+        for j in 0..2 {
+            assert_eq!(o[i][j], m[i][j] - n[i][j]);
+        }
+    }
+}
+
+#[test]
+fn mat_sub_assign() {
+    let mut m = Mat2::new(&[[-1, 4], [8, -256]]);
+    let n = Mat2::new(&[[-1, 2], [10, 202]]);
+    let o = m.clone();
+    m -= &n;
+    for i in 0..2 {
+        for j in 0..2 {
+            assert_eq!(m[i][j], o[i][j] - n[i][j]);
+        }
+    }
+}
+
+#[test]
+fn mat_mul() {
+    let m = Mat2::new(&[[2, 3], [4, 5]]);
+    let n = Mat2::new(&[[2, 1], [1, 2]]);
+    let o = &m * &n;
+    assert_eq!(o[0][0], 8);
+    assert_eq!(o[0][1], 11);
+    assert_eq!(o[1][0], 10);
+    assert_eq!(o[1][1], 13);
+    let v = &m * &Vec2::new(&[10, -20]);
+    assert_eq!(v[0], -60);
+    assert_eq!(v[1], -70);
+}
+
+#[test]
+fn mat_mul_assign() {
+    let mut m = Mat2::new(&[[2, 3], [4, 5]]);
+    let n = Mat2::new(&[[2, 1], [1, 2]]);
+    m *= &n;
+    assert_eq!(m[0][0], 8);
+    assert_eq!(m[0][1], 11);
+    assert_eq!(m[1][0], 10);
+    assert_eq!(m[1][1], 13);
+}
+
+#[test]
+fn mat_transpose() {
+    let m = Mat4::new(&[
+        [0.0, 1.0, 2.0, 3.0],
+        [4.0, 5.0, 6.0, 7.0],
+        [8.0, 9.0, 10.0, 11.0],
+        [12.0, 13.0, 14.0, 15.0],
+    ]);
+    let n = m.transpose();
+    assert_eq!(n[0][0], m[0][0]);
+    assert_eq!(n[0][1], m[1][0]);
+    assert_eq!(n[0][2], m[2][0]);
+    assert_eq!(n[0][3], m[3][0]);
+    assert_eq!(n[1][0], m[0][1]);
+    assert_eq!(n[1][1], m[1][1]);
+    assert_eq!(n[1][2], m[2][1]);
+    assert_eq!(n[1][3], m[3][1]);
+    assert_eq!(n[2][0], m[0][2]);
+    assert_eq!(n[2][1], m[1][2]);
+    assert_eq!(n[2][2], m[2][2]);
+    assert_eq!(n[2][3], m[3][2]);
+    assert_eq!(n[3][0], m[0][3]);
+    assert_eq!(n[3][1], m[1][3]);
+    assert_eq!(n[3][2], m[2][3]);
+    assert_eq!(n[3][3], m[3][3]);
+}
+
+#[test]
+fn mat_invert() {
+    let assert0 = |x: f64| assert!(x.abs() - 0.0 < 0.000000000001);
+    let assert1 = |x: f64| assert!((x.abs() - 1.0).abs() < 0.000000000001);
+
+    let m = Mat2::new(&[[12f64, 0.0], [-1.0, 4.0]]);
+    let n = m.invert();
+    let o = &m * &n;
+    assert1(o[0][0]);
+    assert0(o[0][1]);
+    assert0(o[1][0]);
+    assert1(o[1][1]);
+
+    let m = Mat3::new(&[[1f64, 0.0, 0.0], [0.0, 1.0, 0.0], [7.0, 8.0, 9.0]]);
+    let n = m.invert();
+    let o = &m * &n;
+    assert1(o[0][0]);
+    assert0(o[0][1]);
+    assert0(o[0][2]);
+    assert0(o[1][0]);
+    assert1(o[1][1]);
+    assert0(o[1][2]);
+    assert0(o[2][0]);
+    assert0(o[2][1]);
+    assert1(o[2][2]);
+
+    let m = Mat4::new(&[
+        [-2f64, 0.0, 0.0, 0.0],
+        [0.0, -34.0, 0.0, 1.0],
+        [0.0, 0.0, -1.0, 2.0],
+        [0.0, 1.0, 2.0, -16.0],
+    ]);
+    let n = m.invert();
+    let o = &m * &n;
+    assert1(o[0][0]);
+    assert0(o[0][1]);
+    assert0(o[0][2]);
+    assert0(o[0][3]);
+    assert0(o[1][0]);
+    assert1(o[1][1]);
+    assert0(o[1][2]);
+    assert0(o[1][3]);
+    assert0(o[2][0]);
+    assert0(o[2][1]);
+    assert1(o[2][2]);
+    assert0(o[2][3]);
+    assert0(o[3][0]);
+    assert0(o[3][1]);
+    assert0(o[3][2]);
+    assert1(o[3][3]);
 }
