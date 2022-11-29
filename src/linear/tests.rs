@@ -409,3 +409,107 @@ fn quat_rotation() {
     assert_eq!(u.real(), q.real());
     assert_eq!(q.real(), p.real());
 }
+
+#[test]
+fn mat_translation() {
+    let m = Mat4::<i32>::translation(3, -2, -99);
+    for i in 0..3 {
+        assert_eq!(m[i][i], 1);
+        for j in i + 1..3 {
+            assert_eq!(m[i][j], 0);
+            assert_eq!(m[j][i], 0);
+        }
+    }
+    assert_eq!(m[3][0], 3);
+    assert_eq!(m[3][1], -2);
+    assert_eq!(m[3][2], -99);
+    assert_eq!(m[3][3], 1);
+}
+
+#[test]
+fn mat_rotation() {
+    const PI: f32 = 3.14159265358979;
+    const PI_2: f32 = PI / 2.0;
+    const PI_4: f32 = PI_2 / 2.0;
+    let assert = |m: Mat4<f32>, n: Mat4<f32>| {
+        for i in 0..4 {
+            for j in 0..4 {
+                assert!((m[i][j] - n[i][j]).abs() < 0.000001);
+            }
+        }
+    };
+
+    let m = Mat4::<f32>::rotation(PI, &Vec3::new(&[1.0, 0.0, 0.0]));
+    let n = Mat4::<f32>::rotation_x(PI);
+    assert(m, n);
+
+    let m = Mat4::<f32>::rotation(PI_2, &Vec3::new(&[0.0, 1.0, 0.0]));
+    let n = Mat4::<f32>::rotation_y(PI_2);
+    assert(m, n);
+
+    let m = Mat4::<f32>::rotation(PI_4, &Vec3::new(&[0.0, 0.0, -1.0]));
+    let n = Mat4::<f32>::rotation_z(-PI_4);
+    assert(m, n);
+
+    let q = Quat::<f32>::rotation(PI_2, &Vec3::new(&[0.0, -1.0, 0.0]));
+    let m = Mat4::<f32>::rotation_q(&q);
+    let n = Mat4::<f32>::rotation(PI_2, &Vec3::new(&[0.0, -1.0, 0.0]));
+    assert(m, n);
+}
+
+#[test]
+fn mat_scale() {
+    let a = [2.0, 3.0, 0.5, 1.0];
+    let m = Mat3::<f64>::scale(a[0], a[1], a[2]);
+    for i in 0..3 {
+        assert_eq!(m[i][i], a[i]);
+        for j in i + 1..3 {
+            assert_eq!(m[i][j], 0.0);
+            assert_eq!(m[j][i], 0.0);
+        }
+    }
+    let m = Mat4::<f64>::scale(a[0], a[1], a[2]);
+    for i in 0..4 {
+        assert_eq!(m[i][i], a[i]);
+        for j in i + 1..4 {
+            assert_eq!(m[i][j], 0.0);
+            assert_eq!(m[j][i], 0.0);
+        }
+    }
+}
+
+#[test]
+fn mat_view() {
+    let center = Vec3::default();
+    let eye = Vec3::new(&[-1.0, 0.0, 0.0]);
+    let up = Vec3::new(&[0.0, 1.0, 0.0]);
+    let m = Mat4::<f32>::look_at(&center, &eye, &up);
+    assert_eq!(m[0][2], -1.0);
+    assert_eq!(m[1][1], -1.0);
+    assert_eq!(m[2][0], 1.0);
+    assert_eq!(m[3][2], -1.0);
+}
+
+#[test]
+fn mat_projection() {
+    let yfov = 3.14159265358979 / 2.0;
+    let aspect = 16.0 / 9.0;
+    let (znear, zfar) = (0.01, 100.0);
+
+    let m = Mat4::<f32>::perspective(yfov, aspect, znear, zfar);
+    assert_eq!(m[0][0] * aspect, 1.0);
+    assert_eq!(m[3][3], 0.0);
+    let n = Mat4::<f32>::inf_perspective(yfov, aspect, znear);
+    assert_eq!(n[0][0] * aspect, 1.0);
+    assert_eq!(n[3][3], 0.0);
+    assert!(n[2][2] > m[2][2]);
+    assert!(n[3][2] > m[3][2]);
+
+    let (znear, zfar) = (0.0, -1.0);
+    let (xmag, ymag) = (1.25, 1.5);
+
+    let m = Mat4::<f32>::ortho(xmag, ymag, znear, zfar);
+    assert_eq!(m[0][0], 1.0 / xmag);
+    assert_eq!(m[1][1], 1.0 / ymag);
+    assert_eq!(m[3][3], 1.0);
+}
