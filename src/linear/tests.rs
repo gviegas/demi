@@ -358,3 +358,54 @@ fn mat_invert() {
     assert0(o[3][2]);
     assert1(o[3][3]);
 }
+
+#[test]
+fn quat_mul() {
+    let q = Quat::new(&[0.0; 3], 1f32);
+    let u = Quat::new(&[0.7071068, 0.0, -0.7071068], 1f32);
+    let p = &q * &u;
+    assert_eq!(p.imag()[0], u.imag()[0]);
+    assert_eq!(p.imag()[1], u.imag()[1]);
+    assert_eq!(p.imag()[2], u.imag()[2]);
+    assert_eq!(p.real(), u.real());
+}
+
+#[test]
+fn quat_mul_assign() {
+    const PI: f64 = 3.14159265358979;
+    let mut q = Quat::new(&[0.0, 0.0, -1.0], PI);
+    let u = Quat::new(&[1.0, 0.0, 0.0], PI);
+    q *= &u;
+    assert!((q.imag()[0] - PI).abs() < 0.000000000001);
+    assert_eq!(q.imag()[1], -1.0);
+    assert!((q.imag()[2] + PI).abs() < 0.000000000001);
+    assert!((q.real() - PI * PI).abs() < 0.000000000001);
+}
+
+#[test]
+fn quat_rotation() {
+    const PI_2: f64 = 3.14159265358979 / 2.0;
+    const PI_4: f64 = PI_2 / 2.0;
+
+    let q = Quat::<f64>::rotation(PI_2, &Vec3::new(&[1.0, 0.0, 0.0]));
+    let u = Quat::<f64>::rotation(PI_2, &Vec3::new(&[0.0, 1.0, 0.0]));
+    let p = &q * &u;
+    assert!((p.imag()[0] - 0.5).abs() < 0.000000000001);
+    assert!((p.imag()[1] - 0.5).abs() < 0.000000000001);
+    assert!((p.imag()[2] - 0.5).abs() < 0.000000000001);
+    assert!((p.real() - 0.5).abs() < 0.000000000001);
+
+    let q = Quat::<f64>::rotation_x(PI_4);
+    let u = Quat::<f64>::rotation_y(PI_4);
+    let p = Quat::<f64>::rotation_z(PI_4);
+    assert_eq!(q.imag()[0], u.imag()[1]);
+    assert_eq!(u.imag()[1], p.imag()[2]);
+    assert_eq!(q.imag()[1], 0.0);
+    assert_eq!(q.imag()[2], 0.0);
+    assert_eq!(u.imag()[0], 0.0);
+    assert_eq!(u.imag()[2], 0.0);
+    assert_eq!(p.imag()[0], 0.0);
+    assert_eq!(p.imag()[1], 0.0);
+    assert_eq!(u.real(), q.real());
+    assert_eq!(q.real(), p.real());
+}
