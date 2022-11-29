@@ -2,7 +2,7 @@
 
 use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
 
-use crate::linear::{Vec2, Vec3, Vec4};
+use crate::linear::{Quat, Vec2, Vec3, Vec4};
 
 /// Column-major 2x2 matrix.
 #[derive(Clone, Default, Debug)]
@@ -204,6 +204,8 @@ transpose_impl!(Mat2<T>, 2);
 transpose_impl!(Mat3<T>, 3);
 transpose_impl!(Mat4<T>, 4);
 
+// TODO: Consider using custom traits for numeric types instead.
+
 // NOTE: Floating-point only.
 macro_rules! invert_impl {
     ($($f:ty, $one:literal),+) => {$(
@@ -319,3 +321,270 @@ macro_rules! invert_impl {
 }
 
 invert_impl!(f32, 1f32, f64, 1f64);
+
+macro_rules! translation_impl {
+    ($($num:ty, $one:literal),+) => {$(
+        impl Mat4<$num> {
+            pub fn translation(x: $num, y: $num, z: $num) -> Self {
+                let mut m = Self::default();
+                m[0][0] = $one;
+                m[1][1] = $one;
+                m[2][2] = $one;
+                m[3][0] = x;
+                m[3][1] = y;
+                m[3][2] = z;
+                m[3][3] = $one;
+                m
+            }
+        }
+    )+};
+}
+
+translation_impl!(i32, 1i32, i64, 1i64, f32, 1f32, f64, 1f64);
+
+// NOTE: Floating-point only.
+macro_rules! rotation_impl {
+    ($($f:ty, $one:literal),+) => {$(
+        impl Mat3<$f> {
+            pub fn rotation(angle: $f, axis: &Vec3<$f>) -> Self {
+                let axis = axis.norm();
+                let (x, y, z) = (axis[0], axis[1], axis[2]);
+                let cos = angle.cos();
+                let sin = angle.sin();
+                let dcos = $one - cos;
+                let dcosxy = dcos * x * y;
+                let dcosxz = dcos * x * z;
+                let dcosyz = dcos * y * z;
+                let sinx = sin * x;
+                let siny = sin * y;
+                let sinz = sin * z;
+                Self::new(&[
+                    [cos + dcos * x * x, dcosxy + sinz, dcosxz - siny],
+                    [dcosxy - sinz, cos + dcos * y * y, dcosyz + sinx],
+                    [dcosxz + siny, dcosyz - sinx, cos + dcos * z * z],
+                ])
+            }
+
+            pub fn rotation_q(quat: &Quat<$f>) -> Self {
+                // TODO: Implement vector conversions.
+                let imag = quat.imag();
+                let real = quat.real();
+                let qvec = Vec4::new(&[imag[0], imag[1], imag[2], real]).norm();
+                let (x, y, z, w) = (qvec[0], qvec[1], qvec[2], qvec[3]);
+                let xx2 = ($one + $one) * x * x;
+                let xy2 = ($one + $one) * x * y;
+                let xz2 = ($one + $one) * x * z;
+                let xw2 = ($one + $one) * x * w;
+                let yy2 = ($one + $one) * y * y;
+                let yz2 = ($one + $one) * y * z;
+                let yw2 = ($one + $one) * y * w;
+                let zz2 = ($one + $one) * z * z;
+                let zw2 = ($one + $one) * z * w;
+                Self::new(&[
+                    [$one - yy2 - zz2, xy2 + zw2, xz2 - yw2],
+                    [xy2 - zw2, $one - xx2 - zz2, yz2 + xw2],
+                    [xz2 + yw2, yz2 - xw2, $one - xx2 - yy2],
+                ])
+            }
+
+            pub fn rotation_x(angle: $f) -> Self {
+                let zero = $one - $one;
+                let cos = angle.cos();
+                let sin = angle.sin();
+                Self::new(&[[$one, zero, zero], [zero, cos, sin], [zero, -sin, cos]])
+            }
+
+            pub fn rotation_y(angle: $f) -> Self {
+                let zero = $one - $one;
+                let cos = angle.cos();
+                let sin = angle.sin();
+                Self::new(&[[cos, zero, -sin], [zero, $one, zero], [sin, zero, cos]])
+            }
+
+            pub fn rotation_z(angle: $f) -> Self {
+                let zero = $one - $one;
+                let cos = angle.cos();
+                let sin = angle.sin();
+                Self::new(&[[cos, sin, zero], [-sin, cos, zero], [zero, zero, $one]])
+            }
+        }
+
+        impl Mat4<$f> {
+            pub fn rotation(angle: $f, axis: &Vec3<$f>) -> Self {
+                let zero = $one - $one;
+                let axis = axis.norm();
+                let (x, y, z) = (axis[0], axis[1], axis[2]);
+                let cos = angle.cos();
+                let sin = angle.sin();
+                let dcos = $one - cos;
+                let dcosxy = dcos * x * y;
+                let dcosxz = dcos * x * z;
+                let dcosyz = dcos * y * z;
+                let sinx = sin * x;
+                let siny = sin * y;
+                let sinz = sin * z;
+                Self::new(&[
+                    [cos + dcos * x * x, dcosxy + sinz, dcosxz - siny, zero],
+                    [dcosxy - sinz, cos + dcos * y * y, dcosyz + sinx, zero],
+                    [dcosxz + siny, dcosyz - sinx, cos + dcos * z * z, zero],
+                    [zero, zero, zero, $one],
+                ])
+            }
+
+            pub fn rotation_q(quat: &Quat<$f>) -> Self {
+                let zero = $one - $one;
+                // TODO: Implement vector conversions.
+                let imag = quat.imag();
+                let real = quat.real();
+                let qvec = Vec4::new(&[imag[0], imag[1], imag[2], real]).norm();
+                let (x, y, z, w) = (qvec[0], qvec[1], qvec[2], qvec[3]);
+                let xx2 = ($one + $one) * x * x;
+                let xy2 = ($one + $one) * x * y;
+                let xz2 = ($one + $one) * x * z;
+                let xw2 = ($one + $one) * x * w;
+                let yy2 = ($one + $one) * y * y;
+                let yz2 = ($one + $one) * y * z;
+                let yw2 = ($one + $one) * y * w;
+                let zz2 = ($one + $one) * z * z;
+                let zw2 = ($one + $one) * z * w;
+                Self::new(&[
+                    [$one - yy2 - zz2, xy2 + zw2, xz2 - yw2, zero],
+                    [xy2 - zw2, $one - xx2 - zz2, yz2 + xw2, zero],
+                    [xz2 + yw2, yz2 - xw2, $one - xx2 - yy2, zero],
+                    [zero, zero, zero, $one],
+                ])
+            }
+
+            pub fn rotation_x(angle: $f) -> Self {
+                let zero = $one - $one;
+                let cos = angle.cos();
+                let sin = angle.sin();
+                Self::new(&[
+                    [$one, zero, zero, zero],
+                    [zero, cos, sin, zero],
+                    [zero, -sin, cos, zero],
+                    [zero, zero, zero, $one],
+                ])
+            }
+
+            pub fn rotation_y(angle: $f) -> Self {
+                let zero = $one - $one;
+                let cos = angle.cos();
+                let sin = angle.sin();
+                Self::new(&[
+                    [cos, zero, -sin, zero],
+                    [zero, $one, zero, zero],
+                    [sin, zero, cos, zero],
+                    [zero, zero, zero, $one],
+                ])
+            }
+
+            pub fn rotation_z(angle: $f) -> Self {
+                let zero = $one - $one;
+                let cos = angle.cos();
+                let sin = angle.sin();
+                Self::new(&[
+                    [cos, sin, zero, zero],
+                    [-sin, cos, zero, zero],
+                    [zero, zero, $one, zero],
+                    [zero, zero, zero, $one],
+                ])
+            }
+        }
+    )+};
+}
+
+rotation_impl!(f32, 1f32, f64, 1f64);
+
+macro_rules! scale_impl {
+    ($($num:ty, $one:literal),+) => {$(
+        impl Mat3<$num> {
+            pub fn scale(x: $num, y: $num, z: $num) -> Self {
+                let mut m = Self::default();
+                m[0][0] = x;
+                m[1][1] = y;
+                m[2][2] = z;
+                m
+            }
+        }
+
+        impl Mat4<$num> {
+            pub fn scale(x: $num, y: $num, z: $num) -> Self {
+                let mut m = Self::default();
+                m[0][0] = x;
+                m[1][1] = y;
+                m[2][2] = z;
+                m[3][3] = $one;
+                m
+            }
+        }
+    )+};
+}
+
+scale_impl!(i32, 1i32, i64, 1i64, f32, 1f32, f64, 1f64);
+
+// NOTE: Floating-point only.
+macro_rules! view_impl {
+    ($($f:ty, $one:literal),+) => {$(
+        impl Mat4<$f> {
+            pub fn look_at(center: &Vec3<$f>, eye: &Vec3<$f>, up: &Vec3<$f>) -> Self {
+                let fwd = (center - eye).norm();
+                let side = fwd.cross(up).norm();
+                let up = fwd.cross(&side);
+                let zero = $one - $one;
+                Self::new(&[
+                    [side[0], up[0], -fwd[0], zero],
+                    [side[1], up[1], -fwd[1], zero],
+                    [side[2], up[2], -fwd[2], zero],
+                    [-side.dot(eye), -up.dot(eye), fwd.dot(eye), $one],
+                ])
+            }
+        }
+    )+};
+}
+
+view_impl!(f32, 1f32, f64, 1f64);
+
+// NOTE: Floating-point only.
+macro_rules! projection_impl {
+    ($($f:ty, $one:literal),+) => {$(
+        impl Mat4<$f> {
+            pub fn perspective(yfov: $f, aspect: $f, znear: $f, zfar: $f) -> Self {
+                let zero = $one - $one;
+                let two = $one + $one;
+                let ct = $one / (yfov / two).tan();
+                Self::new(&[
+                    [ct / aspect, zero, zero, zero],
+                    [zero, ct, zero, zero],
+                    [zero, zero, (zfar + znear) / (znear - zfar), -$one],
+                    [zero, zero, (two * zfar * znear) / (znear - zfar), zero],
+                ])
+            }
+
+            pub fn inf_perspective(yfov: $f, aspect: $f, znear: $f) -> Self {
+                let zero = $one - $one;
+                let two = $one + $one;
+                let ct = $one / (yfov / two).tan();
+                Self::new(&[
+                    [ct / aspect, zero, zero, zero],
+                    [zero, ct, zero, zero],
+                    [zero, zero, -$one, -$one],
+                    [zero, zero, -two * znear, zero],
+                ])
+            }
+
+            pub fn ortho(xmag: $f, ymag: $f, znear: $f, zfar: $f) -> Self {
+                let zero = $one - $one;
+                let two = $one + $one;
+                Self::new(&[
+                    [$one / xmag, zero, zero, zero],
+                    [zero, $one / ymag, zero, zero],
+                    [zero, zero, two / (znear - zfar), zero],
+                    [zero, zero, (zfar + znear) / (znear - zfar), $one],
+                ])
+            }
+        }
+    )+};
+}
+
+projection_impl!(f32, 1f32, f64, 1f64);
