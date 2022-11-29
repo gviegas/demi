@@ -59,3 +59,41 @@ where
         */
     }
 }
+
+// NOTE: Floating-point only.
+macro_rules! rotation_impl {
+    ($f:ty, $zero:literal, $half:literal) => {
+        impl Quat<$f> {
+            pub fn rotation(angle: $f, axis: &Vec3<$f>) -> Self {
+                let ang = angle * $half;
+                let cos = ang.cos();
+                let sin = ang.sin();
+                Self(&axis.norm() * sin, cos)
+            }
+
+            pub fn rotation_x(angle: $f) -> Self {
+                let ang = angle * $half;
+                let cos = ang.cos();
+                let sin = ang.sin();
+                Self(Vec3::new(&[sin, $zero, $zero]), cos)
+            }
+
+            pub fn rotation_y(angle: $f) -> Self {
+                let ang = angle * $half;
+                let cos = ang.cos();
+                let sin = ang.sin();
+                Self(Vec3::new(&[$zero, sin, $zero]), cos)
+            }
+
+            pub fn rotation_z(angle: $f) -> Self {
+                let ang = angle * $half;
+                let cos = ang.cos();
+                let sin = ang.sin();
+                Self(Vec3::new(&[$zero, $zero, sin]), cos)
+            }
+        }
+    };
+}
+
+rotation_impl!(f32, 0f32, 0.5f32);
+rotation_impl!(f64, 0f64, 0.5f64);
