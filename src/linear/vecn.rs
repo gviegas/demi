@@ -4,6 +4,8 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign,
 };
 
+use crate::linear::Float;
+
 /// 2-component vector.
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Vec2<T>([T; 2]);
@@ -143,7 +145,7 @@ mul_impl!(Vec4<T>);
 
 macro_rules! mul_assign_impl {
     ($t:ty) => {
-        impl<T: Copy + Default + MulAssign> MulAssign<T> for $t {
+        impl<T: Copy + MulAssign> MulAssign<T> for $t {
             fn mul_assign(&mut self, scalar: T) {
                 for i in &mut self.0 {
                     *i *= scalar;
@@ -176,7 +178,7 @@ div_impl!(Vec4<T>);
 
 macro_rules! div_assign_impl {
     ($t:ty) => {
-        impl<T: Copy + Default + DivAssign> DivAssign<T> for $t {
+        impl<T: Copy + DivAssign> DivAssign<T> for $t {
             fn div_assign(&mut self, scalar: T) {
                 for i in &mut self.0 {
                     *i /= scalar;
@@ -212,7 +214,7 @@ neg_impl!(Vec4<T>);
 
 macro_rules! dot_impl {
     ($t:ty) => {
-        impl<T: Copy + Default + Mul<Output = T> + Add<Output = T>> $t {
+        impl<T: Copy + Default + Add<Output = T> + Mul<Output = T>> $t {
             pub fn dot(&self, other: &Self) -> T {
                 // TODO: Compare to a simple for loop.
                 self.0
@@ -228,36 +230,42 @@ dot_impl!(Vec2<T>);
 dot_impl!(Vec3<T>);
 dot_impl!(Vec4<T>);
 
-// NOTE: Floating-point only.
 macro_rules! length_impl {
-    ($($v:tt<$f:ty>),+) => {$(
-        impl $v<$f> {
-            pub fn length(&self) -> $f {
-                self.dot(self).sqrt()
+    ($t:ty) => {
+        impl<T: Float> $t {
+            pub fn length(&self) -> T {
+                // TODO: Compare to a simple for loop.
+                self.0
+                    .iter()
+                    .zip(&self.0)
+                    .fold(T::default(), |acc, (a, b)| acc + *a * *b)
+                    .sqrt()
+
+                // NOTE: This would require `Float` bound on `dot`.
+                //self.dot(self).sqrt()
             }
         }
-    )+};
+    };
 }
 
-length_impl!(Vec2<f32>, Vec2<f64>);
-length_impl!(Vec3<f32>, Vec3<f64>);
-length_impl!(Vec4<f32>, Vec4<f64>);
+length_impl!(Vec2<T>);
+length_impl!(Vec3<T>);
+length_impl!(Vec4<T>);
 
-// NOTE: Floating-point only.
 macro_rules! norm_impl {
-    ($($t:ty),+) => {$(
-        impl $t {
+    ($t:ty) => {
+        impl<T: Float> $t {
             #[must_use]
             pub fn norm(&self) -> Self {
                 self / self.length()
             }
         }
-    )+};
+    };
 }
 
-norm_impl!(Vec2<f32>, Vec2<f64>);
-norm_impl!(Vec3<f32>, Vec3<f64>);
-norm_impl!(Vec4<f32>, Vec4<f64>);
+norm_impl!(Vec2<T>);
+norm_impl!(Vec3<T>);
+norm_impl!(Vec4<T>);
 
 impl<T: Copy + Sub<Output = T> + Mul<Output = T>> Vec3<T> {
     #[must_use]

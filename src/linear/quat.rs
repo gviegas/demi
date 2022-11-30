@@ -2,7 +2,7 @@
 
 use std::ops::{Add, Mul, MulAssign, Sub};
 
-use crate::linear::Vec3;
+use crate::linear::{Float, Vec3};
 
 /// Quaternion.
 #[derive(Copy, Clone, Debug)]
@@ -60,40 +60,32 @@ where
     }
 }
 
-// NOTE: Floating-point only.
-macro_rules! rotation_impl {
-    ($f:ty, $zero:literal, $half:literal) => {
-        impl Quat<$f> {
-            pub fn rotation(angle: $f, axis: &Vec3<$f>) -> Self {
-                let ang = angle * $half;
-                let cos = ang.cos();
-                let sin = ang.sin();
-                Self(&axis.norm() * sin, cos)
-            }
+impl<T: Float> Quat<T> {
+    pub fn rotation(angle: T, axis: &Vec3<T>) -> Self {
+        let ang = angle / (T::ONE + T::ONE);
+        let cos = ang.cos();
+        let sin = ang.sin();
+        Self(&axis.norm() * sin, cos)
+    }
 
-            pub fn rotation_x(angle: $f) -> Self {
-                let ang = angle * $half;
-                let cos = ang.cos();
-                let sin = ang.sin();
-                Self(Vec3::new(&[sin, $zero, $zero]), cos)
-            }
+    pub fn rotation_x(angle: T) -> Self {
+        let ang = angle / (T::ONE + T::ONE);
+        let cos = ang.cos();
+        let sin = ang.sin();
+        Self(Vec3::new(&[sin, T::ZERO, T::ZERO]), cos)
+    }
 
-            pub fn rotation_y(angle: $f) -> Self {
-                let ang = angle * $half;
-                let cos = ang.cos();
-                let sin = ang.sin();
-                Self(Vec3::new(&[$zero, sin, $zero]), cos)
-            }
+    pub fn rotation_y(angle: T) -> Self {
+        let ang = angle / (T::ONE + T::ONE);
+        let cos = ang.cos();
+        let sin = ang.sin();
+        Self(Vec3::new(&[T::ZERO, sin, T::ZERO]), cos)
+    }
 
-            pub fn rotation_z(angle: $f) -> Self {
-                let ang = angle * $half;
-                let cos = ang.cos();
-                let sin = ang.sin();
-                Self(Vec3::new(&[$zero, $zero, sin]), cos)
-            }
-        }
-    };
+    pub fn rotation_z(angle: T) -> Self {
+        let ang = angle / (T::ONE + T::ONE);
+        let cos = ang.cos();
+        let sin = ang.sin();
+        Self(Vec3::new(&[T::ZERO, T::ZERO, sin]), cos)
+    }
 }
-
-rotation_impl!(f32, 0f32, 0.5f32);
-rotation_impl!(f64, 0f64, 0.5f64);
