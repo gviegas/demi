@@ -23,7 +23,7 @@ fn vec_add() {
     let v = Vec4::new(&[1i8; 4]);
     let u = Vec4::new(&[-2i8, -3, 0, 1]);
     let w = &v + &u;
-    let x = &u + &v;
+    let x = u + v;
     for i in 0..4 {
         assert_eq!(w[i], v[i] + u[i]);
         assert_eq!(w[i], x[i]);
@@ -34,10 +34,14 @@ fn vec_add() {
 fn vec_add_assign() {
     let mut v = Vec2::new(&[4, 2]);
     let u = Vec2::new(&[-10, 10]);
-    let w = v;
+    let mut w = v;
     v += &u;
     for i in 0..2 {
         assert_eq!(v[i], w[i] + u[i]);
+    }
+    w += u;
+    for i in 0..2 {
+        assert_eq!(w[i], v[i]);
     }
 }
 
@@ -45,7 +49,7 @@ fn vec_add_assign() {
 fn vec_sub() {
     let v = Vec4::new(&[1i8; 4]);
     let u = Vec4::new(&[-2i8, 3, 0, -1]);
-    let w = &v - &u;
+    let w = v - u;
     let x = &u - &v;
     for i in 0..4 {
         assert_eq!(w[i], v[i] - u[i]);
@@ -58,10 +62,14 @@ fn vec_sub() {
 fn vec_sub_assign() {
     let mut v = Vec2::new(&[4, 2]);
     let u = Vec2::new(&[-10, 10]);
-    let w = v;
-    v -= &u;
+    let mut w = v;
+    v -= u;
     for i in 0..2 {
         assert_eq!(v[i], w[i] - u[i]);
+    }
+    w -= &u;
+    for i in 0..2 {
+        assert_eq!(w[i], v[i]);
     }
 }
 
@@ -74,7 +82,7 @@ fn vec_mul() {
     for i in 0..3 {
         assert_eq!(v[i], a[i] * s);
     }
-    let v = &v * 0;
+    let v = v * 0;
     for i in 0..3 {
         assert_eq!(v[i], 0);
     }
@@ -100,7 +108,7 @@ fn vec_div() {
     let a = [1u64, 99, 65535];
     let v = Vec3::new(&a);
     let s = 9;
-    let v = &v / s;
+    let v = v / s;
     for i in 0..3 {
         assert_eq!(v[i], a[i] / s);
     }
@@ -134,7 +142,7 @@ fn vec_neg() {
     for i in 0..4 {
         assert_eq!(v[i], -u[i]);
     }
-    let u = -&u;
+    let u = -u;
     for i in 0..4 {
         assert_eq!(v[i], u[i]);
     }
@@ -215,17 +223,29 @@ fn mat_add() {
             assert_eq!(o[i][j], m[i][j] + n[i][j]);
         }
     }
+    let p = m + n;
+    for i in 0..2 {
+        for j in 0..2 {
+            assert_eq!(p[i][j], o[i][j]);
+        }
+    }
 }
 
 #[test]
 fn mat_add_assign() {
     let mut m = Mat2::new(&[[-1, 4], [8, -256]]);
     let n = Mat2::new(&[[-1, 2], [10, 202]]);
-    let o = m.clone();
+    let mut o = m.clone();
     m += &n;
     for i in 0..2 {
         for j in 0..2 {
             assert_eq!(m[i][j], o[i][j] + n[i][j]);
+        }
+    }
+    o += n;
+    for i in 0..2 {
+        for j in 0..2 {
+            assert_eq!(o[i][j], m[i][j]);
         }
     }
 }
@@ -240,17 +260,29 @@ fn mat_sub() {
             assert_eq!(o[i][j], m[i][j] - n[i][j]);
         }
     }
+    let p = m - n;
+    for i in 0..2 {
+        for j in 0..2 {
+            assert_eq!(p[i][j], o[i][j]);
+        }
+    }
 }
 
 #[test]
 fn mat_sub_assign() {
     let mut m = Mat2::new(&[[-1, 4], [8, -256]]);
     let n = Mat2::new(&[[-1, 2], [10, 202]]);
-    let o = m.clone();
+    let mut o = m.clone();
     m -= &n;
     for i in 0..2 {
         for j in 0..2 {
             assert_eq!(m[i][j], o[i][j] - n[i][j]);
+        }
+    }
+    o -= n;
+    for i in 0..2 {
+        for j in 0..2 {
+            assert_eq!(o[i][j], m[i][j]);
         }
     }
 }
@@ -267,17 +299,37 @@ fn mat_mul() {
     let v = &m * &Vec2::new(&[10, -20]);
     assert_eq!(v[0], -60);
     assert_eq!(v[1], -70);
+    let u = &m * Vec2::new(&[10, -20]);
+    assert_eq!(u[0], v[0]);
+    assert_eq!(u[1], v[1]);
+    let u = m.clone() * &Vec2::new(&[10, -20]);
+    assert_eq!(u[0], v[0]);
+    assert_eq!(u[1], v[1]);
+    let u = m.clone() * Vec2::new(&[10, -20]);
+    assert_eq!(u[0], v[0]);
+    assert_eq!(u[1], v[1]);
+    let p = m * n;
+    assert_eq!(p[0][0], o[0][0]);
+    assert_eq!(p[0][1], o[0][1]);
+    assert_eq!(p[1][0], o[1][0]);
+    assert_eq!(p[1][1], o[1][1]);
 }
 
 #[test]
 fn mat_mul_assign() {
     let mut m = Mat2::new(&[[2, 3], [4, 5]]);
     let n = Mat2::new(&[[2, 1], [1, 2]]);
+    let mut o = m.clone();
     m *= &n;
     assert_eq!(m[0][0], 8);
     assert_eq!(m[0][1], 11);
     assert_eq!(m[1][0], 10);
     assert_eq!(m[1][1], 13);
+    o *= n;
+    assert_eq!(o[0][0], m[0][0]);
+    assert_eq!(o[0][1], m[0][1]);
+    assert_eq!(o[1][0], m[1][0]);
+    assert_eq!(o[1][1], m[1][1]);
 }
 
 #[test]
@@ -368,6 +420,11 @@ fn quat_mul() {
     assert_eq!(p.imag()[1], u.imag()[1]);
     assert_eq!(p.imag()[2], u.imag()[2]);
     assert_eq!(p.real(), u.real());
+    let p = u * q;
+    assert_eq!(p.imag()[0], u.imag()[0]);
+    assert_eq!(p.imag()[1], u.imag()[1]);
+    assert_eq!(p.imag()[2], u.imag()[2]);
+    assert_eq!(p.real(), u.real());
 }
 
 #[test]
@@ -375,11 +432,17 @@ fn quat_mul_assign() {
     const PI: f64 = std::f64::consts::PI;
     let mut q = Quat::new(&[0.0, 0.0, -1.0], PI);
     let u = Quat::new(&[1.0, 0.0, 0.0], PI);
+    let mut p = q;
     q *= &u;
     assert!((q.imag()[0] - PI).abs() <= f64::EPSILON);
     assert_eq!(q.imag()[1], -1.0);
     assert!((q.imag()[2] + PI).abs() <= f64::EPSILON);
     assert!((q.real() - PI * PI).abs() <= f64::EPSILON);
+    p *= u;
+    assert_eq!(p.imag()[0], q.imag()[0]);
+    assert_eq!(p.imag()[1], q.imag()[1]);
+    assert_eq!(p.imag()[2], q.imag()[2]);
+    assert_eq!(p.real(), q.real());
 }
 
 #[test]

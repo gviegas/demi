@@ -60,7 +60,19 @@ macro_rules! add_impl {
             type Output = $t;
 
             fn add(self, other: Self) -> Self::Output {
-                let mut v = <$t>::new(&[T::default(); $n]);
+                let mut v = <$t>::default();
+                for i in 0..$n {
+                    v[i] = self[i] + other[i];
+                }
+                v
+            }
+        }
+
+        impl<T: Copy + Default + Add<Output = T>> Add for $t {
+            type Output = Self;
+
+            fn add(self, other: Self) -> Self::Output {
+                let mut v = Self::default();
                 for i in 0..$n {
                     v[i] = self[i] + other[i];
                 }
@@ -83,6 +95,14 @@ macro_rules! add_assign_impl {
                 }
             }
         }
+
+        impl<T: Copy + AddAssign> AddAssign for $t {
+            fn add_assign(&mut self, other: Self) {
+                for i in 0..$n {
+                    self[i] += other[i];
+                }
+            }
+        }
     };
 }
 
@@ -96,7 +116,19 @@ macro_rules! sub_impl {
             type Output = $t;
 
             fn sub(self, other: Self) -> Self::Output {
-                let mut v = <$t>::new(&[T::default(); $n]);
+                let mut v = <$t>::default();
+                for i in 0..$n {
+                    v[i] = self[i] - other[i];
+                }
+                v
+            }
+        }
+
+        impl<T: Copy + Default + Sub<Output = T>> Sub for $t {
+            type Output = Self;
+
+            fn sub(self, other: Self) -> Self::Output {
+                let mut v = Self::default();
                 for i in 0..$n {
                     v[i] = self[i] - other[i];
                 }
@@ -119,6 +151,14 @@ macro_rules! sub_assign_impl {
                 }
             }
         }
+
+        impl<T: Copy + SubAssign> SubAssign for $t {
+            fn sub_assign(&mut self, other: Self) {
+                for i in 0..$n {
+                    self[i] -= other[i];
+                }
+            }
+        }
     };
 }
 
@@ -134,6 +174,15 @@ macro_rules! mul_impl {
             fn mul(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
                 <$t>::new(&self.0.map(|x| x * scalar))
+            }
+        }
+
+        impl<T: Copy + Default + Mul<Output = T>> Mul<T> for $t {
+            type Output = Self;
+
+            fn mul(self, scalar: T) -> Self::Output {
+                // TODO: Compare to a simple for loop.
+                Self::new(&self.0.map(|x| x * scalar))
             }
         }
     };
@@ -169,6 +218,15 @@ macro_rules! div_impl {
                 <$t>::new(&self.0.map(|x| x / scalar))
             }
         }
+
+        impl<T: Copy + Default + Div<Output = T>> Div<T> for $t {
+            type Output = Self;
+
+            fn div(self, scalar: T) -> Self::Output {
+                // TODO: Compare to a simple for loop.
+                Self::new(&self.0.map(|x| x / scalar))
+            }
+        }
     };
 }
 
@@ -199,6 +257,18 @@ macro_rules! neg_impl {
 
             fn neg(self) -> Self::Output {
                 let mut v = *self;
+                for i in &mut v.0 {
+                    *i = -*i;
+                }
+                v
+            }
+        }
+
+        impl<T: Copy + Neg<Output = T>> Neg for $t {
+            type Output = Self;
+
+            fn neg(self) -> Self::Output {
+                let mut v = self;
                 for i in &mut v.0 {
                     *i = -*i;
                 }

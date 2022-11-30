@@ -33,11 +33,22 @@ where
         let r1 = self.1;
         let i2 = &other.0;
         let r2 = other.1;
-        // TODO: Implement ops for VecN values too.
-        Quat::<T>(
-            &(&(i1 * r2) + &(i2 * r1)) + &i1.cross(i2),
-            r1 * r2 - i1.dot(i2),
-        )
+        Quat::<T>(i1 * r2 + i2 * r1 + i1.cross(i2), r1 * r2 - i1.dot(i2))
+    }
+}
+
+impl<T> Mul for Quat<T>
+where
+    T: Copy + Default + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
+{
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self::Output {
+        let i1 = &self.0;
+        let r1 = self.1;
+        let i2 = &other.0;
+        let r2 = other.1;
+        Quat::<T>(i1 * r2 + i2 * r1 + i1.cross(i2), r1 * r2 - i1.dot(i2))
     }
 }
 
@@ -52,11 +63,17 @@ where
         let r1 = self.1;
         let i2 = &other.0;
         let r2 = other.1;
-        *self = Quat::<T>(
-            &(&(i1 * r2) + &(i2 * r1)) + &i1.cross(i2),
-            r1 * r2 - i1.dot(i2),
-        );
+        *self = Quat::<T>(i1 * r2 + i2 * r1 + i1.cross(i2), r1 * r2 - i1.dot(i2));
         */
+    }
+}
+
+impl<T> MulAssign for Quat<T>
+where
+    T: Copy + Default + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
+{
+    fn mul_assign(&mut self, other: Self) {
+        *self = *self * other;
     }
 }
 
@@ -65,7 +82,7 @@ impl<T: Float> Quat<T> {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
         let sin = ang.sin();
-        Self(&axis.norm() * sin, cos)
+        Self(axis.norm() * sin, cos)
     }
 
     pub fn rotation_x(angle: T) -> Self {

@@ -69,6 +69,18 @@ macro_rules! add_impl {
                 m
             }
         }
+
+        impl<T: Copy + Default + Add<Output = T>> Add for $m {
+            type Output = Self;
+
+            fn add(self, other: Self) -> Self::Output {
+                let mut m = Self::default();
+                for i in 0..$n {
+                    m[i] = &self[i] + &other[i];
+                }
+                m
+            }
+        }
     };
 }
 
@@ -80,6 +92,14 @@ macro_rules! add_assign_impl {
     ($t:ty, $n:literal) => {
         impl<T: Copy + AddAssign> AddAssign<&$t> for $t {
             fn add_assign(&mut self, other: &Self) {
+                for i in 0..$n {
+                    self[i] += &other[i];
+                }
+            }
+        }
+
+        impl<T: Copy + AddAssign> AddAssign for $t {
+            fn add_assign(&mut self, other: Self) {
                 for i in 0..$n {
                     self[i] += &other[i];
                 }
@@ -105,6 +125,18 @@ macro_rules! sub_impl {
                 m
             }
         }
+
+        impl<T: Copy + Default + Sub<Output = T>> Sub for $m {
+            type Output = Self;
+
+            fn sub(self, other: Self) -> Self::Output {
+                let mut m = Self::default();
+                for i in 0..$n {
+                    m[i] = &self[i] - &other[i];
+                }
+                m
+            }
+        }
     };
 }
 
@@ -116,6 +148,14 @@ macro_rules! sub_assign_impl {
     ($t:ty, $n:literal) => {
         impl<T: Copy + SubAssign> SubAssign<&$t> for $t {
             fn sub_assign(&mut self, other: &Self) {
+                for i in 0..$n {
+                    self[i] -= &other[i];
+                }
+            }
+        }
+
+        impl<T: Copy + SubAssign> SubAssign for $t {
+            fn sub_assign(&mut self, other: Self) {
                 for i in 0..$n {
                     self[i] -= &other[i];
                 }
@@ -146,10 +186,68 @@ macro_rules! mul_impl {
             }
         }
 
+        impl<T: Copy + Default + AddAssign + Mul<Output = T>> Mul for $m {
+            type Output = Self;
+
+            fn mul(self, other: Self) -> Self::Output {
+                let mut m = Self::default();
+                for i in 0..$n {
+                    for j in 0..$n {
+                        for k in 0..$n {
+                            m[i][j] += self[k][j] * other[i][k];
+                        }
+                    }
+                }
+                m
+            }
+        }
+
         impl<T: Copy + Default + AddAssign + Mul<Output = T>> Mul<&$v> for &$m {
             type Output = $v;
 
             fn mul(self, vector: &$v) -> Self::Output {
+                let mut v = <$v>::default();
+                for i in 0..$n {
+                    for j in 0..$n {
+                        v[i] += self[j][i] * vector[j];
+                    }
+                }
+                v
+            }
+        }
+
+        impl<T: Copy + Default + AddAssign + Mul<Output = T>> Mul<$v> for &$m {
+            type Output = $v;
+
+            fn mul(self, vector: $v) -> Self::Output {
+                let mut v = <$v>::default();
+                for i in 0..$n {
+                    for j in 0..$n {
+                        v[i] += self[j][i] * vector[j];
+                    }
+                }
+                v
+            }
+        }
+
+        impl<T: Copy + Default + AddAssign + Mul<Output = T>> Mul<&$v> for $m {
+            type Output = $v;
+
+            fn mul(self, vector: &$v) -> Self::Output {
+                let mut v = <$v>::default();
+                for i in 0..$n {
+                    for j in 0..$n {
+                        v[i] += self[j][i] * vector[j];
+                    }
+                }
+                v
+            }
+        }
+
+        impl<T: Copy + Default + AddAssign + Mul<Output = T>> Mul<$v> for $m {
+            type Output = $v;
+
+            fn mul(self, vector: $v) -> Self::Output {
                 let mut v = <$v>::default();
                 for i in 0..$n {
                     for j in 0..$n {
@@ -173,6 +271,12 @@ macro_rules! mul_assign_impl {
                 *self = &*self * other;
                 //let m = self.clone();
                 //*self = &m * other;
+            }
+        }
+
+        impl<T: Copy + Default + AddAssign + Mul<Output = T>> MulAssign for $t {
+            fn mul_assign(&mut self, other: Self) {
+                *self = &*self * &other;
             }
         }
     };
