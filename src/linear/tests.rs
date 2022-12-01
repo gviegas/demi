@@ -590,3 +590,83 @@ fn mat_projection() {
     assert_eq!(m[1][1], 1.0 / ymag);
     assert_eq!(m[3][3], 1.0);
 }
+
+#[test]
+#[allow(path_statements)]
+fn vec_conv() {
+    let v = Vec3::from(1.0);
+    for i in 0..3 {
+        assert_eq!(v[i], 1.0);
+    }
+
+    let m = Mat4::scale(2f32, 3.0, 4.0);
+    let n = m.clone();
+    let v = Vec4::from(m);
+    for i in 0..4 {
+        assert_eq!(v[i], n[i][i]);
+    }
+    //m;
+
+    let q = Quat::new(&[-0.7071068, 0.7071068, 0.0], 1.0);
+    let v = Vec4::from(q);
+    for i in 0..3 {
+        assert_eq!(v[i], q.imag()[i]);
+    }
+    assert_eq!(v[3], q.real());
+    q;
+}
+
+#[test]
+fn mat_conv() {
+    let m = Mat4::from(1f32);
+    for i in 0..4 {
+        assert_eq!(m[i][i], 1f32);
+        for j in i + 1..4 {
+            assert_eq!(m[i][j], 0f32);
+            assert_eq!(m[i][j], 0f32);
+        }
+    }
+
+    let v = Vec3::new(&[1, 2, 3]);
+    let m = [Mat3::from(&v), Mat3::from(v)];
+    for i in 0..3 {
+        assert_eq!(m[0][i][i], v[i]);
+        assert_eq!(m[1][i][i], v[i]);
+        for j in i + 1..3 {
+            assert_eq!(m[0][i][j], 0);
+            assert_eq!(m[0][i][j], 0);
+            assert_eq!(m[1][i][j], 0);
+            assert_eq!(m[1][i][j], 0);
+        }
+    }
+
+    let m = Mat3::new(&[[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+    let n = Mat4::from(&m);
+    for i in 0..3 {
+        for j in 0..3 {
+            assert_eq!(m[i][j], n[i][j]);
+        }
+    }
+    assert_eq!(n[3][0], 0);
+    assert_eq!(n[3][1], 0);
+    assert_eq!(n[3][2], 0);
+    assert_eq!(n[3][3], 1);
+
+    let n = &n + &n;
+    let m = Mat3::from(n.clone());
+    for i in 0..3 {
+        for j in 0..3 {
+            assert_eq!(m[i][j], n[i][j]);
+        }
+    }
+}
+
+#[test]
+fn quat_conv() {
+    let v = Vec4::new(&[0.7071068, 0.0, -0.7071068, 1.0]);
+    let q = Quat::from(v);
+    assert_eq!(v[0], q.imag()[0]);
+    assert_eq!(v[1], q.imag()[1]);
+    assert_eq!(v[2], q.imag()[2]);
+    assert_eq!(v[3], q.real());
+}

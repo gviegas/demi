@@ -701,3 +701,88 @@ impl<T: Float> Mat4<T> {
         ])
     }
 }
+
+macro_rules! conv_impl {
+    ($m:ty, $v:ty, $n:literal) => {
+        // NOTE: `Scalar` bounded due to type inference.
+        impl<T: Scalar> From<T> for $m {
+            fn from(diag: T) -> Self {
+                let mut m = Self::default();
+                for i in 0..$n {
+                    m[i][i] = diag;
+                }
+                m
+            }
+        }
+
+        impl<T: Copy + Default> From<&$v> for $m {
+            fn from(diag: &$v) -> Self {
+                let mut m = Self::default();
+                for i in 0..$n {
+                    m[i][i] = diag[i];
+                }
+                m
+            }
+        }
+
+        impl<T: Copy + Default> From<$v> for $m {
+            fn from(diag: $v) -> Self {
+                <$m>::from(&diag)
+            }
+        }
+    };
+}
+
+conv_impl!(Mat2<T>, Vec2<T>, 2);
+conv_impl!(Mat3<T>, Vec3<T>, 3);
+conv_impl!(Mat4<T>, Vec4<T>, 4);
+
+impl<T: Scalar> From<&Mat3<T>> for Mat4<T> {
+    fn from(upper_left: &Mat3<T>) -> Self {
+        let mut m = Self::default();
+        for i in 0..3 {
+            for j in 0..3 {
+                m[i][j] = upper_left[i][j];
+            }
+        }
+        m[3][3] = T::ONE;
+        m
+    }
+}
+
+impl<T: Scalar> From<Mat3<T>> for Mat4<T> {
+    fn from(upper_left: Mat3<T>) -> Self {
+        let mut m = Self::default();
+        for i in 0..3 {
+            for j in 0..3 {
+                m[i][j] = upper_left[i][j];
+            }
+        }
+        m[3][3] = T::ONE;
+        m
+    }
+}
+
+impl<T: Copy + Default> From<&Mat4<T>> for Mat3<T> {
+    fn from(upper_left: &Mat4<T>) -> Self {
+        let mut m = Self::default();
+        for i in 0..3 {
+            for j in 0..3 {
+                m[i][j] = upper_left[i][j];
+            }
+        }
+        m
+    }
+}
+
+impl<T: Copy + Default> From<Mat4<T>> for Mat3<T> {
+    fn from(upper_left: Mat4<T>) -> Self {
+        let mut m = Self::default();
+        for i in 0..3 {
+            for j in 0..3 {
+                m[i][j] = upper_left[i][j];
+            }
+        }
+        m
+    }
+}

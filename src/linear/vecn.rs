@@ -4,7 +4,7 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign,
 };
 
-use crate::linear::Float;
+use crate::linear::{Float, Mat2, Mat3, Mat4, Quat, Scalar};
 
 /// 2-component vector.
 #[derive(Copy, Clone, Default, Debug)]
@@ -345,5 +345,53 @@ impl<T: Copy + Sub<Output = T> + Mul<Output = T>> Vec3<T> {
             self[2] * other[0] - other[2] * self[0],
             self[0] * other[1] - other[0] * self[1],
         ])
+    }
+}
+
+macro_rules! conv_impl {
+    ($v:ty, $m:ty, $n:literal) => {
+        // NOTE: `Scalar` bounded due to type inference.
+        impl<T: Scalar> From<T> for $v {
+            fn from(value: T) -> Self {
+                Self([value; $n])
+            }
+        }
+
+        impl<T: Copy + Default> From<&$m> for $v {
+            fn from(diag: &$m) -> Self {
+                let mut v = Self::default();
+                for i in 0..$n {
+                    v[i] = diag[i][i];
+                }
+                v
+            }
+        }
+
+        impl<T: Copy + Default> From<$m> for $v {
+            fn from(diag: $m) -> Self {
+                <$v>::from(&diag)
+            }
+        }
+    };
+}
+
+conv_impl!(Vec2<T>, Mat2<T>, 2);
+conv_impl!(Vec3<T>, Mat3<T>, 3);
+conv_impl!(Vec4<T>, Mat4<T>, 4);
+
+impl<T: Copy + Default> From<&Quat<T>> for Vec4<T> {
+    fn from(iiir: &Quat<T>) -> Self {
+        let i = iiir.imag();
+        let r = iiir.real();
+        Self([i[0], i[1], i[2], r])
+    }
+}
+
+impl<T: Copy + Default> From<Quat<T>> for Vec4<T> {
+    fn from(iiir: Quat<T>) -> Self {
+        Self::from(&iiir)
+        //let i = iiir.imag();
+        //let r = iiir.real();
+        //Self([i[0], i[1], i[2], r])
     }
 }

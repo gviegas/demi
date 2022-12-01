@@ -2,7 +2,7 @@
 
 use std::ops::{Add, Mul, MulAssign, Sub};
 
-use crate::linear::{Float, Vec3};
+use crate::linear::{Float, Vec3, Vec4};
 
 /// Quaternion.
 #[derive(Copy, Clone, Debug)]
@@ -104,5 +104,17 @@ impl<T: Float> Quat<T> {
         let cos = ang.cos();
         let sin = ang.sin();
         Self(Vec3::new(&[T::ZERO, T::ZERO, sin]), cos)
+    }
+}
+
+impl<T: Copy + Default> From<&Vec4<T>> for Quat<T> {
+    fn from(iiir: &Vec4<T>) -> Self {
+        Self(Vec3::new(&[iiir[0], iiir[1], iiir[2]]), iiir[3])
+    }
+}
+
+impl<T: Copy + Default> From<Vec4<T>> for Quat<T> {
+    fn from(iiir: Vec4<T>) -> Self {
+        Self(Vec3::new(&[iiir[0], iiir[1], iiir[2]]), iiir[3])
     }
 }
