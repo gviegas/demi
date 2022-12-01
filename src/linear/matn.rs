@@ -308,6 +308,55 @@ transpose_impl!(Mat2<T>, 2);
 transpose_impl!(Mat3<T>, 3);
 transpose_impl!(Mat4<T>, 4);
 
+impl<T: Scalar> Mat2<T> {
+    pub fn det(&self) -> T {
+        self[0][0] * self[1][1] - self[0][1] * self[1][0]
+    }
+}
+
+impl<T: Scalar> Mat3<T> {
+    pub fn det(&self) -> T {
+        let m00 = self[0][0];
+        let m01 = self[0][1];
+        let m02 = self[0][2];
+        let m10 = self[1][0];
+        let m11 = self[1][1];
+        let m12 = self[1][2];
+        let m20 = self[2][0];
+        let m21 = self[2][1];
+        let m22 = self[2][2];
+        m00 * (m11 * m22 - m12 * m21) - m01 * (m10 * m22 - m12 * m20)
+            + m02 * (m10 * m21 - m11 * m20)
+    }
+}
+
+impl<T: Scalar> Mat4<T> {
+    pub fn det(&self) -> T {
+        let m00 = self[0][0];
+        let m01 = self[0][1];
+        let m02 = self[0][2];
+        let m03 = self[0][3];
+        let m10 = self[1][0];
+        let m11 = self[1][1];
+        let m12 = self[1][2];
+        let m13 = self[1][3];
+        let m20 = self[2][0];
+        let m21 = self[2][1];
+        let m22 = self[2][2];
+        let m23 = self[2][3];
+        let m30 = self[3][0];
+        let m31 = self[3][1];
+        let m32 = self[3][2];
+        let m33 = self[3][3];
+        (m00 * m11 - m01 * m10) * (m22 * m33 - m23 * m32)
+            - (m00 * m12 - m02 * m10) * (m21 * m33 - m23 * m31)
+            + (m00 * m13 - m03 * m10) * (m21 * m32 - m22 * m31)
+            + (m01 * m12 - m02 * m11) * (m20 * m33 - m23 * m30)
+            - (m01 * m13 - m03 * m11) * (m20 * m32 - m22 * m30)
+            + (m02 * m13 - m03 * m12) * (m20 * m31 - m21 * m30)
+    }
+}
+
 impl<T: Float> Mat2<T> {
     pub fn invert(&self) -> Self {
         let m00 = self[0][0];

@@ -360,6 +360,20 @@ fn mat_transpose() {
 }
 
 #[test]
+fn mat_det() {
+    let m = Mat2::new(&[[1.0, -1.0], [2.0, -0.5]]);
+    assert_eq!(m.det(), m[0][0] * m[1][1] - m[0][1] * m[1][0]);
+    let m = Mat3::new(&[[1; 3]; 3]);
+    assert_eq!(m.det(), 0);
+    let mut m = <Mat4<f32>>::default();
+    m[0][0] = 0.5;
+    m[1][1] = -2.0;
+    m[2][2] = 8.0;
+    m[3][3] = 1.5;
+    assert_eq!(m.det(), m[0][0] * m[1][1] * m[2][2] * m[3][3]);
+}
+
+#[test]
 fn mat_invert() {
     let assert0 = |x: f64| assert!(x.abs() <= f64::EPSILON);
     let assert1 = |x: f64| assert!((x.abs() - 1.0).abs() <= f64::EPSILON);
