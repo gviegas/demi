@@ -19,6 +19,7 @@ pub struct Mat4<T>([Vec4<T>; 4]);
 macro_rules! new_impl {
     ($m:ty, $v:ty, $n:literal) => {
         impl<T: Copy + Default> $m {
+            /// Creates a new matrix from an array of columns.
             pub fn new(m: &[[T; $n]; $n]) -> Self {
                 let mut cols = [<$v>::default(); $n];
                 for i in 0..$n {
@@ -289,6 +290,8 @@ mul_assign_impl!(Mat4<T>);
 macro_rules! transpose_impl {
     ($t:ty, $n:literal) => {
         impl<T: Copy + Default> $t {
+            /// Computes the transpose.
+            #[must_use]
             pub fn transpose(&self) -> Self {
                 let mut m = <$t>::default();
                 for i in 0..$n {
@@ -309,12 +312,14 @@ transpose_impl!(Mat3<T>, 3);
 transpose_impl!(Mat4<T>, 4);
 
 impl<T: Scalar> Mat2<T> {
+    /// Computes the determinant.
     pub fn det(&self) -> T {
         self[0][0] * self[1][1] - self[0][1] * self[1][0]
     }
 }
 
 impl<T: Scalar> Mat3<T> {
+    /// Computes the determinant.
     pub fn det(&self) -> T {
         let m00 = self[0][0];
         let m01 = self[0][1];
@@ -331,6 +336,7 @@ impl<T: Scalar> Mat3<T> {
 }
 
 impl<T: Scalar> Mat4<T> {
+    /// Computes the determinant.
     pub fn det(&self) -> T {
         let m00 = self[0][0];
         let m01 = self[0][1];
@@ -358,6 +364,10 @@ impl<T: Scalar> Mat4<T> {
 }
 
 impl<T: Float> Mat2<T> {
+    /// Computes the inverse.
+    ///
+    /// NOTE: One must ensure that `self` is invertible.
+    #[must_use]
     pub fn invert(&self) -> Self {
         let m00 = self[0][0];
         let m01 = self[0][1];
@@ -370,6 +380,10 @@ impl<T: Float> Mat2<T> {
 }
 
 impl<T: Float> Mat3<T> {
+    /// Computes the inverse.
+    ///
+    /// NOTE: One must ensure that `self` is invertible.
+    #[must_use]
     pub fn invert(&self) -> Self {
         let m00 = self[0][0];
         let m01 = self[0][1];
@@ -406,6 +420,10 @@ impl<T: Float> Mat3<T> {
 }
 
 impl<T: Float> Mat4<T> {
+    /// Computes the inverse.
+    ///
+    /// NOTE: One must ensure that `self` is invertible.
+    #[must_use]
     pub fn invert(&self) -> Self {
         let m00 = self[0][0];
         let m01 = self[0][1];
@@ -467,6 +485,7 @@ impl<T: Float> Mat4<T> {
 }
 
 impl<T: Scalar> Mat4<T> {
+    /// Creates a new matrix encoding a translation.
     pub fn translation(x: T, y: T, z: T) -> Self {
         Self::new(&[
             [T::ONE, T::ZERO, T::ZERO, T::ZERO],
@@ -478,6 +497,7 @@ impl<T: Scalar> Mat4<T> {
 }
 
 impl<T: Float> Mat3<T> {
+    /// Creates a new matrix encoding a rotation about an arbitrary axis.
     pub fn rotation(angle: T, axis: &Vec3<T>) -> Self {
         let axis = axis.norm();
         let (x, y, z) = (axis[0], axis[1], axis[2]);
@@ -497,6 +517,7 @@ impl<T: Float> Mat3<T> {
         ])
     }
 
+    /// Creates a new matrix encoding the rotation described by a given quaternion.
     pub fn rotation_q(quat: &Quat<T>) -> Self {
         // TODO: Implement vector conversions.
         let imag = quat.imag();
@@ -519,6 +540,7 @@ impl<T: Float> Mat3<T> {
         ])
     }
 
+    /// Creates a new matrix encoding a rotation about the x axis.
     pub fn rotation_x(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
@@ -529,6 +551,7 @@ impl<T: Float> Mat3<T> {
         ])
     }
 
+    /// Creates a new matrix encoding a rotation about the y axis.
     pub fn rotation_y(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
@@ -539,6 +562,7 @@ impl<T: Float> Mat3<T> {
         ])
     }
 
+    /// Creates a new matrix encoding a rotation about the z axis.
     pub fn rotation_z(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
@@ -551,6 +575,7 @@ impl<T: Float> Mat3<T> {
 }
 
 impl<T: Float> Mat4<T> {
+    /// Creates a new matrix encoding a rotation about an arbitrary axis.
     pub fn rotation(angle: T, axis: &Vec3<T>) -> Self {
         let axis = axis.norm();
         let (x, y, z) = (axis[0], axis[1], axis[2]);
@@ -571,6 +596,7 @@ impl<T: Float> Mat4<T> {
         ])
     }
 
+    /// Creates a new matrix encoding the rotation described by a given quaternion.
     pub fn rotation_q(quat: &Quat<T>) -> Self {
         // TODO: Implement vector conversions.
         let imag = quat.imag();
@@ -594,6 +620,7 @@ impl<T: Float> Mat4<T> {
         ])
     }
 
+    /// Creates a new matrix encoding a rotation about the x axis.
     pub fn rotation_x(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
@@ -605,6 +632,7 @@ impl<T: Float> Mat4<T> {
         ])
     }
 
+    /// Creates a new matrix encoding a rotation about the y axis.
     pub fn rotation_y(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
@@ -616,6 +644,7 @@ impl<T: Float> Mat4<T> {
         ])
     }
 
+    /// Creates a new matrix encoding a rotation about the z axis.
     pub fn rotation_z(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
@@ -629,6 +658,7 @@ impl<T: Float> Mat4<T> {
 }
 
 impl<T: Scalar> Mat3<T> {
+    /// Creates a new matrix encoding a scale.
     pub fn scale(x: T, y: T, z: T) -> Self {
         let mut m = Self::default();
         m[0][0] = x;
@@ -639,6 +669,7 @@ impl<T: Scalar> Mat3<T> {
 }
 
 impl<T: Scalar> Mat4<T> {
+    /// Creates a new matrix encoding a scale.
     pub fn scale(x: T, y: T, z: T) -> Self {
         let mut m = Self::default();
         m[0][0] = x;
@@ -650,6 +681,7 @@ impl<T: Scalar> Mat4<T> {
 }
 
 impl<T: Float> Mat4<T> {
+    /// Creates a new matrix encoding a view transform.
     pub fn look_at(center: &Vec3<T>, eye: &Vec3<T>, up: &Vec3<T>) -> Self {
         let fwd = (center - eye).norm();
         let side = fwd.cross(up).norm();
@@ -664,6 +696,7 @@ impl<T: Float> Mat4<T> {
 }
 
 impl<T: Float> Mat4<T> {
+    /// Creates a new matrix encoding a perspective projection.
     pub fn perspective(yfov: T, aspect: T, znear: T, zfar: T) -> Self {
         let two = T::ONE + T::ONE;
         let ct = T::ONE / (yfov / two).tan();
@@ -680,6 +713,7 @@ impl<T: Float> Mat4<T> {
         ])
     }
 
+    /// Creates a new matrix encoding an infinity perspective projection.
     pub fn inf_perspective(yfov: T, aspect: T, znear: T) -> Self {
         let two = T::ONE + T::ONE;
         let ct = T::ONE / (yfov / two).tan();
@@ -691,6 +725,7 @@ impl<T: Float> Mat4<T> {
         ])
     }
 
+    /// Creates a new matrix encoding an orthographic projection.
     pub fn ortho(xmag: T, ymag: T, znear: T, zfar: T) -> Self {
         let two = T::ONE + T::ONE;
         Self::new(&[
@@ -706,6 +741,12 @@ macro_rules! conv_impl {
     ($m:ty, $v:ty, $n:literal) => {
         // NOTE: `Scalar` bounded due to type inference.
         impl<T: Scalar> From<T> for $m {
+            /// Converts a scalar into a matrix whose diagonal contains copies
+            /// of such scalar. Non-diagonal components are set to the default value
+            /// (which is expected to be `T::ZERO`).
+            ///
+            /// This conversion can be used to create identity matrices with the
+            /// convenience of type inference.
             fn from(diag: T) -> Self {
                 let mut m = Self::default();
                 for i in 0..$n {
@@ -716,6 +757,8 @@ macro_rules! conv_impl {
         }
 
         impl<T: Copy + Default> From<&$v> for $m {
+            /// Converts a vector into a matrix whose diagonal contains the components
+            /// of such vector. Non-diagonal components are set to the default value.
             fn from(diag: &$v) -> Self {
                 let mut m = Self::default();
                 for i in 0..$n {
@@ -726,6 +769,8 @@ macro_rules! conv_impl {
         }
 
         impl<T: Copy + Default> From<$v> for $m {
+            /// Converts a vector into a matrix whose diagonal contains the components
+            /// of such vector. Non-diagonal components are set to the default value.
             fn from(diag: $v) -> Self {
                 <$m>::from(&diag)
             }
@@ -738,6 +783,7 @@ conv_impl!(Mat3<T>, Vec3<T>, 3);
 conv_impl!(Mat4<T>, Vec4<T>, 4);
 
 impl<T: Scalar> From<&Mat3<T>> for Mat4<T> {
+    /// Converts a `&Mat3<T>` into an homogeneous `Mat4<T>`.
     fn from(upper_left: &Mat3<T>) -> Self {
         let mut m = Self::default();
         for i in 0..3 {
@@ -751,6 +797,7 @@ impl<T: Scalar> From<&Mat3<T>> for Mat4<T> {
 }
 
 impl<T: Scalar> From<Mat3<T>> for Mat4<T> {
+    /// Converts a `Mat3<T>` into an homogeneous `Mat4<T>`.
     fn from(upper_left: Mat3<T>) -> Self {
         let mut m = Self::default();
         for i in 0..3 {
@@ -764,6 +811,7 @@ impl<T: Scalar> From<Mat3<T>> for Mat4<T> {
 }
 
 impl<T: Copy + Default> From<&Mat4<T>> for Mat3<T> {
+    /// Converts the upper-left of a `&Mat4<T>` into a `Mat3<T>`.
     fn from(upper_left: &Mat4<T>) -> Self {
         let mut m = Self::default();
         for i in 0..3 {
@@ -776,6 +824,7 @@ impl<T: Copy + Default> From<&Mat4<T>> for Mat3<T> {
 }
 
 impl<T: Copy + Default> From<Mat4<T>> for Mat3<T> {
+    /// Converts the upper-left of a `Mat4<T>` into a `Mat3<T>`.
     fn from(upper_left: Mat4<T>) -> Self {
         let mut m = Self::default();
         for i in 0..3 {

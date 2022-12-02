@@ -9,14 +9,18 @@ use crate::linear::{Float, Vec3, Vec4};
 pub struct Quat<T>(Vec3<T>, T);
 
 impl<T: Copy> Quat<T> {
+    /// Creates a new quaternion from a vector (imaginary part) and
+    /// a value (real part).
     pub fn new(i: &[T; 3], r: T) -> Self {
         Self(Vec3::new(&i), r)
     }
 
+    /// Returns the imaginary part.
     pub fn imag(&self) -> Vec3<T> {
         self.0
     }
 
+    /// Returns the real part.
     pub fn real(&self) -> T {
         self.1
     }
@@ -78,6 +82,7 @@ where
 }
 
 impl<T: Float> Quat<T> {
+    /// Creates a new quaternion encoding a rotation about an arbitrary axis.
     pub fn rotation(angle: T, axis: &Vec3<T>) -> Self {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
@@ -85,6 +90,7 @@ impl<T: Float> Quat<T> {
         Self(axis.norm() * sin, cos)
     }
 
+    /// Creates a new quaternion encoding a rotation about the x axis.
     pub fn rotation_x(angle: T) -> Self {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
@@ -92,6 +98,7 @@ impl<T: Float> Quat<T> {
         Self(Vec3::new(&[sin, T::ZERO, T::ZERO]), cos)
     }
 
+    /// Creates a new quaternion encoding a rotation about the y axis.
     pub fn rotation_y(angle: T) -> Self {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
@@ -99,6 +106,7 @@ impl<T: Float> Quat<T> {
         Self(Vec3::new(&[T::ZERO, sin, T::ZERO]), cos)
     }
 
+    /// Creates a new quaternion encoding a rotation about the z axis.
     pub fn rotation_z(angle: T) -> Self {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
@@ -108,12 +116,18 @@ impl<T: Float> Quat<T> {
 }
 
 impl<T: Copy + Default> From<&Vec4<T>> for Quat<T> {
+    /// Converts a `&Vec4<T>` into a `Quat<T>`.
+    ///
+    /// The real part is taken from the last component of the vector.
     fn from(iiir: &Vec4<T>) -> Self {
         Self(Vec3::new(&[iiir[0], iiir[1], iiir[2]]), iiir[3])
     }
 }
 
 impl<T: Copy + Default> From<Vec4<T>> for Quat<T> {
+    /// Converts a `Vec4<T>` into a `Quat<T>`.
+    ///
+    /// The real part is taken from the last component of the vector.
     fn from(iiir: Vec4<T>) -> Self {
         Self(Vec3::new(&[iiir[0], iiir[1], iiir[2]]), iiir[3])
     }

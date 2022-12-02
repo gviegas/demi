@@ -21,6 +21,7 @@ pub struct Vec4<T>([T; 4]);
 macro_rules! new_impl {
     ($t:ty, $n:literal) => {
         impl<T: Copy> $t {
+            /// Creates a new vector from an array of values.
             pub fn new(v: &[T; $n]) -> Self {
                 Self(*v)
             }
@@ -285,6 +286,7 @@ neg_impl!(Vec4<T>);
 macro_rules! dot_impl {
     ($t:ty) => {
         impl<T: Copy + Default + Add<Output = T> + Mul<Output = T>> $t {
+            /// Computes the dot product.
             pub fn dot(&self, other: &Self) -> T {
                 // TODO: Compare to a simple for loop.
                 self.0
@@ -303,6 +305,7 @@ dot_impl!(Vec4<T>);
 macro_rules! length_impl {
     ($t:ty) => {
         impl<T: Float> $t {
+            /// Computes the vector's length.
             pub fn length(&self) -> T {
                 // TODO: Compare to a simple for loop.
                 self.0
@@ -325,6 +328,9 @@ length_impl!(Vec4<T>);
 macro_rules! norm_impl {
     ($t:ty) => {
         impl<T: Float> $t {
+            /// Returns a new direction vector.
+            ///
+            /// NOTE: One must ensure that `self.length()` is greater than zero.
             #[must_use]
             pub fn norm(&self) -> Self {
                 self / self.length()
@@ -338,6 +344,7 @@ norm_impl!(Vec3<T>);
 norm_impl!(Vec4<T>);
 
 impl<T: Copy + Sub<Output = T> + Mul<Output = T>> Vec3<T> {
+    /// Computes the cross product.
     #[must_use]
     pub fn cross(&self, other: &Self) -> Self {
         Self([
@@ -352,12 +359,15 @@ macro_rules! conv_impl {
     ($v:ty, $m:ty, $n:literal) => {
         // NOTE: `Scalar` bounded due to type inference.
         impl<T: Scalar> From<T> for $v {
+            /// Converts a scalar into a vector whose components are copies
+            /// of such scalar.
             fn from(value: T) -> Self {
                 Self([value; $n])
             }
         }
 
         impl<T: Copy + Default> From<&$m> for $v {
+            /// Converts a matrix's diagonal into a vector.
             fn from(diag: &$m) -> Self {
                 let mut v = Self::default();
                 for i in 0..$n {
@@ -368,6 +378,7 @@ macro_rules! conv_impl {
         }
 
         impl<T: Copy + Default> From<$m> for $v {
+            /// Converts a matrix's diagonal into a vector.
             fn from(diag: $m) -> Self {
                 <$v>::from(&diag)
             }
@@ -380,6 +391,9 @@ conv_impl!(Vec3<T>, Mat3<T>, 3);
 conv_impl!(Vec4<T>, Mat4<T>, 4);
 
 impl<T: Copy + Default> From<&Quat<T>> for Vec4<T> {
+    /// Converts a `&Quat<T>` into a `Vec4<T>`.
+    ///
+    /// The real part is stored in the last component of the vector.
     fn from(iiir: &Quat<T>) -> Self {
         let i = iiir.imag();
         let r = iiir.real();
@@ -388,6 +402,9 @@ impl<T: Copy + Default> From<&Quat<T>> for Vec4<T> {
 }
 
 impl<T: Copy + Default> From<Quat<T>> for Vec4<T> {
+    /// Converts a `Quat<T>` into a `Vec4<T>`.
+    ///
+    /// The real part is stored in the last component of the vector.
     fn from(iiir: Quat<T>) -> Self {
         Self::from(&iiir)
         //let i = iiir.imag();
