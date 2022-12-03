@@ -12,7 +12,7 @@ impl<T: Copy> Quat<T> {
     /// Creates a new quaternion from a vector (imaginary part) and
     /// a value (real part).
     pub fn new(i: &[T; 3], r: T) -> Self {
-        Self(Vec3::new(&i), r)
+        Self(Vec3::new(i), r)
     }
 
     /// Returns the imaginary part.
