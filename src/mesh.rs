@@ -1,6 +1,9 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use std::io::{self, Read};
+use std::sync::Arc;
+
+use crate::material::Material;
 
 /// Mesh.
 pub struct Mesh {
@@ -66,6 +69,10 @@ impl Builder {
         todo!();
     }
 
+    pub fn set_weights(&mut self, weights: &[f64]) -> &mut Self {
+        todo!();
+    }
+
     pub fn set_vertex_count(&mut self, count: usize) -> &mut Self {
         todo!();
     }
@@ -97,6 +104,30 @@ impl Builder {
     }
 
     pub fn read_indices<T: Read>(&mut self, mut reader: T) -> io::Result<&mut Self> {
+        todo!();
+    }
+
+    pub fn set_displacement_semantic(
+        &mut self,
+        slot: usize,
+        semantic: Semantic,
+        data_type: DataType,
+        offset: usize,
+        stride: usize,
+    ) -> &mut Self {
+        todo!();
+    }
+
+    pub fn read_displacement_semantic<T: Read>(
+        &mut self,
+        slot: usize,
+        semantic: Semantic,
+        mut reader: T,
+    ) -> io::Result<&mut Self> {
+        todo!();
+    }
+
+    pub fn set_material(&mut self, material: &Arc<Material>) -> &mut Self {
         todo!();
     }
 
