@@ -8,13 +8,13 @@ pub struct Animation {
 }
 
 /// Key-frame input types.
-pub enum KeyframeIn {
-    SecondsF32,
+pub enum KfInput {
     SecondsF64,
+    SecondsF32,
 }
 
 /// Key-frame output types.
-pub enum KeyframeOut {
+pub enum KfOutput {
     TranslationF64x3,
     TranslationF32x3,
     RotationF32x4,
@@ -23,6 +23,12 @@ pub enum KeyframeOut {
     RotationI8x4,
     RotationU8x4,
     ScaleF32x4,
+    WeightsF64,
+    WeightsF32,
+    WeightsI16,
+    WeightsU16,
+    WeightsI8,
+    WeightsU8,
 }
 
 /// Interpolation methods.
@@ -55,7 +61,7 @@ impl Builder {
     pub fn set_input(
         &mut self,
         slot: usize,
-        input_type: KeyframeIn,
+        input_type: KfInput,
         sample_count: usize,
         offset: usize,
         stride: usize,
@@ -74,7 +80,7 @@ impl Builder {
     pub fn set_output(
         &mut self,
         slot: usize,
-        output_type: KeyframeOut,
+        output_type: KfOutput,
         sample_count: usize,
         offset: usize,
         stride: usize,
