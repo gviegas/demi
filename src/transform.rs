@@ -5,6 +5,9 @@
 
 use crate::linear::Mat4;
 
+#[cfg(test)]
+mod tests;
+
 /// Identifier of a transform.
 #[derive(Debug)]
 pub struct XformId(usize);
