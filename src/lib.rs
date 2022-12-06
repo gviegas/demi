@@ -7,3 +7,4 @@ pub mod mesh;
 pub mod sampler;
 pub mod skin;
 pub mod texture;
+pub mod transform;
