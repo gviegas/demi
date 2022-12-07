@@ -29,6 +29,7 @@ struct XformData {
     local: Mat4<f32>,
     world: Mat4<f32>,
     world_inv: Mat4<f32>,
+    node: usize,
 }
 
 /// Transform.
@@ -56,6 +57,7 @@ impl Transform {
                 local: xform.clone(),
                 world: xform.clone(),
                 world_inv: xform.invert(),
+                node: 0,
             }],
         }
     }
@@ -104,13 +106,35 @@ impl Transform {
             local: xform.clone(),
             world: Default::default(),
             world_inv: Default::default(),
+            node: new_idx,
         });
         XformId(new_idx)
     }
 
     /// Removes a given transform.
     pub fn remove(&mut self, id: XformId) {
-        todo!();
+        assert_ne!(id.0, self.id().0, "cannot remove root transform");
+        // TODO: Validate.
+        let node = self.nodes[id.0].take().unwrap();
+        self.node_idx = id.0;
+        self.none_cnt += 1;
+        if let Some(x) = node.prev {
+            let prev_sub = self.nodes[x].as_ref().unwrap().sub;
+            match prev_sub {
+                Some(y) if y == id.0 => self.nodes[x].as_mut().unwrap().sub = node.next,
+                _ => self.nodes[x].as_mut().unwrap().next = node.next,
+            }
+        }
+        if let Some(x) = node.next {
+            self.nodes[x].as_mut().unwrap().prev = node.prev;
+        }
+        if let Some(x) = node.sub {
+            // NOTE: Orphaned sub-graph.
+            self.nodes[x].as_mut().unwrap().prev = None;
+        }
+        let swap = self.data.last().unwrap().node;
+        self.nodes[swap].as_mut().unwrap().data = node.data;
+        self.data.swap_remove(node.data);
     }
 
     /// Returns a reference to a given local transform.
