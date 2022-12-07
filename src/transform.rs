@@ -34,8 +34,9 @@ struct XformData {
 /// Transform.
 #[derive(Debug)]
 pub struct Transform {
-    // TODO: Node management.
     nodes: Vec<Option<XformNode>>,
+    node_idx: usize,
+    none_cnt: usize,
     data: Vec<XformData>,
 }
 
@@ -49,6 +50,8 @@ impl Transform {
                 sub: None,
                 data: 0,
             })],
+            node_idx: 0,
+            none_cnt: 0,
             data: vec![XformData {
                 local: xform.clone(),
                 world: xform.clone(),
@@ -69,7 +72,40 @@ impl Transform {
 
     /// Inserts a new transform.
     pub fn insert(&mut self, prev: &XformId, xform: &Mat4<f32>) -> XformId {
-        todo!();
+        let new_idx = if self.none_cnt > 0 {
+            let n = self.nodes.len();
+            let mut i = self.node_idx;
+            while self.nodes[i].is_some() {
+                i = (i + 1) % n;
+            }
+            self.node_idx = n / 2;
+            self.none_cnt -= 1;
+            i
+        } else {
+            let n = self.nodes.len();
+            self.nodes.push(None);
+            n
+        };
+        // TODO: Validate.
+        let prev_node = self.nodes[prev.0].as_mut().unwrap();
+        let next_idx = prev_node.sub;
+        prev_node.sub = Some(new_idx);
+        if let Some(x) = next_idx {
+            // TODO: Validate.
+            self.nodes[x].as_mut().unwrap().prev = Some(new_idx);
+        }
+        self.nodes[new_idx] = Some(XformNode {
+            prev: Some(prev.0),
+            next: next_idx,
+            sub: None,
+            data: self.data.len(),
+        });
+        self.data.push(XformData {
+            local: xform.clone(),
+            world: Default::default(),
+            world_inv: Default::default(),
+        });
+        XformId(new_idx)
     }
 
     /// Removes a given transform.
