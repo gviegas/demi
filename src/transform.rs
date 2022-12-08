@@ -1,7 +1,6 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
-#![allow(dead_code)] // TODO
-#![allow(unused_variables)] // TODO
+//! Graph of transformation matrices.
 
 use crate::linear::Mat4;
 
@@ -32,7 +31,7 @@ struct XformData {
     node: usize,
 }
 
-/// Transform.
+/// Transform graph.
 #[derive(Debug)]
 pub struct Transform {
     nodes: Vec<Option<XformNode>>,
@@ -73,8 +72,12 @@ impl Transform {
     }
 
     /// Inserts a new transform.
+    ///
+    /// NOTE: The `XformId` returned by this method must not be used
+    /// with `Transform`s other than the one that produced it.
     pub fn insert(&mut self, prev: &XformId, xform: &Mat4<f32>) -> XformId {
         let new_idx = if self.none_cnt > 0 {
+            // There is a vacant node that we can use.
             let n = self.nodes.len();
             let mut i = self.node_idx;
             while self.nodes[i].is_some() {
@@ -84,16 +87,17 @@ impl Transform {
             self.none_cnt -= 1;
             i
         } else {
+            // No vacant nodes, so push a new one.
             let n = self.nodes.len();
             self.nodes.push(None);
             n
         };
-        // TODO: Validate.
         let prev_node = self.nodes[prev.0].as_mut().unwrap();
         let next_idx = prev_node.sub;
+        // Insert the new transform as the first child.
+        // The current first child, if any, becomes the next sibling.
         prev_node.sub = Some(new_idx);
         if let Some(x) = next_idx {
-            // TODO: Validate.
             self.nodes[x].as_mut().unwrap().prev = Some(new_idx);
         }
         self.nodes[new_idx] = Some(XformNode {
@@ -112,16 +116,24 @@ impl Transform {
     }
 
     /// Removes a given transform.
+    ///
+    /// Trying to remove the root transform is an error and will cause a panic.
+    ///
+    /// NOTE: Removing a non-leaf transform does not remove any of its
+    /// descendants - they must be explicitly `remove`d.
     pub fn remove(&mut self, id: XformId) {
         assert_ne!(id.0, self.id().0, "cannot remove root transform");
-        // TODO: Validate.
         let node = self.nodes[id.0].take().unwrap();
         self.node_idx = id.0;
         self.none_cnt += 1;
         if let Some(x) = node.prev {
             let prev_sub = self.nodes[x].as_ref().unwrap().sub;
             match prev_sub {
+                // `node.prev` is the parent.
+                // The next sibling, if any, becomes the first child.
                 Some(y) if y == id.0 => self.nodes[x].as_mut().unwrap().sub = node.next,
+                // `node.prev` is a sibling.
+                // The next sibling, if any, becomes the previous' next sibling.
                 _ => self.nodes[x].as_mut().unwrap().next = node.next,
             }
         }
@@ -132,6 +144,9 @@ impl Transform {
             // NOTE: Orphaned sub-graph.
             self.nodes[x].as_mut().unwrap().prev = None;
         }
+        // Unlike nodes, data can be removed from any position, and
+        // we just need to update a node's `data` index in the event
+        // of a swap-removal.
         let swap = self.data.last().unwrap().node;
         if swap != id.0 {
             self.nodes[swap].as_mut().unwrap().data = node.data;
@@ -143,14 +158,16 @@ impl Transform {
 
     /// Returns a reference to a given local transform.
     pub fn local(&self, id: &XformId) -> &Mat4<f32> {
-        // TODO: Validate.
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
         &self.data[data_idx].local
     }
 
     /// Returns a mutable reference to a given local transform.
+    ///
+    /// NOTE: Calling this method will mark `id` as being stale and thus its
+    /// world transform (and those of its descendants) will be recomputed
+    /// when the graph is updated.
     pub fn local_mut(&mut self, id: &XformId) -> &mut Mat4<f32> {
-        // TODO: Validate.
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
 
         // NOTE: Code such as the following can potentially invalidate
@@ -169,7 +186,6 @@ impl Transform {
 
     /// Returns a reference to a given world transform.
     pub fn world(&self, id: &XformId) -> &Mat4<f32> {
-        // TODO: Validate.
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
         &self.data[data_idx].world
     }
