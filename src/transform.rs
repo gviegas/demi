@@ -133,8 +133,12 @@ impl Transform {
             self.nodes[x].as_mut().unwrap().prev = None;
         }
         let swap = self.data.last().unwrap().node;
-        self.nodes[swap].as_mut().unwrap().data = node.data;
-        self.data.swap_remove(node.data);
+        if swap != id.0 {
+            self.nodes[swap].as_mut().unwrap().data = node.data;
+            self.data.swap_remove(node.data);
+        } else {
+            self.data.pop();
+        }
     }
 
     /// Returns a reference to a given local transform.
