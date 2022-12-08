@@ -68,3 +68,89 @@ fn insert() {
     assert_eq!(graph.data[2].node, 2);
     assert_eq!(graph.data[3].node, 3);
 }
+
+#[test]
+#[should_panic = "cannot remove root transform"]
+fn remove_root() {
+    let mut graph = Transform::new(&Default::default());
+    graph.remove(graph.id());
+}
+
+#[test]
+fn remove() {
+    let m = Mat4::from(1.0);
+    let ma = Mat4::from(2.0);
+    let maa = Mat4::from(3.0);
+    let mb = Mat4::from(4.0);
+
+    let mut graph = Transform::new(&m);
+    let xa = graph.insert(&graph.id(), &ma);
+    let xaa = graph.insert(&xa, &maa);
+    let xb = graph.insert(&graph.id(), &mb);
+
+    // Note:
+    // - `remove` takes `XformId` by value
+    // - `nodes` are set to `None` (vacant) on removal
+    // - `data` are swap-removed from `Vec`
+
+    let xa_i = xa.0;
+    let xaa_i = xaa.0;
+    let xb_i = xb.0;
+
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.none_cnt, 0);
+    assert_eq!(graph.data.len(), 4);
+    graph.remove(xaa);
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.node_idx, xaa_i);
+    assert_eq!(graph.none_cnt, 1);
+    assert_eq!(graph.data.len(), 3);
+    assert_eq!(graph.data.last().unwrap().node, xb_i);
+
+    // Should reuse vacant node.
+    let xaa = graph.insert(&xa, &maa);
+    assert_eq!(xaa.0, xaa_i);
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.none_cnt, 0);
+    assert_eq!(graph.data.len(), 4);
+    assert_eq!(graph.data.last().unwrap().node, xaa_i);
+    graph.remove(xaa);
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.node_idx, xaa_i);
+    assert_eq!(graph.none_cnt, 1);
+    assert_eq!(graph.data.len(), 3);
+    assert_eq!(graph.data.last().unwrap().node, xb_i);
+
+    graph.remove(xa);
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.node_idx, xa_i);
+    assert_eq!(graph.none_cnt, 2);
+    assert_eq!(graph.data.len(), 2);
+    assert_eq!(graph.data.last().unwrap().node, xb_i);
+
+    graph.remove(xb);
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.node_idx, xb_i);
+    assert_eq!(graph.none_cnt, 3);
+    assert_eq!(graph.data.len(), 1);
+    assert_eq!(graph.data.last().unwrap().node, graph.id().0);
+
+    // Should insert in the most recent vacant node.
+    let xb = graph.insert(&graph.id(), &mb);
+    assert_eq!(xb.0, xb_i);
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.none_cnt, 2);
+    assert_eq!(graph.data.len(), 2);
+    assert_eq!(graph.data.last().unwrap().node, xb_i);
+
+    let x = graph.insert(&graph.id(), &Default::default());
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.none_cnt, 1);
+    assert_eq!(graph.data.len(), 3);
+    assert_eq!(graph.data[0].node, graph.id().0);
+    assert_eq!(graph.nodes[graph.id().0].as_ref().unwrap().data, 0);
+    assert_eq!(graph.data[1].node, xb_i);
+    assert_eq!(graph.nodes[xb_i].as_ref().unwrap().data, 1);
+    assert_eq!(graph.data[2].node, x.0);
+    assert_eq!(graph.nodes[x.0].as_ref().unwrap().data, 2);
+}
