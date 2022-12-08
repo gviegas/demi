@@ -28,7 +28,7 @@ struct XformData {
     // as TRS properties instead.
     local: Mat4<f32>,
     world: Mat4<f32>,
-    world_inv: Mat4<f32>,
+    changed: bool,
     node: usize,
 }
 
@@ -56,7 +56,7 @@ impl Transform {
             data: vec![XformData {
                 local: xform.clone(),
                 world: xform.clone(),
-                world_inv: xform.invert(),
+                changed: false,
                 node: 0,
             }],
         }
@@ -105,7 +105,7 @@ impl Transform {
         self.data.push(XformData {
             local: xform.clone(),
             world: Default::default(),
-            world_inv: Default::default(),
+            changed: true,
             node: new_idx,
         });
         XformId(new_idx)
@@ -152,6 +152,18 @@ impl Transform {
     pub fn local_mut(&mut self, id: &XformId) -> &mut Mat4<f32> {
         // TODO: Validate.
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
+
+        // NOTE: Code such as the following can potentially invalidate
+        // a whole sub-graph needlessly:
+        //
+        //  let m = graph.local_mut(&xid);
+        //  if <something> { <mutate *m> } else { <don't mutate *m> }
+        //
+        // It may be better to define a `set_local` method rather than
+        // giving mutable access to the transform data, although it
+        // would not be possible to patch the local transform in-place.
+        self.data[data_idx].changed = true;
+
         &mut self.data[data_idx].local
     }
 
