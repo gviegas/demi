@@ -216,4 +216,42 @@ impl Transform {
             }
         }
     }
+
+    /// Checks whether a specific transform has been changed since the
+    /// last call to `update_world`.
+    ///
+    /// NOTE: This method does not check if any previous transforms
+    /// have changed, so a `false` result here does not necessarily
+    /// means that the world transform is valid.
+    pub fn changed(&self, id: &XformId) -> bool {
+        let data_idx = self.nodes[id.0].as_ref().unwrap().data;
+        self.data[data_idx].changed
+    }
+
+    /// Checks whether a specific transform has been invalidated due to
+    /// changes in the graph.
+    ///
+    /// NOTE: This method needs to traverse the graph backwards and as
+    /// such is not fast to compute.
+    pub fn changed_upward(&self, id: &XformId) -> bool {
+        let mut prev_idx = id.0;
+        let mut data_idx = self.nodes[id.0].as_ref().unwrap().data;
+        'outer: loop {
+            if self.data[data_idx].changed {
+                break true;
+            }
+            while let Some(prev) = self.nodes[prev_idx].as_ref().unwrap().prev {
+                let node = self.nodes[prev].as_ref().unwrap();
+                match node.sub {
+                    Some(x) if x == prev_idx => {
+                        prev_idx = prev;
+                        data_idx = self.nodes[prev].as_ref().unwrap().data;
+                        continue 'outer;
+                    }
+                    _ => prev_idx = prev,
+                }
+            }
+            break false;
+        }
+    }
 }
