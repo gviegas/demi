@@ -2,6 +2,8 @@
 
 //! Graph of transformation matrices.
 
+use std::collections::VecDeque;
+
 use crate::linear::Mat4;
 
 #[cfg(test)]
@@ -12,6 +14,8 @@ mod tests;
 pub struct XformId(usize);
 
 /// Node in a transform graph.
+// NOTE: If node size becomes an issue, the `Option`s could
+// be replaced with the use of sentinel values.
 #[derive(Debug)]
 struct XformNode {
     prev: Option<usize>,
@@ -188,5 +192,28 @@ impl Transform {
     pub fn world(&self, id: &XformId) -> &Mat4<f32> {
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
         &self.data[data_idx].world
+    }
+
+    /// Updates the graph's world transforms.
+    pub fn update_world(&mut self) {
+        // TODO: Skip unnecessary updates.
+        let mut queue = VecDeque::from([self.id().0]);
+        while let Some(prev) = queue.pop_front() {
+            // Breadth-first traversal.
+            let prev_data = self.nodes[prev].as_ref().unwrap().data;
+            let mut next = self.nodes[prev].as_ref().unwrap().sub;
+            while let Some(cur) = next {
+                // Update every child of `prev` (`prev.sub` plus the
+                // `next` chain) and push them to the queue.
+                // This ensures that ancestors are processed before
+                // their descendants.
+                queue.push_back(cur);
+                next = self.nodes[cur].as_ref().unwrap().next;
+                let data = self.nodes[cur].as_ref().unwrap().data;
+                let local = &self.data[data].local;
+                self.data[data].world = &self.data[prev_data].world * local;
+                self.data[data].changed = false;
+            }
+        }
     }
 }
