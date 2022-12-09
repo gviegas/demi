@@ -154,3 +154,49 @@ fn remove() {
     assert_eq!(graph.data[2].node, x.0);
     assert_eq!(graph.nodes[x.0].as_ref().unwrap().data, 2);
 }
+
+#[test]
+fn update_world() {
+    let eq_mat = |m, n| {
+        let m: Mat4<f32> = m - n;
+        for i in 0..4 {
+            for j in 0..4 {
+                assert!(m[i][j].abs() <= f32::EPSILON);
+            }
+        }
+    };
+
+    let dfl = Mat4::<f32>::default();
+    let m = Mat4::from(2.0);
+    let ma = Mat4::from(0.25);
+    let mb = Mat4::from(3.0);
+    let maa = Mat4::from(2.5);
+
+    let mut graph = Transform::new(&m);
+    let x = graph.id();
+    let xa = graph.insert(&graph.id(), &ma);
+    let xb = graph.insert(&graph.id(), &mb);
+    eq_mat(graph.world(&x).clone(), m.clone());
+    eq_mat(graph.world(&xa).clone(), dfl.clone());
+    eq_mat(graph.world(&xb).clone(), dfl.clone());
+
+    graph.update_world();
+    eq_mat(graph.world(&x).clone(), m.clone());
+    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
+    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
+
+    let xaa = graph.insert(&xa, &maa);
+    eq_mat(graph.world(&x).clone(), m.clone());
+    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
+    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
+    eq_mat(graph.world(&xaa).clone(), dfl.clone());
+
+    graph.update_world();
+    eq_mat(graph.world(&x).clone(), m.clone());
+    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
+    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
+    eq_mat(
+        graph.world(&xaa).clone(),
+        graph.world(&xa) * graph.local(&xaa),
+    );
+}
