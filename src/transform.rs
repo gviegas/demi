@@ -195,9 +195,15 @@ impl Transform {
     }
 
     /// Updates the graph's world transforms.
+    // TODO: Skip unnecessary updates.
     pub fn update_world(&mut self) {
-        // TODO: Skip unnecessary updates.
         let mut queue = VecDeque::from([self.id().0]);
+        if self.changed(&self.id()) {
+            // The whole world will need to be updated.
+            let data = self.nodes[self.id().0].as_ref().unwrap().data;
+            self.data[data].world = self.data[data].local.clone();
+            self.data[data].changed = false;
+        }
         while let Some(prev) = queue.pop_front() {
             // Breadth-first traversal.
             let prev_data = self.nodes[prev].as_ref().unwrap().data;
