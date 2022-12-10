@@ -200,3 +200,108 @@ fn update_world() {
         graph.world(&xa) * graph.local(&xaa),
     );
 }
+
+#[test]
+fn changed() {
+    let mut graph = Transform::new(&Mat4::from(1.0));
+    assert!(!graph.changed(&graph.id()));
+
+    let xa = graph.insert(&graph.id(), &Mat4::from(1.0));
+    assert!(!graph.changed(&graph.id()));
+    assert!(graph.changed(&xa));
+
+    graph.update_world();
+    assert!(!graph.changed(&graph.id()));
+    assert!(!graph.changed(&xa));
+
+    let xb = graph.insert(&graph.id(), &Mat4::from(1.0));
+    assert!(!graph.changed(&graph.id()));
+    assert!(!graph.changed(&xa));
+    assert!(graph.changed(&xb));
+
+    let xaa = graph.insert(&graph.id(), &Mat4::from(1.0));
+    assert!(!graph.changed(&graph.id()));
+    assert!(!graph.changed(&xa));
+    assert!(graph.changed(&xb));
+    assert!(graph.changed(&xaa));
+
+    *graph.local_mut(&xa) *= Mat4::scale(-1.0, -1.0, -1.0);
+    assert!(!graph.changed(&graph.id()));
+    assert!(graph.changed(&xa));
+    assert!(graph.changed(&xb));
+    assert!(graph.changed(&xaa));
+
+    graph.update_world();
+    assert!(!graph.changed(&graph.id()));
+    assert!(!graph.changed(&xa));
+    assert!(!graph.changed(&xb));
+    assert!(!graph.changed(&xaa));
+}
+
+#[test]
+fn changed_upward() {
+    let mut graph = Transform::new(&Mat4::from(1.0));
+    assert!(!graph.changed_upward(&graph.id()));
+
+    let xa = graph.insert(&graph.id(), &Mat4::from(1.0));
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(graph.changed_upward(&xa));
+
+    graph.update_world();
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(!graph.changed_upward(&xa));
+
+    let xb = graph.insert(&graph.id(), &Mat4::from(1.0));
+    let xc = graph.insert(&graph.id(), &Mat4::from(1.0));
+    let xbb = graph.insert(&xb, &Mat4::from(1.0));
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(!graph.changed_upward(&xa));
+    assert!(graph.changed_upward(&xb));
+    assert!(graph.changed_upward(&xc));
+    assert!(graph.changed_upward(&xbb));
+
+    graph.update_world();
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(!graph.changed_upward(&xa));
+    assert!(!graph.changed_upward(&xb));
+    assert!(!graph.changed_upward(&xc));
+    assert!(!graph.changed_upward(&xbb));
+
+    *graph.local_mut(&xa) *= Mat4::rotation_y(0.7854);
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(graph.changed_upward(&xa));
+    assert!(!graph.changed_upward(&xb));
+    assert!(!graph.changed_upward(&xc));
+    assert!(!graph.changed_upward(&xbb));
+
+    *graph.local_mut(&xb) *= Mat4::rotation_y(-0.7854);
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(graph.changed_upward(&xa));
+    assert!(graph.changed_upward(&xb));
+    assert!(!graph.changed_upward(&xc));
+    assert!(graph.changed_upward(&xbb));
+
+    let xbbb = graph.insert(&xbb, &Mat4::from(1.0));
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(graph.changed_upward(&xa));
+    assert!(graph.changed_upward(&xb));
+    assert!(!graph.changed_upward(&xc));
+    assert!(graph.changed_upward(&xbb));
+    assert!(graph.changed_upward(&xbbb));
+
+    graph.update_world();
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(!graph.changed_upward(&xa));
+    assert!(!graph.changed_upward(&xb));
+    assert!(!graph.changed_upward(&xc));
+    assert!(!graph.changed_upward(&xbb));
+    assert!(!graph.changed_upward(&xbbb));
+
+    *graph.local_mut(&xb) *= Mat4::rotation_y(0.7854);
+    assert!(!graph.changed_upward(&graph.id()));
+    assert!(!graph.changed_upward(&xa));
+    assert!(graph.changed_upward(&xb));
+    assert!(!graph.changed_upward(&xc));
+    assert!(graph.changed_upward(&xbb));
+    assert!(graph.changed_upward(&xbbb));
+}
