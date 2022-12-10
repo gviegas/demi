@@ -2,8 +2,6 @@
 
 //! Graph of transformation matrices.
 
-use std::collections::VecDeque;
-
 use crate::linear::Mat4;
 
 #[cfg(test)]
@@ -195,30 +193,60 @@ impl Transform {
     }
 
     /// Updates the graph's world transforms.
-    // TODO: Skip unnecessary updates.
     pub fn update_world(&mut self) {
-        let mut queue = VecDeque::from([self.id().0]);
-        if self.changed(&self.id()) {
-            // The whole world will need to be updated.
-            let data = self.nodes[self.id().0].as_ref().unwrap().data;
-            self.data[data].world = self.data[data].local.clone();
-            self.data[data].changed = false;
+        let data = self.nodes[self.id().0].as_ref().unwrap().data;
+        let changed = self.data[data].changed;
+
+        // NOTE: Doing this here let us treat the root like just another
+        // node during graph traversal. Notice that if `changed` is set,
+        // the root's world transform will be updated like so:
+        //
+        //  root.world = identity * root.local
+        if changed {
+            self.data[data].world = Mat4::from(1.0);
         }
-        while let Some(prev) = queue.pop_front() {
-            // Breadth-first traversal.
-            let prev_data = self.nodes[prev].as_ref().unwrap().data;
-            let mut next = self.nodes[prev].as_ref().unwrap().sub;
-            while let Some(cur) = next {
-                // Update every child of `prev` (`prev.sub` plus the
-                // `next` chain) and push them to the queue.
-                // This ensures that ancestors are processed before
-                // their descendants.
-                queue.push_back(cur);
-                next = self.nodes[cur].as_ref().unwrap().next;
-                let data = self.nodes[cur].as_ref().unwrap().data;
-                let local = &self.data[data].local;
-                self.data[data].world = &self.data[prev_data].world * local;
-                self.data[data].changed = false;
+
+        struct Node {
+            node: usize,
+            prev_data: usize,
+            prev_chg: bool,
+        }
+        let mut nodes = Vec::from([Node {
+            node: self.id().0,
+            prev_data: data, // See NOTE above.
+            prev_chg: changed,
+        }]);
+
+        while let Some(Node {
+            mut node,
+            mut prev_data,
+            mut prev_chg,
+        }) = nodes.pop()
+        {
+            loop {
+                if let Some(next) = self.nodes[node].as_ref().unwrap().next {
+                    nodes.push(Node {
+                        node: next,
+                        prev_data,
+                        prev_chg,
+                    });
+                }
+                let data = self.nodes[node].as_ref().unwrap().data;
+                if prev_chg || self.data[data].changed {
+                    let prev_world = &self.data[prev_data].world;
+                    let local = &self.data[data].local;
+                    self.data[data].world = prev_world * local;
+                    self.data[data].changed = false;
+                    // Notice that this only affects descendants since we already
+                    // pushed the next sibling.
+                    prev_chg = true;
+                }
+                if let Some(sub) = self.nodes[node].as_ref().unwrap().sub {
+                    node = sub;
+                    prev_data = data;
+                } else {
+                    break;
+                }
             }
         }
     }

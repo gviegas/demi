@@ -210,6 +210,16 @@ fn update_world() {
         graph.world(&xaa).clone(),
         graph.world(&xa) * graph.local(&xaa),
     );
+
+    *graph.local_mut(&xa) = Mat4::translation(2.0, -20.0, -2.0);
+    graph.update_world();
+    eq_mat(graph.world(&x).clone(), m.clone());
+    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
+    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
+    eq_mat(
+        graph.world(&xaa).clone(),
+        graph.world(&xa) * graph.local(&xaa),
+    );
 }
 
 #[test]
