@@ -333,6 +333,19 @@ fn mat_mul_assign() {
 }
 
 #[test]
+fn mat_neg() {
+    let m = Mat3::new([[-1.0, 2.0, 0.25], [-5.0, 0.1, 5.0], [999.9, -0.0, 0.001]]);
+    let n = -&m;
+    let o = -n.clone();
+    for i in 0..3 {
+        for j in 0..3 {
+            assert_eq!(n[i][j], -m[i][j]);
+            assert_eq!(o[i][j], -n[i][j]);
+        }
+    }
+}
+
+#[test]
 fn mat_transpose() {
     let m = Mat4::new([
         [0.0, 1.0, 2.0, 3.0],

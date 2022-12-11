@@ -1,6 +1,6 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
-use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use crate::linear::{Float, Quat, Scalar, Vec2, Vec3, Vec4};
 
@@ -286,6 +286,38 @@ macro_rules! mul_assign_impl {
 mul_assign_impl!(Mat2<T>);
 mul_assign_impl!(Mat3<T>);
 mul_assign_impl!(Mat4<T>);
+
+macro_rules! neg_impl {
+    ($t:ty) => {
+        impl<T: Copy + Neg<Output = T>> Neg for &$t {
+            type Output = $t;
+
+            fn neg(self) -> Self::Output {
+                let mut m = self.clone();
+                for i in &mut m.0 {
+                    *i = -*i;
+                }
+                m
+            }
+        }
+
+        impl<T: Copy + Neg<Output = T>> Neg for $t {
+            type Output = Self;
+
+            fn neg(self) -> Self::Output {
+                let mut m = self;
+                for i in &mut m.0 {
+                    *i = -*i;
+                }
+                m
+            }
+        }
+    };
+}
+
+neg_impl!(Mat2<T>);
+neg_impl!(Mat3<T>);
+neg_impl!(Mat4<T>);
 
 macro_rules! transpose_impl {
     ($t:ty, $n:literal) => {
