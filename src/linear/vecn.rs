@@ -22,8 +22,8 @@ macro_rules! new_impl {
     ($t:ty, $n:literal) => {
         impl<T: Copy> $t {
             /// Creates a new vector from an array of values.
-            pub fn new(v: &[T; $n]) -> Self {
-                Self(*v)
+            pub fn new(v: [T; $n]) -> Self {
+                Self(v)
             }
         }
     };
@@ -174,7 +174,7 @@ macro_rules! mul_impl {
 
             fn mul(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
-                <$t>::new(&self.0.map(|x| x * scalar))
+                <$t>::new(self.0.map(|x| x * scalar))
             }
         }
 
@@ -183,7 +183,7 @@ macro_rules! mul_impl {
 
             fn mul(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
-                Self::new(&self.0.map(|x| x * scalar))
+                Self::new(self.0.map(|x| x * scalar))
             }
         }
     };
@@ -216,7 +216,7 @@ macro_rules! div_impl {
 
             fn div(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
-                <$t>::new(&self.0.map(|x| x / scalar))
+                <$t>::new(self.0.map(|x| x / scalar))
             }
         }
 
@@ -225,7 +225,7 @@ macro_rules! div_impl {
 
             fn div(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
-                Self::new(&self.0.map(|x| x / scalar))
+                Self::new(self.0.map(|x| x / scalar))
             }
         }
     };

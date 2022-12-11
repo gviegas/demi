@@ -11,7 +11,7 @@ pub struct Quat<T>(Vec3<T>, T);
 impl<T: Copy> Quat<T> {
     /// Creates a new quaternion from a vector (imaginary part) and
     /// a value (real part).
-    pub fn new(i: &[T; 3], r: T) -> Self {
+    pub fn new(i: [T; 3], r: T) -> Self {
         Self(Vec3::new(i), r)
     }
 
@@ -95,7 +95,7 @@ impl<T: Float> Quat<T> {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
         let sin = ang.sin();
-        Self(Vec3::new(&[sin, T::ZERO, T::ZERO]), cos)
+        Self(Vec3::new([sin, T::ZERO, T::ZERO]), cos)
     }
 
     /// Creates a new quaternion encoding a rotation about the y axis.
@@ -103,7 +103,7 @@ impl<T: Float> Quat<T> {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
         let sin = ang.sin();
-        Self(Vec3::new(&[T::ZERO, sin, T::ZERO]), cos)
+        Self(Vec3::new([T::ZERO, sin, T::ZERO]), cos)
     }
 
     /// Creates a new quaternion encoding a rotation about the z axis.
@@ -111,7 +111,7 @@ impl<T: Float> Quat<T> {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
         let sin = ang.sin();
-        Self(Vec3::new(&[T::ZERO, T::ZERO, sin]), cos)
+        Self(Vec3::new([T::ZERO, T::ZERO, sin]), cos)
     }
 }
 
@@ -120,7 +120,7 @@ impl<T: Copy + Default> From<&Vec4<T>> for Quat<T> {
     ///
     /// The real part is taken from the last component of the vector.
     fn from(iiir: &Vec4<T>) -> Self {
-        Self(Vec3::new(&[iiir[0], iiir[1], iiir[2]]), iiir[3])
+        Self(Vec3::new([iiir[0], iiir[1], iiir[2]]), iiir[3])
     }
 }
 
@@ -129,6 +129,6 @@ impl<T: Copy + Default> From<Vec4<T>> for Quat<T> {
     ///
     /// The real part is taken from the last component of the vector.
     fn from(iiir: Vec4<T>) -> Self {
-        Self(Vec3::new(&[iiir[0], iiir[1], iiir[2]]), iiir[3])
+        Self(Vec3::new([iiir[0], iiir[1], iiir[2]]), iiir[3])
     }
 }
