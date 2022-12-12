@@ -22,6 +22,7 @@ mod tests;
 pub trait Scalar:
     Copy
     + Default
+    + PartialOrd
     + Add<Output = Self>
     + AddAssign
     + Sub<Output = Self>
