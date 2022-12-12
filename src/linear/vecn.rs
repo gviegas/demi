@@ -390,7 +390,21 @@ conv_impl!(Vec2<T>, Mat2<T>, 2);
 conv_impl!(Vec3<T>, Mat3<T>, 3);
 conv_impl!(Vec4<T>, Mat4<T>, 4);
 
-impl<T: Copy + Default> From<&Quat<T>> for Vec4<T> {
+impl<T: Copy> From<&Vec4<T>> for Vec3<T> {
+    /// Converts a `&Vec4<T>` into a `Vec3<T>`, discarding the last component.
+    fn from(v: &Vec4<T>) -> Self {
+        Self([v[0], v[1], v[2]])
+    }
+}
+
+impl<T: Copy> From<Vec4<T>> for Vec3<T> {
+    /// Converts a `Vec4<T>` into a `Vec3<T>`, discarding the last component.
+    fn from(v: Vec4<T>) -> Self {
+        Self([v[0], v[1], v[2]])
+    }
+}
+
+impl<T: Copy> From<&Quat<T>> for Vec4<T> {
     /// Converts a `&Quat<T>` into a `Vec4<T>`.
     ///
     /// The real part is stored in the last component of the vector.
@@ -401,7 +415,7 @@ impl<T: Copy + Default> From<&Quat<T>> for Vec4<T> {
     }
 }
 
-impl<T: Copy + Default> From<Quat<T>> for Vec4<T> {
+impl<T: Copy> From<Quat<T>> for Vec4<T> {
     /// Converts a `Quat<T>` into a `Vec4<T>`.
     ///
     /// The real part is stored in the last component of the vector.

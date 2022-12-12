@@ -620,6 +620,13 @@ fn vec_conv() {
     }
     //m;
 
+    let u = Vec3::from(&v);
+    let w = Vec3::from(v);
+    for i in 0..3 {
+        assert_eq!(u[i], v[i]);
+        assert_eq!(w[i], v[i]);
+    }
+
     let q = Quat::new([-0.7071068, 0.7071068, 0.0], 1.0);
     let v = Vec4::from(q);
     for i in 0..3 {
