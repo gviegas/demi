@@ -5,7 +5,7 @@ use std::ops::{Add, Mul, MulAssign, Sub};
 use crate::linear::{Float, Vec3, Vec4};
 
 /// Quaternion.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Quat<T>(Vec3<T>, T);
 
 impl<T: Copy> Quat<T> {
@@ -115,20 +115,20 @@ impl<T: Float> Quat<T> {
     }
 }
 
-impl<T: Copy + Default> From<&Vec4<T>> for Quat<T> {
+impl<T: Copy> From<&Vec4<T>> for Quat<T> {
     /// Converts a `&Vec4<T>` into a `Quat<T>`.
     ///
     /// The real part is taken from the last component of the vector.
-    fn from(iiir: &Vec4<T>) -> Self {
-        Self(Vec3::new([iiir[0], iiir[1], iiir[2]]), iiir[3])
+    fn from(ir: &Vec4<T>) -> Self {
+        Self(Vec3::new([ir[0], ir[1], ir[2]]), ir[3])
     }
 }
 
-impl<T: Copy + Default> From<Vec4<T>> for Quat<T> {
+impl<T: Copy> From<Vec4<T>> for Quat<T> {
     /// Converts a `Vec4<T>` into a `Quat<T>`.
     ///
     /// The real part is taken from the last component of the vector.
-    fn from(iiir: Vec4<T>) -> Self {
-        Self(Vec3::new([iiir[0], iiir[1], iiir[2]]), iiir[3])
+    fn from(ir: Vec4<T>) -> Self {
+        Self(Vec3::new([ir[0], ir[1], ir[2]]), ir[3])
     }
 }
