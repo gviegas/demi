@@ -485,6 +485,22 @@ fn quat_rotation() {
     assert!((p.imag()[2] - 0.5).abs() <= f64::EPSILON);
     assert!((p.real() - 0.5).abs() <= f64::EPSILON);
 
+    let r = Quat::rotation_m(&Mat3::rotation_q(&q));
+    assert!((r.imag()[0] - q.imag()[0]).abs() <= f64::EPSILON);
+    assert!((r.imag()[1] - q.imag()[1]).abs() <= f64::EPSILON);
+    assert!((r.imag()[2] - q.imag()[2]).abs() <= f64::EPSILON);
+    assert!((r.real() - q.real()).abs() <= f64::EPSILON);
+    let r = Quat::rotation_m(&Mat3::rotation_q(&u));
+    assert!((r.imag()[0] - u.imag()[0]).abs() <= f64::EPSILON);
+    assert!((r.imag()[1] - u.imag()[1]).abs() <= f64::EPSILON);
+    assert!((r.imag()[2] - u.imag()[2]).abs() <= f64::EPSILON);
+    assert!((r.real() - u.real()).abs() <= f64::EPSILON);
+    let r = Quat::rotation_m(&Mat3::rotation_q(&p));
+    assert!((r.imag()[0] - p.imag()[0]).abs() <= f64::EPSILON);
+    assert!((r.imag()[1] - p.imag()[1]).abs() <= f64::EPSILON);
+    assert!((r.imag()[2] - p.imag()[2]).abs() <= f64::EPSILON);
+    assert!((r.real() - p.real()).abs() <= f64::EPSILON);
+
     let q = Quat::rotation_x(PI_4);
     let u = Quat::rotation_y(PI_4);
     let p = Quat::rotation_z(PI_4);

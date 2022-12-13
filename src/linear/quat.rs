@@ -2,7 +2,7 @@
 
 use std::ops::{Add, Mul, MulAssign, Sub};
 
-use crate::linear::{Float, Vec3, Vec4};
+use crate::linear::{Float, Mat3, Vec3, Vec4};
 
 /// Quaternion.
 #[derive(Copy, Clone, Default, Debug)]
@@ -88,6 +88,51 @@ impl<T: Float> Quat<T> {
         let cos = ang.cos();
         let sin = ang.sin();
         Self(axis.norm() * sin, cos)
+    }
+
+    /// Creates a new quaternion encoding the rotation described by a given matrix.
+    pub fn rotation_m(mat: &Mat3<T>) -> Self {
+        let diag = Vec3::from(mat);
+        match diag[0] + diag[1] + diag[2] {
+            x if x > T::ZERO => {
+                let s = (T::ONE + x).sqrt();
+                Self(
+                    Vec3::new([
+                        mat[1][2] - mat[2][1],
+                        mat[2][0] - mat[0][2],
+                        mat[0][1] - mat[1][0],
+                    ]) * (T::ONE / (s + s)),
+                    s / (T::ONE + T::ONE),
+                )
+            }
+            _ => {
+                let (i, j, k) = if diag[0] > diag[1] {
+                    if diag[1] > diag[2] {
+                        (0, 1, 2)
+                    } else if diag[2] > diag[0] {
+                        (2, 0, 1)
+                    } else {
+                        (0, 2, 1)
+                    }
+                } else if diag[1] > diag[2] {
+                    if diag[2] > diag[0] {
+                        (1, 2, 0)
+                    } else {
+                        (1, 0, 2)
+                    }
+                } else {
+                    (2, 1, 0)
+                };
+                let s = (diag[i] - (diag[j] + diag[k]) + T::ONE).sqrt();
+                debug_assert!(s.abs() > T::EPSILON);
+                let is = T::ONE / (s + s);
+                let mut v = Vec3::default();
+                v[i] = s / (T::ONE + T::ONE);
+                v[j] = is * (mat[i][j] + mat[j][i]);
+                v[k] = is * (mat[i][k] + mat[k][i]);
+                Self(v, is * (mat[j][k] - mat[k][j]))
+            }
+        }
     }
 
     /// Creates a new quaternion encoding a rotation about the x axis.
