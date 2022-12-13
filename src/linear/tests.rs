@@ -706,3 +706,57 @@ fn quat_conv() {
     assert_eq!(v[2], q.imag()[2]);
     assert_eq!(v[3], q.real());
 }
+
+#[test]
+fn mat_trs() {
+    let assert = |m: &Mat4<f64>, t: Vec3<f64>, r: Quat<f64>, s: Vec3<f64>| {
+        let n = Mat4::translation(t[0], t[1], t[2])
+            * Mat4::rotation_q(&r)
+            * Mat4::scale(s[0], s[1], s[2]);
+        for i in 0..4 {
+            for j in 0..4 {
+                assert!((m[i][j] - n[i][j]).abs() <= f64::EPSILON);
+            }
+        }
+    };
+
+    let t = Vec3::new([-10.0, 20.0, -30.0]);
+    let r = Quat::rotation_y(std::f64::consts::FRAC_PI_2);
+    let s = Vec3::from(2.0);
+    let m = Mat4::from_trs(&t, &r, &s);
+    let trs = m.into_trs();
+    assert(&m, t, r, s);
+    assert(&m, trs.0, trs.1, trs.2);
+
+    let t = Vec3::new([50.0, 0.0, -100.0]);
+    let r = Quat::rotation(
+        std::f64::consts::FRAC_PI_3,
+        &Vec3::new([0.7071068, 0.0, -0.7071068]),
+    );
+    let s = Vec3::from(0.5);
+    let m = Mat4::from_trs(&t, &r, &s);
+    let trs = m.into_trs();
+    assert(&m, t, r, s);
+    assert(&m, trs.0, trs.1, trs.2);
+
+    let t = Vec3::default();
+    let r = Quat::rotation(
+        std::f64::consts::FRAC_PI_3,
+        &Vec3::new([0.7071068, 0.0, -0.7071068]),
+    );
+    let s = Vec3::from(-1.0);
+    let m = Mat4::from_trs(&t, &r, &s);
+    let trs = m.into_trs();
+    assert(&m, t, r, s);
+    assert(&m, trs.0, trs.1, trs.2);
+
+    let t = Vec3::new([64.0, 16.0, 4.0]);
+    let r = Quat::rotation_x(std::f64::consts::FRAC_PI_3)
+        * Quat::rotation_y(std::f64::consts::FRAC_PI_6)
+        * Quat::rotation_z(std::f64::consts::FRAC_PI_4);
+    let s = Vec3::new([1.0, 2.75, 0.25]);
+    let m = Mat4::from_trs(&t, &r, &s);
+    let trs = m.into_trs();
+    assert(&m, t, r, s);
+    assert(&m, trs.0, trs.1, trs.2);
+}

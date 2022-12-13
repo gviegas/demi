@@ -867,3 +867,44 @@ impl<T: Copy + Default> From<Mat4<T>> for Mat3<T> {
         m
     }
 }
+
+impl<T: Float> Mat4<T> {
+    /// Composes a matrix from TRS properties.
+    pub fn from_trs(t: &Vec3<T>, r: &Quat<T>, s: &Vec3<T>) -> Self {
+        let mut m = Mat4::rotation_q(r);
+        m[0][0] *= s[0];
+        m[0][1] *= s[0];
+        m[0][2] *= s[0];
+        m[1][0] *= s[1];
+        m[1][1] *= s[1];
+        m[1][2] *= s[1];
+        m[2][0] *= s[2];
+        m[2][1] *= s[2];
+        m[2][2] *= s[2];
+        m[3][0] = t[0];
+        m[3][1] = t[1];
+        m[3][2] = t[2];
+        m
+    }
+
+    /// Decomposes a matrix into TRS properties.
+    pub fn into_trs(&self) -> (Vec3<T>, Quat<T>, Vec3<T>) {
+        let mut ul = Mat3::from(self);
+        let det = ul.det();
+        let s = if det > T::ZERO {
+            Vec3::new([ul[0].length(), ul[1].length(), ul[2].length()])
+        } else {
+            Vec3::new([-ul[0].length(), -ul[1].length(), -ul[2].length()])
+        };
+        let r = if det.abs() <= T::EPSILON {
+            Quat::new([T::ZERO; 3], T::ONE)
+        } else {
+            ul[0] /= s[0];
+            ul[1] /= s[1];
+            ul[2] /= s[2];
+            Quat::rotation_m(&ul)
+        };
+        let t = Vec3::from(self[3]);
+        (t, r, s)
+    }
+}
