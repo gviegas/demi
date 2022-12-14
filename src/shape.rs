@@ -25,10 +25,18 @@ impl Bbox {
         Self::new(Vec3::default(), half_extent)
     }
 
-    /// Offsets the bounding box's center.
-    pub fn offset(self, off: Vec3<f32>) -> Self {
+    /// Displaces the bounding box by offsetting its center.
+    pub fn displace_by(self, offset: Vec3<f32>) -> Self {
         Self {
-            center: self.center + off,
+            center: self.center + offset,
+            ..self
+        }
+    }
+
+    /// Resizes the bounding box by offsetting its half extent.
+    pub fn resize_by(self, offset: Vec3<f32>) -> Self {
+        Self {
+            half_extent: self.half_extent + offset,
             ..self
         }
     }
@@ -90,10 +98,18 @@ impl Sphere {
         Self::new(Vec3::default(), radius)
     }
 
-    /// Offsets the sphere's center.
-    pub fn offset(self, off: Vec3<f32>) -> Self {
+    /// Displaces the sphere by offsetting its center.
+    pub fn displace_by(self, offset: Vec3<f32>) -> Self {
         Self {
-            center: self.center + off,
+            center: self.center + offset,
+            ..self
+        }
+    }
+
+    /// Resizes the sphere by offsetting its radius.
+    pub fn resize_by(self, offset: f32) -> Self {
+        Self {
+            radius: self.radius + offset,
             ..self
         }
     }
