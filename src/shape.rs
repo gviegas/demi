@@ -2,6 +2,9 @@
 
 //! Bounding shapes.
 
+#[cfg(test)]
+mod tests;
+
 use crate::linear::{Vec3, Vec4};
 
 /// Bounding box.
