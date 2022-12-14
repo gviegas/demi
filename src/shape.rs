@@ -154,3 +154,11 @@ impl Plane {
         self.coef
     }
 }
+
+impl From<Vec4<f32>> for Plane {
+    /// Converts from a `Vec4<f32>` containing the `[A, B, C, D]` coefficients
+    /// of the `Plane`'s equation.
+    fn from(coef: Vec4<f32>) -> Self {
+        Self { coef }
+    }
+}
