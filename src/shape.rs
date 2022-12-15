@@ -172,6 +172,16 @@ impl Plane {
     pub fn coef(&self) -> Vec4<f32> {
         self.coef
     }
+
+    /// Returns the (possibly unnormalized) normal to the plane.
+    pub fn n(&self) -> Vec3<f32> {
+        Vec3::from(self.coef)
+    }
+
+    /// Returns the point on the plane that lies closest to the origin.
+    pub fn p0(&self) -> Vec3<f32> {
+        -self.n() * self.coef[3]
+    }
 }
 
 impl From<Vec4<f32>> for Plane {

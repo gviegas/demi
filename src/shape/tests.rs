@@ -109,11 +109,11 @@ fn plane() {
     assert_eq!(pln2, pln1);
 
     let n = Vec3::new([-2.0, 0.0, 0.0]);
-    let p0 = Vec3::new([0.0, 1.0, 1.0]);
+    let p0 = Vec3::new([1.0, -1.0, 0.0]);
     let pln0 = Plane::new_unnorm(n, p0);
-    let pln1 = Plane::new_norm(n, p0);
-    let nn = n.norm();
-    let pln2 = Plane::new(nn[0], nn[1], nn[2], -nn.dot(&p0));
+    let pln1 = Plane::new_norm(n, pln0.p0());
+    let nn = pln0.n().norm();
+    let pln2 = Plane::new(nn[0], nn[1], nn[2], -nn.dot(&pln1.p0()));
     assert_ne!(pln0, pln1);
     assert_ne!(pln0, pln2);
     assert_eq!(pln1, pln2);
