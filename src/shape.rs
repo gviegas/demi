@@ -152,6 +152,22 @@ impl Plane {
         }
     }
 
+    /// Creates a new plane from a normal vector and a point on the plane.
+    ///
+    /// This function normalizes `n`.
+    pub fn new_norm(n: Vec3<f32>, p0: Vec3<f32>) -> Self {
+        Self::new_unnorm(n.norm(), p0)
+    }
+
+    /// Creates a new plane from a normal vector and a point on the plane.
+    ///
+    /// This function does *not* normalizes `n`.
+    pub fn new_unnorm(n: Vec3<f32>, p0: Vec3<f32>) -> Self {
+        Self {
+            coef: Vec4::new([n[0], n[1], n[2], -n.dot(&p0)]),
+        }
+    }
+
     /// Returns the coefficients of the plane's equation.
     pub fn coef(&self) -> Vec4<f32> {
         self.coef
