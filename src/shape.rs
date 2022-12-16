@@ -208,6 +208,14 @@ impl Plane {
         // TODO: Disallow unnormalized planes.
         ((n.dot(&point) + d) / n.length()).abs() <= 1e-6
     }
+
+    /// Computes the signed distance from the plane to a given point.
+    pub fn signed_distance(&self, point: Vec3<f32>) -> f32 {
+        let n = self.n();
+        let d = self.coef[3];
+        // TODO: Disallow unnormalized planes.
+        (n.dot(&point) + d) / n.length()
+    }
 }
 
 impl From<Vec4<f32>> for Plane {

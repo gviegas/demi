@@ -502,3 +502,42 @@ fn bbox_sphere_intersects() {
     assert!(bb.displace_by(d).intersects_sphere(sph.resize_by(r[2])));
     assert!(bb.resize_by(r).intersects_sphere(sph.displace_by(d)));
 }
+
+#[test]
+fn plane_signed_distance() {
+    let pln = Plane::new(0.0, 1.0, 0.0, 0.0);
+    assert_eq!(0.0, pln.signed_distance(Vec3::from(0.0)));
+    assert_eq!(3.0, pln.signed_distance(Vec3::from(3.0)));
+    assert_eq!(-3.0, pln.signed_distance(Vec3::from(-3.0)));
+    assert_eq!(2.5, pln.signed_distance(Vec3::new(0.0, 2.5, 0.0)));
+    assert_eq!(-2.5, pln.signed_distance(Vec3::new(0.0, -2.5, 0.0)));
+    assert_eq!(0.0, pln.signed_distance(Vec3::new(-16.0, 0.0, 4.0)));
+    assert_eq!(0.0, pln.signed_distance(Vec3::new(-16.0, 0.0, 4.0)));
+    assert_eq!(0.0, pln.signed_distance(Vec3::new(1.25, 0.0, 0.0)));
+    assert_eq!(0.0, pln.signed_distance(Vec3::new(0.0, 0.0, 11.1)));
+
+    let pln = Plane::new_norm(Vec3::new(-1.0, 0.0, 1.0), Vec3::default());
+    assert_eq!(0.0, pln.signed_distance(Vec3::from(0.0)));
+    assert_eq!(0.0, pln.signed_distance(Vec3::from(1.0)));
+    assert_eq!(0.0, pln.signed_distance(Vec3::from(-1.0)));
+    assert!((pln.n()[2] - pln.signed_distance(Vec3::new(0.0, 0.0, 1.0))).abs() <= 1e-6);
+    assert!((pln.n()[0] - pln.signed_distance(Vec3::new(1.0, 0.0, 0.0))).abs() <= 1e-6);
+    assert_eq!(0.0, pln.signed_distance(Vec3::new(0.0, 1.0, 0.0)));
+
+    let pln = Plane::new_norm(Vec3::new(-1.0, 0.0, 1.0), Vec3::new(2.0, 0.0, -2.0));
+    assert!((pln.coef()[3] - pln.signed_distance(Vec3::from(0.0)).abs()) <= 1e-6);
+    assert!(pln.signed_distance(pln.p0()).abs() <= 1e-6);
+    assert!(pln.signed_distance(Vec3::from(0.0)) > 0.0);
+    assert!(pln.signed_distance(Vec3::new(-2.0, 0.0, 2.0)) > 0.0);
+    assert!(pln.signed_distance(Vec3::new(2.0001, 0.0, -2.0001)) < 0.0);
+    assert!(
+        pln.signed_distance(Vec3::new(pln.p0()[0], -1e9, pln.p0()[2]))
+            .abs()
+            <= 1e-6
+    );
+    assert!(
+        pln.signed_distance(Vec3::new(pln.p0()[0], 1e9, pln.p0()[2]))
+            .abs()
+            <= 1e-6
+    );
+}
