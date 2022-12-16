@@ -12,7 +12,7 @@ impl<T: Copy> Quat<T> {
     /// Creates a new quaternion from a vector (imaginary part) and
     /// a value (real part).
     pub fn new(i: [T; 3], r: T) -> Self {
-        Self(Vec3::new(i), r)
+        Self(Vec3::from(i), r)
     }
 
     /// Returns the imaginary part.
@@ -97,11 +97,11 @@ impl<T: Float> Quat<T> {
             x if x > T::ZERO => {
                 let s = (T::ONE + x).sqrt();
                 Self(
-                    Vec3::new([
+                    Vec3::new(
                         mat[1][2] - mat[2][1],
                         mat[2][0] - mat[0][2],
                         mat[0][1] - mat[1][0],
-                    ]) * (T::ONE / (s + s)),
+                    ) * (T::ONE / (s + s)),
                     s / (T::ONE + T::ONE),
                 )
             }
@@ -140,7 +140,7 @@ impl<T: Float> Quat<T> {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
         let sin = ang.sin();
-        Self(Vec3::new([sin, T::ZERO, T::ZERO]), cos)
+        Self(Vec3::new(sin, T::ZERO, T::ZERO), cos)
     }
 
     /// Creates a new quaternion encoding a rotation about the y axis.
@@ -148,7 +148,7 @@ impl<T: Float> Quat<T> {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
         let sin = ang.sin();
-        Self(Vec3::new([T::ZERO, sin, T::ZERO]), cos)
+        Self(Vec3::new(T::ZERO, sin, T::ZERO), cos)
     }
 
     /// Creates a new quaternion encoding a rotation about the z axis.
@@ -156,7 +156,7 @@ impl<T: Float> Quat<T> {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
         let sin = ang.sin();
-        Self(Vec3::new([T::ZERO, T::ZERO, sin]), cos)
+        Self(Vec3::new(T::ZERO, T::ZERO, sin), cos)
     }
 }
 
@@ -165,7 +165,7 @@ impl<T: Copy> From<&Vec4<T>> for Quat<T> {
     ///
     /// The real part is taken from the last component of the vector.
     fn from(ir: &Vec4<T>) -> Self {
-        Self(Vec3::new([ir[0], ir[1], ir[2]]), ir[3])
+        Self(Vec3::new(ir[0], ir[1], ir[2]), ir[3])
     }
 }
 
@@ -174,6 +174,6 @@ impl<T: Copy> From<Vec4<T>> for Quat<T> {
     ///
     /// The real part is taken from the last component of the vector.
     fn from(ir: Vec4<T>) -> Self {
-        Self(Vec3::new([ir[0], ir[1], ir[2]]), ir[3])
+        Self(Vec3::new(ir[0], ir[1], ir[2]), ir[3])
     }
 }

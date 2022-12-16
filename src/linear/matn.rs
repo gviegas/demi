@@ -1,5 +1,6 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+use std::mem;
 use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use crate::linear::{Float, Quat, Scalar, Vec2, Vec3, Vec4};
@@ -16,24 +17,31 @@ pub struct Mat3<T>([Vec3<T>; 3]);
 #[derive(Clone, Default, Debug)]
 pub struct Mat4<T>([Vec4<T>; 4]);
 
-macro_rules! new_impl {
-    ($m:ty, $v:ty, $n:literal) => {
-        impl<T: Copy + Default> $m {
-            /// Creates a new matrix from an array of columns.
-            pub fn new(m: [[T; $n]; $n]) -> Self {
-                let mut cols = [<$v>::default(); $n];
-                for i in 0..$n {
-                    cols[i] = <$v>::new(m[i]);
-                }
-                Self(cols)
-            }
-        }
-    };
+impl<T> Mat2<T> {
+    /// Creates a new `Mat2`.
+    pub fn new(col0: [T; 2], col1: [T; 2]) -> Self {
+        Self([Vec2::from(col0), Vec2::from(col1)])
+    }
 }
 
-new_impl!(Mat2<T>, Vec2<T>, 2);
-new_impl!(Mat3<T>, Vec3<T>, 3);
-new_impl!(Mat4<T>, Vec4<T>, 4);
+impl<T> Mat3<T> {
+    /// Creates a new `Mat3`.
+    pub fn new(col0: [T; 3], col1: [T; 3], col2: [T; 3]) -> Self {
+        Self([Vec3::from(col0), Vec3::from(col1), Vec3::from(col2)])
+    }
+}
+
+impl<T> Mat4<T> {
+    /// Creates a new `Mat4`.
+    pub fn new(col0: [T; 4], col1: [T; 4], col2: [T; 4], col3: [T; 4]) -> Self {
+        Self([
+            Vec4::from(col0),
+            Vec4::from(col1),
+            Vec4::from(col2),
+            Vec4::from(col3),
+        ])
+    }
+}
 
 macro_rules! index_impl {
     ($m:ty, $v:ty) => {
@@ -407,7 +415,7 @@ impl<T: Float> Mat2<T> {
         let m11 = self[1][1];
         let det = m00 * m11 - m01 * m10;
         let idet = T::ONE / det;
-        Self::new([[m11 * idet, m01 * idet], [-m10 * idet, m00 * idet]])
+        Self::new([m11 * idet, m01 * idet], [-m10 * idet, m00 * idet])
     }
 }
 
@@ -431,7 +439,7 @@ impl<T: Float> Mat3<T> {
         let s2 = m10 * m21 - m11 * m20;
         let det = m00 * s0 - m01 * s1 + m02 * s2;
         let idet = T::ONE / det;
-        Self::new([
+        Self::new(
             [
                 s0 * idet,
                 -(m01 * m22 - m02 * m21) * idet,
@@ -447,7 +455,7 @@ impl<T: Float> Mat3<T> {
                 -(m00 * m21 - m01 * m20) * idet,
                 (m00 * m11 - m01 * m10) * idet,
             ],
-        ])
+        )
     }
 }
 
@@ -487,7 +495,7 @@ impl<T: Float> Mat4<T> {
         let c5 = m22 * m33 - m23 * m32;
         let det = s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
         let idet = T::ONE / det;
-        Self::new([
+        Self::new(
             [
                 (c5 * m11 - c4 * m12 + c3 * m13) * idet,
                 (-c5 * m01 + c4 * m02 - c3 * m03) * idet,
@@ -512,19 +520,19 @@ impl<T: Float> Mat4<T> {
                 (-s3 * m30 + s1 * m31 - s0 * m32) * idet,
                 (s3 * m20 - s1 * m21 + s0 * m22) * idet,
             ],
-        ])
+        )
     }
 }
 
 impl<T: Scalar> Mat4<T> {
     /// Creates a new matrix encoding a translation.
     pub fn translation(x: T, y: T, z: T) -> Self {
-        Self::new([
+        Self::new(
             [T::ONE, T::ZERO, T::ZERO, T::ZERO],
             [T::ZERO, T::ONE, T::ZERO, T::ZERO],
             [T::ZERO, T::ZERO, T::ONE, T::ZERO],
             [x, y, z, T::ONE],
-        ])
+        )
     }
 }
 
@@ -542,11 +550,11 @@ impl<T: Float> Mat3<T> {
         let sinx = sin * x;
         let siny = sin * y;
         let sinz = sin * z;
-        Self::new([
+        Self::new(
             [cos + dcos * x * x, dcosxy + sinz, dcosxz - siny],
             [dcosxy - sinz, cos + dcos * y * y, dcosyz + sinx],
             [dcosxz + siny, dcosyz - sinx, cos + dcos * z * z],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding the rotation described by a given quaternion.
@@ -554,7 +562,7 @@ impl<T: Float> Mat3<T> {
         // TODO: Implement vector conversions.
         let imag = quat.imag();
         let real = quat.real();
-        let qvec = Vec4::new([imag[0], imag[1], imag[2], real]).norm();
+        let qvec = Vec4::new(imag[0], imag[1], imag[2], real).norm();
         let (x, y, z, w) = (qvec[0], qvec[1], qvec[2], qvec[3]);
         let xx2 = (T::ONE + T::ONE) * x * x;
         let xy2 = (T::ONE + T::ONE) * x * y;
@@ -565,44 +573,44 @@ impl<T: Float> Mat3<T> {
         let yw2 = (T::ONE + T::ONE) * y * w;
         let zz2 = (T::ONE + T::ONE) * z * z;
         let zw2 = (T::ONE + T::ONE) * z * w;
-        Self::new([
+        Self::new(
             [T::ONE - yy2 - zz2, xy2 + zw2, xz2 - yw2],
             [xy2 - zw2, T::ONE - xx2 - zz2, yz2 + xw2],
             [xz2 + yw2, yz2 - xw2, T::ONE - xx2 - yy2],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding a rotation about the x axis.
     pub fn rotation_x(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
-        Self::new([
+        Self::new(
             [T::ONE, T::ZERO, T::ZERO],
             [T::ZERO, cos, sin],
             [T::ZERO, -sin, cos],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding a rotation about the y axis.
     pub fn rotation_y(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
-        Self::new([
+        Self::new(
             [cos, T::ZERO, -sin],
             [T::ZERO, T::ONE, T::ZERO],
             [sin, T::ZERO, cos],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding a rotation about the z axis.
     pub fn rotation_z(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
-        Self::new([
+        Self::new(
             [cos, sin, T::ZERO],
             [-sin, cos, T::ZERO],
             [T::ZERO, T::ZERO, T::ONE],
-        ])
+        )
     }
 }
 
@@ -620,12 +628,12 @@ impl<T: Float> Mat4<T> {
         let sinx = sin * x;
         let siny = sin * y;
         let sinz = sin * z;
-        Self::new([
+        Self::new(
             [cos + dcos * x * x, dcosxy + sinz, dcosxz - siny, T::ZERO],
             [dcosxy - sinz, cos + dcos * y * y, dcosyz + sinx, T::ZERO],
             [dcosxz + siny, dcosyz - sinx, cos + dcos * z * z, T::ZERO],
             [T::ZERO, T::ZERO, T::ZERO, T::ONE],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding the rotation described by a given quaternion.
@@ -633,7 +641,7 @@ impl<T: Float> Mat4<T> {
         // TODO: Implement vector conversions.
         let imag = quat.imag();
         let real = quat.real();
-        let qvec = Vec4::new([imag[0], imag[1], imag[2], real]).norm();
+        let qvec = Vec4::new(imag[0], imag[1], imag[2], real).norm();
         let (x, y, z, w) = (qvec[0], qvec[1], qvec[2], qvec[3]);
         let xx2 = (T::ONE + T::ONE) * x * x;
         let xy2 = (T::ONE + T::ONE) * x * y;
@@ -644,48 +652,48 @@ impl<T: Float> Mat4<T> {
         let yw2 = (T::ONE + T::ONE) * y * w;
         let zz2 = (T::ONE + T::ONE) * z * z;
         let zw2 = (T::ONE + T::ONE) * z * w;
-        Self::new([
+        Self::new(
             [T::ONE - yy2 - zz2, xy2 + zw2, xz2 - yw2, T::ZERO],
             [xy2 - zw2, T::ONE - xx2 - zz2, yz2 + xw2, T::ZERO],
             [xz2 + yw2, yz2 - xw2, T::ONE - xx2 - yy2, T::ZERO],
             [T::ZERO, T::ZERO, T::ZERO, T::ONE],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding a rotation about the x axis.
     pub fn rotation_x(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
-        Self::new([
+        Self::new(
             [T::ONE, T::ZERO, T::ZERO, T::ZERO],
             [T::ZERO, cos, sin, T::ZERO],
             [T::ZERO, -sin, cos, T::ZERO],
             [T::ZERO, T::ZERO, T::ZERO, T::ONE],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding a rotation about the y axis.
     pub fn rotation_y(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
-        Self::new([
+        Self::new(
             [cos, T::ZERO, -sin, T::ZERO],
             [T::ZERO, T::ONE, T::ZERO, T::ZERO],
             [sin, T::ZERO, cos, T::ZERO],
             [T::ZERO, T::ZERO, T::ZERO, T::ONE],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding a rotation about the z axis.
     pub fn rotation_z(angle: T) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
-        Self::new([
+        Self::new(
             [cos, sin, T::ZERO, T::ZERO],
             [-sin, cos, T::ZERO, T::ZERO],
             [T::ZERO, T::ZERO, T::ONE, T::ZERO],
             [T::ZERO, T::ZERO, T::ZERO, T::ONE],
-        ])
+        )
     }
 }
 
@@ -718,12 +726,12 @@ impl<T: Float> Mat4<T> {
         let fwd = (center - eye).norm();
         let side = fwd.cross(up).norm();
         let up = fwd.cross(&side);
-        Self::new([
+        Self::new(
             [side[0], up[0], -fwd[0], T::ZERO],
             [side[1], up[1], -fwd[1], T::ZERO],
             [side[2], up[2], -fwd[2], T::ZERO],
             [-side.dot(eye), -up.dot(eye), fwd.dot(eye), T::ONE],
-        ])
+        )
     }
 }
 
@@ -732,7 +740,7 @@ impl<T: Float> Mat4<T> {
     pub fn perspective(yfov: T, aspect: T, znear: T, zfar: T) -> Self {
         let two = T::ONE + T::ONE;
         let ct = T::ONE / (yfov / two).tan();
-        Self::new([
+        Self::new(
             [ct / aspect, T::ZERO, T::ZERO, T::ZERO],
             [T::ZERO, ct, T::ZERO, T::ZERO],
             [T::ZERO, T::ZERO, (zfar + znear) / (znear - zfar), -T::ONE],
@@ -742,30 +750,30 @@ impl<T: Float> Mat4<T> {
                 (two * zfar * znear) / (znear - zfar),
                 T::ZERO,
             ],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding an infinity perspective projection.
     pub fn inf_perspective(yfov: T, aspect: T, znear: T) -> Self {
         let two = T::ONE + T::ONE;
         let ct = T::ONE / (yfov / two).tan();
-        Self::new([
+        Self::new(
             [ct / aspect, T::ZERO, T::ZERO, T::ZERO],
             [T::ZERO, ct, T::ZERO, T::ZERO],
             [T::ZERO, T::ZERO, -T::ONE, -T::ONE],
             [T::ZERO, T::ZERO, -two * znear, T::ZERO],
-        ])
+        )
     }
 
     /// Creates a new matrix encoding an orthographic projection.
     pub fn ortho(xmag: T, ymag: T, znear: T, zfar: T) -> Self {
         let two = T::ONE + T::ONE;
-        Self::new([
+        Self::new(
             [T::ONE / xmag, T::ZERO, T::ZERO, T::ZERO],
             [T::ZERO, T::ONE / ymag, T::ZERO, T::ZERO],
             [T::ZERO, T::ZERO, two / (znear - zfar), T::ZERO],
             [T::ZERO, T::ZERO, (zfar + znear) / (znear - zfar), T::ONE],
-        ])
+        )
     }
 }
 
@@ -805,6 +813,32 @@ macro_rules! conv_impl {
             /// of such vector. Non-diagonal components are set to the default value.
             fn from(diag: $v) -> Self {
                 <$m>::from(&diag)
+            }
+        }
+
+        impl<T: Copy + Default> From<&[T; $n * $n]> for $m {
+            /// Converts an array into a matrix.
+            fn from(array: &[T; $n * $n]) -> Self {
+                let mut m = Self::default();
+                for i in 0..$n {
+                    for j in 0..$n {
+                        m[i][j] = array[i * $n + j];
+                    }
+                }
+                m
+            }
+        }
+
+        impl<T: Default> From<[T; $n * $n]> for $m {
+            /// Converts an array into a matrix.
+            fn from(mut array: [T; $n * $n]) -> Self {
+                let mut m = Self::default();
+                for i in 0..$n {
+                    for j in 0..$n {
+                        m[i][j] = mem::take(&mut array[i * $n + j]);
+                    }
+                }
+                m
             }
         }
     };
@@ -892,9 +926,9 @@ impl<T: Float> Mat4<T> {
         let mut ul = Mat3::from(self);
         let det = ul.det();
         let s = if det > T::ZERO {
-            Vec3::new([ul[0].length(), ul[1].length(), ul[2].length()])
+            Vec3::new(ul[0].length(), ul[1].length(), ul[2].length())
         } else {
-            Vec3::new([-ul[0].length(), -ul[1].length(), -ul[2].length()])
+            Vec3::new(-ul[0].length(), -ul[1].length(), -ul[2].length())
         };
         let r = if det.abs() <= T::EPSILON {
             Quat::new([T::ZERO; 3], T::ONE)

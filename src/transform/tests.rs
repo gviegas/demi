@@ -5,7 +5,7 @@ use crate::transform::Transform;
 
 #[test]
 fn new() {
-    let m = Mat4::new([[1.0; 4], [2.0; 4], [-1.0; 4], [0.5; 4]]);
+    let m = Mat4::new([1.0; 4], [2.0; 4], [-1.0; 4], [0.5; 4]);
     let mut graph = Transform::new(&m);
     assert!(graph.len() == 1);
     let id = graph.id();

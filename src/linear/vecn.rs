@@ -18,20 +18,26 @@ pub struct Vec3<T>([T; 3]);
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Vec4<T>([T; 4]);
 
-macro_rules! new_impl {
-    ($t:ty, $n:literal) => {
-        impl<T: Copy> $t {
-            /// Creates a new vector from an array of values.
-            pub fn new(v: [T; $n]) -> Self {
-                Self(v)
-            }
-        }
-    };
+impl<T> Vec2<T> {
+    /// Creates a new `Vec2`.
+    pub fn new(x: T, y: T) -> Self {
+        Self([x, y])
+    }
 }
 
-new_impl!(Vec2<T>, 2);
-new_impl!(Vec3<T>, 3);
-new_impl!(Vec4<T>, 4);
+impl<T> Vec3<T> {
+    /// Creates a new `Vec3`.
+    pub fn new(x: T, y: T, z: T) -> Self {
+        Self([x, y, z])
+    }
+}
+
+impl<T> Vec4<T> {
+    /// Creates a new `Vec4`.
+    pub fn new(x: T, y: T, z: T, w: T) -> Self {
+        Self([x, y, z, w])
+    }
+}
 
 macro_rules! index_impl {
     ($t:ty) => {
@@ -174,7 +180,7 @@ macro_rules! mul_impl {
 
             fn mul(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
-                <$t>::new(self.0.map(|x| x * scalar))
+                <$t>::from(self.0.map(|x| x * scalar))
             }
         }
 
@@ -183,7 +189,7 @@ macro_rules! mul_impl {
 
             fn mul(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
-                Self::new(self.0.map(|x| x * scalar))
+                Self::from(self.0.map(|x| x * scalar))
             }
         }
     };
@@ -216,7 +222,7 @@ macro_rules! div_impl {
 
             fn div(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
-                <$t>::new(self.0.map(|x| x / scalar))
+                <$t>::from(self.0.map(|x| x / scalar))
             }
         }
 
@@ -225,7 +231,7 @@ macro_rules! div_impl {
 
             fn div(self, scalar: T) -> Self::Output {
                 // TODO: Compare to a simple for loop.
-                Self::new(self.0.map(|x| x / scalar))
+                Self::from(self.0.map(|x| x / scalar))
             }
         }
     };
@@ -381,6 +387,20 @@ macro_rules! conv_impl {
             /// Converts a matrix's diagonal into a vector.
             fn from(diag: $m) -> Self {
                 <$v>::from(&diag)
+            }
+        }
+
+        impl<T: Copy> From<&[T; $n]> for $v {
+            /// Converts an array into a vector.
+            fn from(array: &[T; $n]) -> Self {
+                Self(*array)
+            }
+        }
+
+        impl<T> From<[T; $n]> for $v {
+            /// Converts an array into a vector.
+            fn from(array: [T; $n]) -> Self {
+                Self(array)
             }
         }
     };

@@ -39,11 +39,11 @@ impl PartialEq for Plane {
 
 #[test]
 fn bbox() {
-    let bb0 = Bbox::new(Vec3::new([0.0; 3]), Vec3::new([1.0; 3]));
+    let bb0 = Bbox::new(Vec3::default(), Vec3::from(1.0));
     let bb1 = Bbox::new_origin(Vec3::from(1.0));
     assert_eq!(bb0, bb1);
 
-    let off = Vec3::new([-1.0, 2.0, 0.25]);
+    let off = Vec3::new(-1.0, 2.0, 0.25);
     assert_eq!(bb0.displace_by(off), bb1.displace_by(off));
     assert_eq!(bb0, bb1.displace_by(Vec3::default()));
 
@@ -53,7 +53,7 @@ fn bbox() {
     assert_eq!(bb0.displace_by(-bb0.center()), bb1);
 
     let bb1 = bb1.displace_by(off);
-    let off = Vec3::new([10.0, 42.0, 4.0]);
+    let off = Vec3::new(10.0, 42.0, 4.0);
     assert_eq!(bb0.resize_by(off), bb1.resize_by(off));
     assert_eq!(bb0.resize_by(Vec3::default()), bb1);
 
@@ -69,7 +69,7 @@ fn sphere() {
     let sph1 = Sphere::new(Vec3::default(), 1.0);
     assert_eq!(sph0, sph1);
 
-    let off = Vec3::new([2.0, -2.5, -0.01]);
+    let off = Vec3::new(2.0, -2.5, -0.01);
     assert_eq!(sph0.displace_by(off), sph1.displace_by(--off));
     assert_eq!(sph0.displace_by(-Vec3::default()), sph1);
 
@@ -92,7 +92,7 @@ fn sphere() {
 #[test]
 fn plane() {
     let pln0 = Plane::new(0.0, 1.0, 0.0, 0.0);
-    let pln1 = Plane::from(Vec4::new([0.0, 1.0, 0.0, 0.0]));
+    let pln1 = Plane::from(Vec4::new(0.0, 1.0, 0.0, 0.0));
     let pln2 = Plane::from(-pln0.coef());
     assert_eq!(pln0, pln1);
     assert_ne!(pln0, pln2);
@@ -103,13 +103,13 @@ fn plane() {
     assert_eq!(pln0, pln2);
     assert_ne!(pln1, pln2);
 
-    let pln0 = Plane::new_norm(Vec3::new([0.0, 1e9, 0.0]), Vec3::default());
-    let pln2 = Plane::new_unnorm(Vec3::new([0.0, 1.0, 0.0]), Vec3::default());
+    let pln0 = Plane::new_norm(Vec3::new(0.0, 1e9, 0.0), Vec3::default());
+    let pln2 = Plane::new_unnorm(Vec3::new(0.0, 1.0, 0.0), Vec3::default());
     assert_eq!(pln0, pln1);
     assert_eq!(pln2, pln1);
 
-    let n = Vec3::new([-2.0, 0.0, 0.0]);
-    let p0 = Vec3::new([1.0, -1.0, 0.0]);
+    let n = Vec3::new(-2.0, 0.0, 0.0);
+    let p0 = Vec3::new(1.0, -1.0, 0.0);
     let pln0 = Plane::new_unnorm(n, p0);
     let pln1 = Plane::new_norm(n, pln0.p0());
     let nn = pln0.n().norm();
@@ -152,15 +152,15 @@ fn box_intersects() {
     assert!(!bb0.intersects(bb1.displace_by(off)));
     assert!(!bb0.displace_by(off).intersects(bb1));
 
-    let off = Vec3::new([1.0, 0.0, 0.0]);
+    let off = Vec3::new(1.0, 0.0, 0.0);
     assert!(bb0.intersects(bb1.displace_by(off)));
     assert!(bb0.displace_by(off).intersects(bb1));
 
-    let off = Vec3::new([0.0, -1.25, 0.2]);
+    let off = Vec3::new(0.0, -1.25, 0.2);
     assert!(bb0.intersects(bb1.displace_by(off)));
     assert!(bb0.displace_by(off).intersects(bb1));
 
-    let off = Vec3::new([0.0, 0.0, 2.01]);
+    let off = Vec3::new(0.0, 0.0, 2.01);
     assert!(!bb0.intersects(bb1.displace_by(off)));
     assert!(!bb0.displace_by(off).intersects(bb1));
 
@@ -174,23 +174,23 @@ fn box_intersects() {
     assert!(bb0.intersects(bb1.resize_by(off)));
     assert!(bb0.resize_by(off).intersects(bb1));
 
-    let off = Vec3::new([0.0, -1.0, 1.0]);
+    let off = Vec3::new(0.0, -1.0, 1.0);
     assert!(bb0.intersects(bb1.resize_by(off)));
     assert!(bb0.resize_by(off).intersects(bb1));
 
-    let off = Vec3::new([10.0, 20.0, 30.0]);
+    let off = Vec3::new(10.0, 20.0, 30.0);
     assert!(bb0.intersects(bb1.resize_by(off)));
     assert!(bb0.resize_by(off).intersects(bb1));
 
     // Displaced and resized.
 
-    let d = Vec3::new([1.0, 0.0, 0.0]);
-    let r = Vec3::new([0.0, -1.01, 0.0]);
+    let d = Vec3::new(1.0, 0.0, 0.0);
+    let r = Vec3::new(0.0, -1.01, 0.0);
     assert!(bb0.displace_by(d).intersects(bb1.resize_by(r)));
     assert!(bb0.resize_by(r).intersects(bb1.displace_by(d)));
 
-    let d = Vec3::new([0.0, 0.0, -1.0]);
-    let r = Vec3::new([0.0, 0.0, -1.01]);
+    let d = Vec3::new(0.0, 0.0, -1.0);
+    let r = Vec3::new(0.0, 0.0, -1.01);
     assert!(!bb0.displace_by(d).intersects(bb1.resize_by(r)));
     assert!(!bb0.resize_by(r).intersects(bb1.displace_by(d)));
 }
@@ -212,22 +212,22 @@ fn sphere_intersects() {
     assert!(sph0.intersects(sph1.displace_by(off)));
     assert!(sph0.displace_by(off).intersects(sph1));
 
-    let off = Vec3::new([0.0, 1.0, 0.0]);
+    let off = Vec3::new(0.0, 1.0, 0.0);
     assert!(sph0.intersects(sph1.displace_by(off)));
     assert!(sph0.displace_by(off).intersects(sph1));
 
-    let off = Vec3::new([0.0, -1.25, -0.2]);
+    let off = Vec3::new(0.0, -1.25, -0.2);
     assert!(sph0.intersects(sph1.displace_by(off)));
     assert!(sph0.displace_by(off).intersects(sph1));
 
     // TODO: Shouldn't we do the distance check using
     // less equal instead?
-    let off = Vec3::new([-1.999999, 0.0, 0.0]);
+    let off = Vec3::new(-1.999999, 0.0, 0.0);
     assert!(sph0.intersects(sph1.displace_by(off)));
     assert!(sph0.displace_by(off).intersects(sph1));
 
     // ... so this one would intersect.
-    let off = Vec3::new([0.0, 0.0, 2.0]);
+    let off = Vec3::new(0.0, 0.0, 2.0);
     assert!(!sph0.intersects(sph1.displace_by(off)));
     assert!(!sph0.displace_by(off).intersects(sph1));
 
@@ -247,12 +247,12 @@ fn sphere_intersects() {
 
     // Displaced and resized.
 
-    let d = Vec3::new([2.0, 0.0, 0.0]);
+    let d = Vec3::new(2.0, 0.0, 0.0);
     let r = 0.1;
     assert!(sph0.displace_by(d).intersects(sph1.resize_by(r)));
     assert!(sph0.resize_by(r).intersects(sph1.displace_by(d)));
 
-    let d = Vec3::new([0.0, 0.0, -3.0]);
+    let d = Vec3::new(0.0, 0.0, -3.0);
     let r = 1.0;
     assert!(!sph0.displace_by(d).intersects(sph1.resize_by(r)));
     assert!(!sph0.resize_by(r).intersects(sph1.displace_by(d)));
@@ -267,11 +267,11 @@ fn bbox_sphere_intersects() {
 
     // Displaced.
 
-    let off = Vec3::new([1.0, -1.0, 0.0]);
+    let off = Vec3::new(1.0, -1.0, 0.0);
     assert!(bb.intersects_sphere(sph.displace_by(off)));
     assert!(bb.displace_by(off).intersects_sphere(sph));
 
-    let off = Vec3::new([2.0, 0.0, 0.0]);
+    let off = Vec3::new(2.0, 0.0, 0.0);
     assert!(!bb.intersects_sphere(sph.displace_by(off)));
     assert!(!bb.displace_by(off).intersects_sphere(sph));
 
@@ -291,18 +291,18 @@ fn bbox_sphere_intersects() {
 
     // Displaced and resized.
 
-    let d = Vec3::new([3.0, 0.0, 0.0]);
-    let r = Vec3::new([2.0, 0.0, 0.0]);
+    let d = Vec3::new(3.0, 0.0, 0.0);
+    let r = Vec3::new(2.0, 0.0, 0.0);
     assert!(bb.displace_by(d).intersects_sphere(sph.resize_by(r[0])));
     assert!(bb.resize_by(r).intersects_sphere(sph.displace_by(d)));
 
-    let d = Vec3::new([0.0, 1.5, 0.0]);
-    let r = Vec3::new([0.0, -0.5, 0.0]);
+    let d = Vec3::new(0.0, 1.5, 0.0);
+    let r = Vec3::new(0.0, -0.5, 0.0);
     assert!(!bb.displace_by(d).intersects_sphere(sph.resize_by(r[1])));
     assert!(!bb.resize_by(r).intersects_sphere(sph.displace_by(d)));
 
-    let d = Vec3::new([0.0, 0.0, 7.0]);
-    let r = Vec3::new([0.0, 0.0, 5.000001]);
+    let d = Vec3::new(0.0, 0.0, 7.0);
+    let r = Vec3::new(0.0, 0.0, 5.000001);
     assert!(bb.displace_by(d).intersects_sphere(sph.resize_by(r[2])));
     assert!(bb.resize_by(r).intersects_sphere(sph.displace_by(d)));
 }

@@ -73,11 +73,11 @@ impl Bbox {
     pub fn intersects_sphere(&self, sphere: Sphere) -> bool {
         let min = self.center - self.half_extent;
         let max = self.center + self.half_extent;
-        let p = Vec3::new([
+        let p = Vec3::new(
             sphere.center[0].clamp(min[0], max[0]),
             sphere.center[1].clamp(min[1], max[1]),
             sphere.center[2].clamp(min[2], max[2]),
-        ]);
+        );
 
         (p - sphere.center).length() < sphere.radius
     }
@@ -148,7 +148,7 @@ impl Plane {
     /// Creates a new plane.
     pub fn new(a: f32, b: f32, c: f32, d: f32) -> Self {
         Self {
-            coef: Vec4::new([a, b, c, d]),
+            coef: Vec4::new(a, b, c, d),
         }
     }
 
@@ -164,7 +164,7 @@ impl Plane {
     /// This function does *not* normalizes `n`.
     pub fn new_unnorm(n: Vec3<f32>, p0: Vec3<f32>) -> Self {
         Self {
-            coef: Vec4::new([n[0], n[1], n[2], -n.dot(&p0)]),
+            coef: Vec4::new(n[0], n[1], n[2], -n.dot(&p0)),
         }
     }
 
