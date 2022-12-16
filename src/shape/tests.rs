@@ -120,7 +120,203 @@ fn plane() {
 }
 
 #[test]
-fn box_intersects() {
+fn bbox_contains() {
+    let bb0 = Bbox::new(Vec3::default(), Vec3::from(1.0));
+    let bb = bb0;
+    assert!(bb.contains(Vec3::default()));
+    assert!(bb.contains(Vec3::from(1.0)));
+    assert!(bb.contains(Vec3::from(-1.0)));
+    assert!(bb.contains(Vec3::from(1.0)));
+    assert!(bb.contains(Vec3::from(-1.0)));
+    assert!(bb.contains(Vec3::new(0.5, 0.0, 0.0)));
+    assert!(bb.contains(Vec3::new(0.0, -0.5, 0.0)));
+    assert!(bb.contains(Vec3::new(0.0, 0.0, 0.5)));
+    assert!(bb.contains(Vec3::new(-1.0, 0.0, 0.0)));
+    assert!(bb.contains(Vec3::new(0.0, 1.0, 0.0)));
+    assert!(bb.contains(Vec3::new(0.0, 0.0, -1.0)));
+    assert!(bb.contains(Vec3::new(-1.0, 0.0, 1.0)));
+    assert!(bb.contains(Vec3::new(1.0, -1.0, 0.0)));
+    assert!(!bb.contains(Vec3::from(1.0001)));
+    assert!(!bb.contains(Vec3::from(-1.0001)));
+    assert!(!bb.contains(Vec3::new(0.0, 0.0, -2.5)));
+    assert!(!bb.contains(Vec3::new(-1.0, 5.0, 1.0)));
+    assert!(!bb.contains(Vec3::new(1.0, -1.0, 10.0)));
+
+    // Displaced.
+    let bb = bb0.displace_by(Vec3::from(2.1));
+    assert!(!bb.contains(Vec3::default()));
+    assert!(!bb.contains(Vec3::from(1.0)));
+    assert!(!bb.contains(Vec3::from(-1.0)));
+    assert!(bb.contains(Vec3::from(2.0)));
+    assert!(!bb.contains(Vec3::from(-2.0)));
+    assert!(!bb.contains(Vec3::new(0.5, 0.0, 0.0)));
+    assert!(!bb.contains(Vec3::new(0.0, -0.5, 0.0)));
+    assert!(!bb.contains(Vec3::new(0.0, 0.0, 0.5)));
+    assert!(!bb.contains(Vec3::new(-1.5, 0.0, 0.0)));
+    assert!(!bb.contains(Vec3::new(0.0, 1.5, 0.0)));
+    assert!(!bb.contains(Vec3::new(0.0, 0.0, -1.5)));
+    assert!(!bb.contains(Vec3::new(-1.0, 0.0, 1.0)));
+    assert!(!bb.contains(Vec3::new(1.0, -1.0, 0.0)));
+    assert!(bb.contains(Vec3::from(2.0001)));
+    assert!(!bb.contains(Vec3::from(-2.0001)));
+    assert!(!bb.contains(Vec3::new(0.0, 0.0, -2.5)));
+    assert!(!bb.contains(Vec3::new(-1.0, 5.0, 1.0)));
+    assert!(!bb.contains(Vec3::new(1.0, -1.0, 10.0)));
+
+    // Resized.
+    let bb = bb0.resize_by(Vec3::from(1.0));
+    assert!(bb.contains(Vec3::default()));
+    assert!(bb.contains(Vec3::from(1.0)));
+    assert!(bb.contains(Vec3::from(-1.0)));
+    assert!(bb.contains(Vec3::from(2.0)));
+    assert!(bb.contains(Vec3::from(-2.0)));
+    assert!(bb.contains(Vec3::new(0.5, 0.0, 0.0)));
+    assert!(bb.contains(Vec3::new(0.0, -0.5, 0.0)));
+    assert!(bb.contains(Vec3::new(0.0, 0.0, 0.5)));
+    assert!(bb.contains(Vec3::new(-1.5, 0.0, 0.0)));
+    assert!(bb.contains(Vec3::new(0.0, 1.5, 0.0)));
+    assert!(bb.contains(Vec3::new(0.0, 0.0, -1.5)));
+    assert!(bb.contains(Vec3::new(-1.0, 0.0, 1.0)));
+    assert!(bb.contains(Vec3::new(1.0, -1.0, 0.0)));
+    assert!(!bb.contains(Vec3::from(2.0001)));
+    assert!(!bb.contains(Vec3::from(-2.0001)));
+    assert!(!bb.contains(Vec3::new(0.0, 0.0, -2.5)));
+    assert!(!bb.contains(Vec3::new(-1.0, 5.0, 1.0)));
+    assert!(!bb.contains(Vec3::new(1.0, -1.0, 10.0)));
+
+    // Displaced and resized.
+    let bb = bb0
+        .displace_by(Vec3::new(1.0, 0.0, 0.0))
+        .resize_by(Vec3::new(-0.5, 2.5, 9.0));
+    assert!(!bb.contains(Vec3::default()));
+    assert!(bb.contains(Vec3::from(1.0)));
+    assert!(!bb.contains(Vec3::from(-1.0)));
+    assert!(!bb.contains(Vec3::from(2.0)));
+    assert!(!bb.contains(Vec3::from(-2.0)));
+    assert!(bb.contains(Vec3::new(0.5, 0.0, 0.0)));
+    assert!(!bb.contains(Vec3::new(0.0, -0.5, 0.0)));
+    assert!(!bb.contains(Vec3::new(0.0, 0.0, 0.5)));
+    assert!(!bb.contains(Vec3::new(-1.5, 0.0, 0.0)));
+    assert!(!bb.contains(Vec3::new(0.0, 1.5, 0.0)));
+    assert!(!bb.contains(Vec3::new(0.0, 0.0, -1.5)));
+    assert!(!bb.contains(Vec3::new(-1.0, 0.0, 1.0)));
+    assert!(bb.contains(Vec3::new(1.0, -1.0, 0.0)));
+    assert!(!bb.contains(Vec3::from(2.0001)));
+    assert!(!bb.contains(Vec3::from(-2.0001)));
+    assert!(!bb.contains(Vec3::new(0.0, 0.0, -2.5)));
+    assert!(!bb.contains(Vec3::new(-1.0, 5.0, 1.0)));
+    assert!(bb.contains(Vec3::new(1.0, -1.0, 10.0)));
+}
+
+#[test]
+fn sphere_contains() {
+    let sph0 = Sphere::new(Vec3::default(), 1.0);
+    let sph = sph0;
+    assert!(sph.contains(Vec3::default()));
+    assert!(!sph.contains(Vec3::from(1.0)));
+    assert!(!sph.contains(Vec3::from(-1.0)));
+    assert!(sph.contains(Vec3::from(1.0).norm()));
+    assert!(sph.contains(Vec3::from(-1.0).norm()));
+    assert!(sph.contains(Vec3::new(1.0 / 3f32.sqrt(), 0.0, 0.0)));
+    assert!(sph.contains(Vec3::new(0.0, -1.0 / 3f32.sqrt(), 0.0)));
+    assert!(sph.contains(Vec3::new(0.0, 0.0, -1.0 / 3f32.sqrt())));
+    assert!(sph.contains(Vec3::new(-0.25, 0.3333, 0.0)));
+    assert!(sph.contains(Vec3::new(0.0, -0.3333, 0.25)));
+
+    // Displaced.
+    let sph = sph0.displace_by(Vec3::new(0.0, -1.0, 0.0));
+    assert!(!sph.contains(Vec3::default()));
+    assert!(!sph.contains(Vec3::from(1.0)));
+    assert!(!sph.contains(Vec3::from(-1.0)));
+    assert!(!sph.contains(Vec3::from(1.0).norm()));
+    assert!(sph.contains(Vec3::from(-1.0).norm()));
+    assert!(!sph.contains(Vec3::new(1.0 / 3f32.sqrt(), 0.0, 0.0)));
+    assert!(sph.contains(Vec3::new(0.0, -1.0 / 3f32.sqrt(), 0.0)));
+    assert!(!sph.contains(Vec3::new(0.0, 0.0, -1.0 / 3f32.sqrt())));
+    assert!(!sph.contains(Vec3::new(-0.25, 0.3333, 0.0)));
+    assert!(sph.contains(Vec3::new(0.0, -0.3333, 0.25)));
+
+    // Resized.
+    let sph = sph0.resize_by(1.0);
+    assert!(sph.contains(Vec3::default()));
+    assert!(sph.contains(Vec3::from(1.0)));
+    assert!(sph.contains(Vec3::from(-1.0)));
+    assert!(sph.contains(Vec3::from(1.0).norm()));
+    assert!(sph.contains(Vec3::from(-1.0).norm()));
+    assert!(sph.contains(Vec3::new(1.0 / 3f32.sqrt(), 0.0, 0.0)));
+    assert!(sph.contains(Vec3::new(0.0, -1.0 / 3f32.sqrt(), 0.0)));
+    assert!(sph.contains(Vec3::new(0.0, 0.0, -1.0 / 3f32.sqrt())));
+    assert!(sph.contains(Vec3::new(-0.25, 0.3333, 0.0)));
+    assert!(sph.contains(Vec3::new(0.0, -0.3333, 0.25)));
+
+    // Displaced and resized.
+    let sph = sph0
+        .displace_by(Vec3::from(0.75).norm())
+        .resize_by(0.817 - 1.0);
+    assert!(!sph.contains(Vec3::default()));
+    assert!(sph.contains(Vec3::from(1.0)));
+    assert!(!sph.contains(Vec3::from(-1.0)));
+    assert!(sph.contains(Vec3::from(1.0).norm()));
+    assert!(!sph.contains(Vec3::from(-1.0).norm()));
+    assert!(sph.contains(Vec3::new(1.0 / 3f32.sqrt(), 0.0, 0.0)));
+    assert!(!sph.contains(Vec3::new(0.0, -1.0 / 3f32.sqrt(), 0.0)));
+    assert!(!sph.contains(Vec3::new(0.0, 0.0, -1.0 / 3f32.sqrt())));
+    assert!(!sph.contains(Vec3::new(-0.25, 0.3333, 0.0)));
+    assert!(!sph.contains(Vec3::new(0.0, -0.3333, 0.25)));
+}
+
+#[test]
+fn plane_contains() {
+    let pln = Plane::new(0.0, 1.0, 0.0, 0.0);
+    assert!(pln.contains(Vec3::default()));
+    assert!(pln.contains(pln.p0()));
+    assert!(pln.contains(pln.p0() + Vec3::new(-1e9, 0.0, 1e9)));
+    assert!(pln.contains(pln.p0() + Vec3::new(0.0, 0.0, -1e9)));
+    assert!(pln.contains(pln.p0() + Vec3::new(1e9, 0.0, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, 0.0001, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, 1.0, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, -1.0, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, 1.0, -1.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(-1.0, 1.0, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::from(1.0)));
+
+    let pln = Plane::new_norm(Vec3::new(0.0, 1.0, -1.0), Vec3::default());
+    assert!(pln.contains(Vec3::default()));
+    assert!(pln.contains(pln.p0()));
+    assert!(!pln.contains(pln.p0() + Vec3::new(-1e9, 0.0, 1e9)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, 0.0, -1e9)));
+    assert!(pln.contains(pln.p0() + Vec3::new(1e9, 0.0, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, 0.0001, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, 1.0, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, -1.0, 0.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(0.0, 1.0, -1.0)));
+    assert!(!pln.contains(pln.p0() + Vec3::new(-1.0, 1.0, 0.0)));
+    assert!(pln.contains(pln.p0() + Vec3::from(1.0)));
+
+    let mut v = Vec4::new(1.0, 1.0, 0.0, 0.0).norm();
+    v[3] = -Vec3::from(v).dot(&Vec3::from(2.0));
+    let pln = Plane::from(v);
+    assert!(!pln.contains(Vec3::default()));
+    assert!(pln.contains(pln.p0()));
+    assert!(!pln.contains(Vec3::new(-1e9, 0.0, 1e9)));
+    assert!(!pln.contains(Vec3::new(0.0, 0.0, -1e9)));
+    assert!(!pln.contains(Vec3::new(1e9, 0.0, 0.0)));
+    assert!(!pln.contains(Vec3::new(0.0, 0.0001, 0.0)));
+    assert!(!pln.contains(Vec3::new(0.0, 1.0, 0.0)));
+    assert!(!pln.contains(Vec3::new(0.0, -1.0, 0.0)));
+    assert!(!pln.contains(Vec3::new(0.0, 1.0, -1.0)));
+    assert!(!pln.contains(Vec3::new(-1.0, 1.0, 0.0)));
+    assert!(!pln.contains(Vec3::from(1.0)));
+    assert!(pln.contains(Vec3::new(pln.p0()[0], pln.p0()[1], 0.0)));
+    assert!(pln.contains(Vec3::new(pln.p0()[0], pln.p0()[1], -14.0)));
+    assert!(pln.contains(Vec3::new(pln.p0()[0], pln.p0()[1], 123.0)));
+    assert!(!pln.contains(Vec3::new(pln.p0()[0] + 1.0, pln.p0()[1], pln.p0()[2])));
+    assert!(!pln.contains(Vec3::new(pln.p0()[0], pln.p0()[1] + 1.0, pln.p0()[2])));
+    assert!(!pln.contains(Vec3::new(pln.p0()[0] + 1.0, pln.p0()[1] + 1.0, pln.p0()[2])));
+}
+
+#[test]
+fn bbox_intersects() {
     let bb0 = Bbox::new_origin(Vec3::from(1.0));
     let bb1 = bb0;
     assert!(bb0.intersects(bb1));
