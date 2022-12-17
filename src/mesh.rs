@@ -6,6 +6,7 @@ use std::sync::Arc;
 use crate::material::Material;
 
 /// Mesh.
+#[derive(Debug)]
 pub struct Mesh {
     // TODO
 }

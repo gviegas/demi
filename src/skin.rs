@@ -5,6 +5,7 @@ use std::io;
 use crate::linear::Mat4;
 
 /// Skin.
+#[derive(Debug)]
 pub struct Skin {
     // TODO
 }
