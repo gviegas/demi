@@ -122,6 +122,16 @@ impl Bbox {
     }
 }
 
+impl From<Sphere> for Bbox {
+    /// Converts from a `Sphere` into its enclosing `Bbox`.
+    fn from(sphere: Sphere) -> Self {
+        Self {
+            center: sphere.center,
+            half_extent: Vec3::from(sphere.radius),
+        }
+    }
+}
+
 /// Sphere.
 #[derive(Copy, Clone, Debug)]
 pub struct Sphere {
@@ -179,6 +189,16 @@ impl Sphere {
     /// Checks whether a sphere intersects a bounding box.
     pub fn intersects_bbox(&self, bbox: Bbox) -> bool {
         bbox.intersects_sphere(*self)
+    }
+}
+
+impl From<Bbox> for Sphere {
+    /// Converts from a `Bbox` into its enclosing `Sphere`.
+    fn from(bbox: Bbox) -> Self {
+        Self {
+            center: bbox.center,
+            radius: bbox.half_extent.length(),
+        }
     }
 }
 

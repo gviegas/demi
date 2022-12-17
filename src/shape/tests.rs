@@ -594,3 +594,48 @@ fn plane_signed_distance() {
             <= 1e-6
     );
 }
+
+#[test]
+fn bbox_sphere_from() {
+    let bb = Bbox::new_origin(Vec3::from(1.0));
+    let sph = Sphere::from(bb);
+    assert!((sph.radius() - 3f32.sqrt()).abs() <= f32::EPSILON);
+    assert_eq!(sph.center()[0], bb.center()[0]);
+    assert_eq!(sph.center()[1], bb.center()[1]);
+    assert_eq!(sph.center()[2], bb.center()[2]);
+    let bb = Bbox::from(sph);
+    assert_eq!(bb.half_extent()[0], sph.radius());
+    assert_eq!(bb.half_extent()[0], bb.half_extent()[1]);
+    assert_eq!(bb.half_extent()[1], bb.half_extent()[2]);
+    assert_eq!(bb.center()[0], sph.center()[0]);
+    assert_eq!(bb.center()[1], sph.center()[1]);
+    assert_eq!(bb.center()[2], sph.center()[2]);
+
+    let sph = Sphere::new(Vec3::new(2.0, -1.0, 0.5), 2.0);
+    let bb = Bbox::from(sph);
+    assert_eq!(bb.half_extent()[0], sph.radius());
+    assert_eq!(bb.half_extent()[0], bb.half_extent()[1]);
+    assert_eq!(bb.half_extent()[1], bb.half_extent()[2]);
+    assert_eq!(bb.center()[0], sph.center()[0]);
+    assert_eq!(bb.center()[1], sph.center()[1]);
+    assert_eq!(bb.center()[2], sph.center()[2]);
+    let sph = Sphere::from(bb);
+    assert!((sph.radius() - 12f32.sqrt()).abs() <= f32::EPSILON);
+    assert_eq!(sph.center()[0], bb.center()[0]);
+    assert_eq!(sph.center()[1], bb.center()[1]);
+    assert_eq!(sph.center()[2], bb.center()[2]);
+
+    let bb = Bbox::new(Vec3::from(-100.0), Vec3::new(1.0, 2.0, 3.0));
+    let sph = Sphere::from(bb);
+    assert!((sph.radius() - bb.half_extent.length()).abs() <= f32::EPSILON);
+    assert_eq!(sph.center()[0], bb.center()[0]);
+    assert_eq!(sph.center()[1], bb.center()[1]);
+    assert_eq!(sph.center()[2], bb.center()[2]);
+    let bb = Bbox::from(sph);
+    assert_eq!(bb.half_extent()[0], sph.radius());
+    assert_eq!(bb.half_extent()[0], bb.half_extent()[1]);
+    assert_eq!(bb.half_extent()[1], bb.half_extent()[2]);
+    assert_eq!(bb.center()[0], sph.center()[0]);
+    assert_eq!(bb.center()[1], sph.center()[1]);
+    assert_eq!(bb.center()[2], sph.center()[2]);
+}
