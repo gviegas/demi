@@ -1,6 +1,6 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
-use crate::linear::{Vec3, Vec4};
+use crate::linear::{Mat4, Vec3, Vec4};
 use crate::shape::{Bbox, Plane, Sphere};
 
 impl PartialEq for Bbox {
@@ -120,6 +120,83 @@ fn plane() {
 }
 
 #[test]
+fn bbox_transform() {
+    let bb0 = Bbox::new_origin(Vec3::from(1.0));
+    let bb = bb0.transform(&Mat4::from(1.0));
+    assert_eq!(bb, bb0);
+
+    let bb = bb0.transform(&Mat4::translation(2.0, -3.0, 0.5));
+    assert_eq!(bb, bb0.displace_by(Vec3::new(2.0, -3.0, 0.5)));
+
+    let bb = bb0.transform(&Mat4::from(2.0));
+    assert_eq!(bb, bb0.resize_by(Vec3::from(1.0)));
+
+    let t = Mat4::translation(3.0, 1.5, 0.75);
+    let s = Mat4::scale(2.0, -0.5, 5.0);
+    let bb = bb0.transform(&(t * s));
+    assert_eq!(
+        bb,
+        bb0.displace_by(Vec3::new(3.0, 1.5, 0.75))
+            .resize_by(Vec3::new(1.0, -0.5, 4.0))
+    );
+
+    let r = Mat4::rotation(std::f32::consts::FRAC_PI_2, &Vec3::new(1.0, -1.0, 1.0));
+    let bb = bb0.transform(&r);
+    assert_eq!(0.0, bb.center()[0]);
+    assert_eq!(0.0, bb.center()[1]);
+    assert_eq!(0.0, bb.center()[2]);
+    assert_eq!(bb.half_extent()[0], bb.half_extent()[1]);
+    assert_eq!(bb.half_extent()[1], bb.half_extent()[2]);
+    assert!(bb.half_extent()[0] > 1.0);
+
+    let r = Mat4::rotation_y(-std::f32::consts::FRAC_PI_2);
+    let bb0 = bb0
+        .displace_by(Vec3::new(-30.0, 20.0, 10.0))
+        .resize_by(Vec3::new(3.0, 15.0, 63.0));
+    let bb = bb0.transform(&r);
+    assert!((-10.0 - bb.center()[0]).abs() < 1e-6);
+    assert!((20.0 - bb.center()[1]).abs() < 1e-6);
+    assert!((-30.0 - bb.center()[2]).abs() < 1e-6);
+    assert!((64.0 - bb.half_extent()[0]).abs() < 1e-6);
+    assert!((16.0 - bb.half_extent()[1]).abs() < 1e-6);
+    // Notice the huge fp error here.
+    assert!((4.0 - bb.half_extent()[2]).abs() < 3e-6);
+
+    let r = r * Mat4::rotation_y(std::f32::consts::FRAC_PI_2);
+    let bb = bb0.transform(&r);
+    assert!((-30.0 - bb.center()[0]).abs() < 1e-6);
+    assert!((20.0 - bb.center()[1]).abs() < 1e-6);
+    assert!((10.0 - bb.center()[2]).abs() < 1e-6);
+    assert!((4.0 - bb.half_extent()[0]).abs() < 1e-6);
+    assert!((16.0 - bb.half_extent()[1]).abs() < 1e-6);
+    assert!((64.0 - bb.half_extent()[2]).abs() < 1e-6);
+
+    let m = Mat4::translation(-2.0, 3.0, -0.25)
+        * Mat4::rotation_z(-std::f32::consts::PI)
+        * Mat4::scale(1.2, 16.0, 10.1);
+    let bb = Bbox::new_origin(Vec3::new(5.0, 6.0, 7.0)).transform(&m);
+    assert!((-2.0 - bb.center()[0]).abs() < 1e-6);
+    assert!((3.0 - bb.center()[1]).abs() < 1e-6);
+    assert!((-0.25 - bb.center()[2]).abs() < 1e-6);
+    // Notice the huge fp error here.
+    assert!((1.2 * 5.0 - bb.half_extent()[0]).abs() < 9e-6);
+    assert!((16.0 * 6.0 - bb.half_extent()[1]).abs() < 1e-6);
+    assert!((10.1 * 7.0 - bb.half_extent()[2]).abs() < 1e-6);
+
+    let m = Mat4::translation(-2.0, 3.0, -0.25)
+        * Mat4::rotation_z(-std::f32::consts::FRAC_PI_2)
+        * Mat4::scale(1.2, 16.0, 10.1);
+    let bb = Bbox::new_origin(Vec3::new(5.0, 6.0, 7.0)).transform(&m);
+    assert!((-2.0 - bb.center()[0]).abs() < 1e-6);
+    assert!((3.0 - bb.center()[1]).abs() < 1e-6);
+    assert!((-0.25 - bb.center()[2]).abs() < 1e-6);
+    assert!((16.0 * 6.0 - bb.half_extent()[0]).abs() < 1e-6);
+    // Notice the huge fp error here.
+    assert!((1.2 * 5.0 - bb.half_extent()[1]).abs() < 4e-6);
+    assert!((10.1 * 7.0 - bb.half_extent()[2]).abs() < 1e-6);
+}
+
+#[test]
 fn bbox_contains() {
     let bb0 = Bbox::new(Vec3::default(), Vec3::from(1.0));
     let bb = bb0;
@@ -142,7 +219,6 @@ fn bbox_contains() {
     assert!(!bb.contains(Vec3::new(-1.0, 5.0, 1.0)));
     assert!(!bb.contains(Vec3::new(1.0, -1.0, 10.0)));
 
-    // Displaced.
     let bb = bb0.displace_by(Vec3::from(2.1));
     assert!(!bb.contains(Vec3::default()));
     assert!(!bb.contains(Vec3::from(1.0)));
@@ -163,7 +239,6 @@ fn bbox_contains() {
     assert!(!bb.contains(Vec3::new(-1.0, 5.0, 1.0)));
     assert!(!bb.contains(Vec3::new(1.0, -1.0, 10.0)));
 
-    // Resized.
     let bb = bb0.resize_by(Vec3::from(1.0));
     assert!(bb.contains(Vec3::default()));
     assert!(bb.contains(Vec3::from(1.0)));
@@ -184,7 +259,6 @@ fn bbox_contains() {
     assert!(!bb.contains(Vec3::new(-1.0, 5.0, 1.0)));
     assert!(!bb.contains(Vec3::new(1.0, -1.0, 10.0)));
 
-    // Displaced and resized.
     let bb = bb0
         .displace_by(Vec3::new(1.0, 0.0, 0.0))
         .resize_by(Vec3::new(-0.5, 2.5, 9.0));
@@ -223,7 +297,6 @@ fn sphere_contains() {
     assert!(sph.contains(Vec3::new(-0.25, 0.3333, 0.0)));
     assert!(sph.contains(Vec3::new(0.0, -0.3333, 0.25)));
 
-    // Displaced.
     let sph = sph0.displace_by(Vec3::new(0.0, -1.0, 0.0));
     assert!(!sph.contains(Vec3::default()));
     assert!(!sph.contains(Vec3::from(1.0)));
@@ -236,7 +309,6 @@ fn sphere_contains() {
     assert!(!sph.contains(Vec3::new(-0.25, 0.3333, 0.0)));
     assert!(sph.contains(Vec3::new(0.0, -0.3333, 0.25)));
 
-    // Resized.
     let sph = sph0.resize_by(1.0);
     assert!(sph.contains(Vec3::default()));
     assert!(sph.contains(Vec3::from(1.0)));
@@ -249,7 +321,6 @@ fn sphere_contains() {
     assert!(sph.contains(Vec3::new(-0.25, 0.3333, 0.0)));
     assert!(sph.contains(Vec3::new(0.0, -0.3333, 0.25)));
 
-    // Displaced and resized.
     let sph = sph0
         .displace_by(Vec3::from(0.75).norm())
         .resize_by(0.817 - 1.0);
@@ -322,8 +393,6 @@ fn bbox_intersects() {
     assert!(bb0.intersects(bb1));
     assert!(bb1.intersects(bb0));
 
-    // Displaced.
-
     let off = Vec3::from(1.0);
     assert!(bb0.intersects(bb1.displace_by(off)));
     assert!(bb0.displace_by(off).intersects(bb1));
@@ -360,8 +429,6 @@ fn bbox_intersects() {
     assert!(!bb0.intersects(bb1.displace_by(off)));
     assert!(!bb0.displace_by(off).intersects(bb1));
 
-    // Resized.
-
     let off = Vec3::from(1.0);
     assert!(bb0.intersects(bb1.resize_by(off)));
     assert!(bb0.resize_by(off).intersects(bb1));
@@ -377,8 +444,6 @@ fn bbox_intersects() {
     let off = Vec3::new(10.0, 20.0, 30.0);
     assert!(bb0.intersects(bb1.resize_by(off)));
     assert!(bb0.resize_by(off).intersects(bb1));
-
-    // Displaced and resized.
 
     let d = Vec3::new(1.0, 0.0, 0.0);
     let r = Vec3::new(0.0, -1.01, 0.0);
@@ -397,8 +462,6 @@ fn sphere_intersects() {
     let sph1 = sph0;
     assert!(sph0.intersects(sph1));
     assert!(sph1.intersects(sph0));
-
-    // Displaced.
 
     let off = Vec3::from(1.0);
     assert!(sph0.intersects(sph1.displace_by(off)));
@@ -427,8 +490,6 @@ fn sphere_intersects() {
     assert!(!sph0.intersects(sph1.displace_by(off)));
     assert!(!sph0.displace_by(off).intersects(sph1));
 
-    // Resized.
-
     let off = 20.0;
     assert!(sph0.intersects(sph1.resize_by(off)));
     assert!(sph0.resize_by(off).intersects(sph1));
@@ -440,8 +501,6 @@ fn sphere_intersects() {
     let off = -1.0;
     assert!(sph0.intersects(sph1.resize_by(off)));
     assert!(sph0.resize_by(off).intersects(sph1));
-
-    // Displaced and resized.
 
     let d = Vec3::new(2.0, 0.0, 0.0);
     let r = 0.1;
@@ -461,8 +520,6 @@ fn bbox_sphere_intersects() {
     assert!(bb.intersects_sphere(sph));
     assert!(sph.intersects_bbox(bb));
 
-    // Displaced.
-
     let off = Vec3::new(1.0, -1.0, 0.0);
     assert!(bb.intersects_sphere(sph.displace_by(off)));
     assert!(bb.displace_by(off).intersects_sphere(sph));
@@ -470,8 +527,6 @@ fn bbox_sphere_intersects() {
     let off = Vec3::new(2.0, 0.0, 0.0);
     assert!(!bb.intersects_sphere(sph.displace_by(off)));
     assert!(!bb.displace_by(off).intersects_sphere(sph));
-
-    // Resized.
 
     let off = Vec3::from(2.0);
     assert!(bb.intersects_sphere(sph.resize_by(off[0])));
@@ -484,8 +539,6 @@ fn bbox_sphere_intersects() {
     let off = Vec3::from(-0.999999);
     assert!(bb.intersects_sphere(sph.resize_by(off[0])));
     assert!(bb.resize_by(off).intersects_sphere(sph));
-
-    // Displaced and resized.
 
     let d = Vec3::new(3.0, 0.0, 0.0);
     let r = Vec3::new(2.0, 0.0, 0.0);

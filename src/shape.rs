@@ -5,7 +5,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::linear::{Vec3, Vec4};
+use crate::linear::{Mat3, Mat4, Vec3, Vec4};
 
 /// Bounding box.
 #[derive(Copy, Clone, Debug)]
@@ -41,6 +41,32 @@ impl Bbox {
         Self {
             half_extent: self.half_extent + offset,
             ..self
+        }
+    }
+
+    /// Transforms the bounding box.
+    pub fn transform(self, xform: &Mat4<f32>) -> Self {
+        let ul = Mat3::from(xform);
+        let mut min = Vec3::from(xform[3]);
+        let mut max = min;
+        for i in 0..3 {
+            for j in 0..3 {
+                let d = (
+                    ul[i][j] * (self.center[i] - self.half_extent[i]),
+                    ul[i][j] * (self.center[i] + self.half_extent[i]),
+                );
+                if d.0 <= d.1 {
+                    min[j] += d.0;
+                    max[j] += d.1;
+                } else {
+                    min[j] += d.1;
+                    max[j] += d.0;
+                }
+            }
+        }
+        Self {
+            center: (min + max) / 2.0,
+            half_extent: (max - min) / 2.0,
         }
     }
 
