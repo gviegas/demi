@@ -42,6 +42,13 @@ pub struct Transform {
     data: Vec<XformData>,
 }
 
+impl Default for Transform {
+    /// Creates an identity transform.
+    fn default() -> Self {
+        Self::new(&Mat4::from(1.0))
+    }
+}
+
 impl Transform {
     /// Creates a new root transform.
     pub fn new(xform: &Mat4<f32>) -> Self {
