@@ -124,13 +124,13 @@ impl Transform {
         XformId(new_idx)
     }
 
-    /// Removes a given transform.
+    /// Removes a given transform, returning its local matrix.
     ///
-    /// Trying to remove the root transform is an error and will cause a panic.
+    /// Panics if `id` is the root transform.
     ///
     /// NOTE: Removing a non-leaf transform does not remove any of its
     /// descendants - they must be explicitly `remove`d.
-    pub fn remove(&mut self, id: XformId) {
+    pub fn remove(&mut self, id: XformId) -> Mat4<f32> {
         assert_ne!(id.0, self.id().0, "cannot remove root transform");
         let node = self.nodes[id.0].take().unwrap();
         self.node_idx = id.0;
@@ -159,9 +159,9 @@ impl Transform {
         let swap = self.data.last().unwrap().node;
         if swap != id.0 {
             self.nodes[swap].as_mut().unwrap().data = node.data;
-            self.data.swap_remove(node.data);
+            self.data.swap_remove(node.data).local
         } else {
-            self.data.pop();
+            self.data.pop().unwrap().local
         }
     }
 

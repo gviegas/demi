@@ -78,6 +78,15 @@ fn remove_root() {
 
 #[test]
 fn remove() {
+    let eq_mat = |m, n| {
+        let m: Mat4<f32> = m - n;
+        for i in 0..4 {
+            for j in 0..4 {
+                assert!(m[i][j].abs() <= f32::EPSILON);
+            }
+        }
+    };
+
     let m = Mat4::from(1.0);
     let ma = Mat4::from(2.0);
     let maa = Mat4::from(3.0);
@@ -100,7 +109,7 @@ fn remove() {
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.none_cnt, 0);
     assert_eq!(graph.data.len(), 4);
-    graph.remove(xaa);
+    eq_mat(graph.remove(xaa), maa.clone());
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.node_idx, xaa_i);
     assert_eq!(graph.none_cnt, 1);
@@ -114,21 +123,21 @@ fn remove() {
     assert_eq!(graph.none_cnt, 0);
     assert_eq!(graph.data.len(), 4);
     assert_eq!(graph.data.last().unwrap().node, xaa_i);
-    graph.remove(xaa);
+    eq_mat(graph.remove(xaa), maa);
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.node_idx, xaa_i);
     assert_eq!(graph.none_cnt, 1);
     assert_eq!(graph.data.len(), 3);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
-    graph.remove(xa);
+    eq_mat(graph.remove(xa), ma.clone());
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.node_idx, xa_i);
     assert_eq!(graph.none_cnt, 2);
     assert_eq!(graph.data.len(), 2);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
-    graph.remove(xb);
+    eq_mat(graph.remove(xb), mb.clone());
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.node_idx, xb_i);
     assert_eq!(graph.none_cnt, 3);
