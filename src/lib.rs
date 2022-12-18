@@ -7,6 +7,7 @@ pub mod linear;
 pub mod material;
 pub mod mesh;
 pub mod sampler;
+pub mod scene;
 pub mod shape;
 pub mod skin;
 pub mod texture;
