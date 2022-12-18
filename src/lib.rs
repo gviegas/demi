@@ -2,6 +2,7 @@
 
 pub mod animation;
 pub mod drawable;
+pub mod light;
 pub mod linear;
 pub mod material;
 pub mod mesh;
