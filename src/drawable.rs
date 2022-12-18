@@ -10,10 +10,10 @@ use crate::transform::XformId;
 /// Drawable.
 #[derive(Debug)]
 pub struct Drawable {
-    xform: Option<XformId>,
-    shape: Shape,
+    pub(crate) node: Option<(XformId, usize)>,
     // TODO: These resources will likely need to use `Arc`.
     mesh: Rc<Mesh>,
+    shape: Shape,
     skin: Option<Rc<Skin>>,
     // TODO...
 }
@@ -41,10 +41,9 @@ impl Drawable {
 
     // TODO: Setters.
 
-    /// Returns a reference to the `XformId` or `None` if the drawable
-    /// has no transform.
-    pub fn xform_id(&self) -> Option<&XformId> {
-        self.xform.as_ref()
+    /// Returns a reference to the reference-counted `Mesh`.
+    pub fn mesh(&self) -> &Rc<Mesh> {
+        &self.mesh
     }
 
     /// Returns the `Shape`.
@@ -52,12 +51,7 @@ impl Drawable {
         self.shape
     }
 
-    /// Returns a reference to the reference-counted `Mesh`.
-    pub fn mesh(&self) -> &Rc<Mesh> {
-        &self.mesh
-    }
-
-    /// Returns a reference to the reference-counted `Skin` or `None`
+    /// Returns a reference to the reference-counted `Skin`, or `None`
     /// if the drawable has no skin.
     pub fn skin(&self) -> Option<&Rc<Skin>> {
         self.skin.as_ref()

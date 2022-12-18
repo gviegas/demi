@@ -6,7 +6,7 @@ use crate::transform::XformId;
 /// Punctual light source.
 #[derive(Debug)]
 pub struct Light {
-    xform: Option<XformId>,
+    pub(crate) node: Option<(XformId, usize)>,
     light_type: LightType,
     intensity: f32,
     color: Vec3<f32>,
@@ -31,7 +31,7 @@ impl Light {
     /// Creates a new punctual light.
     pub fn new(light_type: LightType, intensity: f32, color: Vec3<f32>) -> Self {
         Self {
-            xform: None,
+            node: None,
             light_type,
             intensity,
             color,
@@ -44,12 +44,6 @@ impl Light {
     }
 
     // TODO: Setters.
-
-    /// Returns a reference to the `XformdId` or `None` if the light
-    /// has no transform.
-    pub fn xform_id(&self) -> Option<&XformId> {
-        self.xform.as_ref()
-    }
 
     /// Returns the `LightType`.
     pub fn light_type(&self) -> LightType {
