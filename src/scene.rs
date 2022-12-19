@@ -18,7 +18,7 @@ pub struct NodeId {
 }
 
 /// Type of a `Node`.
-#[derive(Debug)]
+#[derive(Eq, PartialEq, Debug)]
 enum NodeType {
     Drawable,
     Light,
@@ -90,7 +90,7 @@ impl Scene {
             // There is a vacant node that we can use.
             let n = self.nodes.len();
             let mut i = self.node_idx;
-            while self.nodes[i].is_none() {
+            while self.nodes[i].is_some() {
                 i = (i + 1) % n;
             }
             self.node_idx = n / 2;
