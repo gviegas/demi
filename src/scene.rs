@@ -28,8 +28,8 @@ enum NodeType {
 /// Node in a `Scene` graph.
 #[derive(Debug)]
 pub enum Node {
-    Drawable(Drawable),
-    Light(Light),
+    Drawable(Drawable, Mat4<f32>),
+    Light(Light, Mat4<f32>),
     Xform(Mat4<f32>),
 }
 
@@ -43,7 +43,7 @@ pub struct Scene {
     // vector to index into.
     nodes: Vec<Option<usize>>,
     node_idx: usize,
-    node_cnt: usize,
+    none_cnt: usize,
     // The `usize` here (in the case of `drawables` and `lights`,
     // stored in the structs) is a back-reference into `nodes`.
     drawables: Vec<Drawable>,
@@ -59,7 +59,7 @@ impl Default for Scene {
             graph: Transform::default(),
             nodes: vec![],
             node_idx: 0,
-            node_cnt: 0,
+            none_cnt: 0,
             drawables: vec![],
             lights: vec![],
             xforms: vec![],
@@ -74,7 +74,58 @@ impl Scene {
     /// with `Scene`s other than the one that produced it.
     #[allow(unused_variables)] // TODO
     pub fn insert(&mut self, prev: Option<&NodeId>, node: Node) -> NodeId {
-        todo!();
+        // If `prev` is not provided, insert the new node into the
+        // graph's root transform. Each of these nodes can then be
+        // treated as a separate graph.
+        let root = self.graph.id();
+        let prev = if let Some(x) = prev {
+            let prev_idx = self.nodes[x.index].unwrap();
+            match x.node_type {
+                NodeType::Drawable => &self.drawables[prev_idx].node.as_ref().unwrap().0,
+                NodeType::Light => &self.lights[prev_idx].node.as_ref().unwrap().0,
+                NodeType::Xform => &self.xforms[prev_idx].0,
+            }
+        } else {
+            &root
+        };
+        let index = if self.none_cnt > 0 {
+            // There is a vacant node that we can use.
+            let n = self.nodes.len();
+            let mut i = self.node_idx;
+            while self.nodes[i].is_none() {
+                i = (i + 1) % n;
+            }
+            self.node_idx = n / 2;
+            self.none_cnt -= 1;
+            i
+        } else {
+            // No vacant nodes, so push a new one.
+            let n = self.nodes.len();
+            self.nodes.push(None);
+            n
+        };
+        let node_type = match node {
+            Node::Drawable(mut d, x) => {
+                debug_assert!(d.node.is_none());
+                d.node = Some((self.graph.insert(prev, &x), index));
+                self.nodes[index] = Some(self.drawables.len());
+                self.drawables.push(d);
+                NodeType::Drawable
+            }
+            Node::Light(mut l, x) => {
+                debug_assert!(l.node.is_none());
+                l.node = Some((self.graph.insert(prev, &x), index));
+                self.nodes[index] = Some(self.lights.len());
+                self.lights.push(l);
+                NodeType::Light
+            }
+            Node::Xform(x) => {
+                self.nodes[index] = Some(self.xforms.len());
+                self.xforms.push((self.graph.insert(prev, &x), index));
+                NodeType::Xform
+            }
+        };
+        NodeId { node_type, index }
     }
 
     /// Removes a given node.
@@ -103,7 +154,7 @@ impl Scene {
     /// The scene is responsible for managing the transform graph, thus mutable
     /// access is not provided. One can use `insert`, `remove` and `local_mut`
     /// to mutate the graph - the `Scene` will forward these calls to the
-    /// `Transform`'s methods of same name.
+    /// `Transform`'s methods of the same name.
     ///
     /// Directly updating the world is not possible, and neither is changing
     /// the root's transform.
