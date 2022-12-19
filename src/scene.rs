@@ -107,21 +107,21 @@ impl Scene {
         let node_type = match node {
             Node::Drawable(mut d, x) => {
                 debug_assert!(d.node.is_none());
-                d.node = Some((self.graph.insert(prev, &x), index));
+                d.node = Some((self.graph.insert(prev, x), index));
                 self.nodes[index] = Some(self.drawables.len());
                 self.drawables.push(d);
                 NodeType::Drawable
             }
             Node::Light(mut l, x) => {
                 debug_assert!(l.node.is_none());
-                l.node = Some((self.graph.insert(prev, &x), index));
+                l.node = Some((self.graph.insert(prev, x), index));
                 self.nodes[index] = Some(self.lights.len());
                 self.lights.push(l);
                 NodeType::Light
             }
             Node::Xform(x) => {
                 self.nodes[index] = Some(self.xforms.len());
-                self.xforms.push((self.graph.insert(prev, &x), index));
+                self.xforms.push((self.graph.insert(prev, x), index));
                 NodeType::Xform
             }
         };

@@ -45,13 +45,13 @@ pub struct Transform {
 impl Default for Transform {
     /// Creates an identity transform.
     fn default() -> Self {
-        Self::new(&Mat4::from(1.0))
+        Self::new(Mat4::from(1.0))
     }
 }
 
 impl Transform {
     /// Creates a new root transform.
-    pub fn new(xform: &Mat4<f32>) -> Self {
+    pub fn new(xform: Mat4<f32>) -> Self {
         Self {
             nodes: vec![Some(XformNode {
                 prev: None,
@@ -62,8 +62,8 @@ impl Transform {
             node_idx: 0,
             none_cnt: 0,
             data: vec![XformData {
-                local: xform.clone(),
-                world: xform.clone(),
+                local: xform,
+                world: xform,
                 changed: false,
                 node: 0,
             }],
@@ -84,7 +84,7 @@ impl Transform {
     ///
     /// NOTE: The `XformId` returned by this method must not be used
     /// with `Transform`s other than the one that produced it.
-    pub fn insert(&mut self, prev: &XformId, xform: &Mat4<f32>) -> XformId {
+    pub fn insert(&mut self, prev: &XformId, xform: Mat4<f32>) -> XformId {
         let new_idx = if self.none_cnt > 0 {
             // There is a vacant node that we can use.
             let n = self.nodes.len();
@@ -116,7 +116,7 @@ impl Transform {
             data: self.data.len(),
         });
         self.data.push(XformData {
-            local: xform.clone(),
+            local: xform,
             world: Default::default(),
             changed: true,
             node: new_idx,

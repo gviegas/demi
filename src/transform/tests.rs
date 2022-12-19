@@ -6,7 +6,7 @@ use crate::transform::Transform;
 #[test]
 fn new() {
     let m = Mat4::new([1.0; 4], [2.0; 4], [-1.0; 4], [0.5; 4]);
-    let mut graph = Transform::new(&m);
+    let mut graph = Transform::new(m);
     assert!(graph.len() == 1);
     let id = graph.id();
     let local = graph.local(&id);
@@ -16,7 +16,7 @@ fn new() {
         }
     }
     let local_mut = graph.local_mut(&id);
-    *local_mut = m.clone() * Mat4::scale(2.0, 2.0, 2.0);
+    *local_mut = m * Mat4::scale(2.0, 2.0, 2.0);
     for i in 0..3 {
         for j in 0..3 {
             assert_eq!(local_mut[i][j], m[i][j] * 2.0);
@@ -26,13 +26,14 @@ fn new() {
 
 #[test]
 fn insert() {
-    let mut graph = Transform::new(&Mat4::from(1.0));
+    // AKA `Transform::default()`.
+    let mut graph = Transform::new(Mat4::from(1.0));
     assert_eq!(graph.len(), 1);
-    let xa = graph.insert(&graph.id(), &Mat4::translation(0.0, 0.0, -10.0));
+    let xa = graph.insert(&graph.id(), Mat4::translation(0.0, 0.0, -10.0));
     assert_eq!(graph.len(), 2);
-    let xaa = graph.insert(&xa, &Mat4::rotation_y(std::f32::consts::FRAC_PI_2));
+    let xaa = graph.insert(&xa, Mat4::rotation_y(std::f32::consts::FRAC_PI_2));
     assert_eq!(graph.len(), 3);
-    let xb = graph.insert(&graph.id(), &Mat4::scale(-1.0, -1.0, -1.0));
+    let xb = graph.insert(&graph.id(), Mat4::scale(-1.0, -1.0, -1.0));
     assert_eq!(graph.len(), 4);
 
     // Note:
@@ -72,7 +73,7 @@ fn insert() {
 #[test]
 #[should_panic = "cannot remove root transform"]
 fn remove_root() {
-    let mut graph = Transform::new(&Default::default());
+    let mut graph = Transform::default();
     graph.remove(graph.id());
 }
 
@@ -92,10 +93,10 @@ fn remove() {
     let maa = Mat4::from(3.0);
     let mb = Mat4::from(4.0);
 
-    let mut graph = Transform::new(&m);
-    let xa = graph.insert(&graph.id(), &ma);
-    let xaa = graph.insert(&xa, &maa);
-    let xb = graph.insert(&graph.id(), &mb);
+    let mut graph = Transform::new(m);
+    let xa = graph.insert(&graph.id(), ma);
+    let xaa = graph.insert(&xa, maa);
+    let xb = graph.insert(&graph.id(), mb);
 
     // Note:
     // - `remove` takes `XformId` by value
@@ -109,7 +110,7 @@ fn remove() {
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.none_cnt, 0);
     assert_eq!(graph.data.len(), 4);
-    eq_mat(graph.remove(xaa), maa.clone());
+    eq_mat(graph.remove(xaa), maa);
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.node_idx, xaa_i);
     assert_eq!(graph.none_cnt, 1);
@@ -117,7 +118,7 @@ fn remove() {
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
     // Should reuse vacant node.
-    let xaa = graph.insert(&xa, &maa);
+    let xaa = graph.insert(&xa, maa);
     assert_eq!(xaa.0, xaa_i);
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.none_cnt, 0);
@@ -130,14 +131,14 @@ fn remove() {
     assert_eq!(graph.data.len(), 3);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
-    eq_mat(graph.remove(xa), ma.clone());
+    eq_mat(graph.remove(xa), ma);
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.node_idx, xa_i);
     assert_eq!(graph.none_cnt, 2);
     assert_eq!(graph.data.len(), 2);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
-    eq_mat(graph.remove(xb), mb.clone());
+    eq_mat(graph.remove(xb), mb);
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.node_idx, xb_i);
     assert_eq!(graph.none_cnt, 3);
@@ -145,14 +146,14 @@ fn remove() {
     assert_eq!(graph.data.last().unwrap().node, graph.id().0);
 
     // Should insert in the most recent vacant node.
-    let xb = graph.insert(&graph.id(), &mb);
+    let xb = graph.insert(&graph.id(), mb);
     assert_eq!(xb.0, xb_i);
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.none_cnt, 2);
     assert_eq!(graph.data.len(), 2);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
-    let x = graph.insert(&graph.id(), &Default::default());
+    let x = graph.insert(&graph.id(), Default::default());
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.none_cnt, 1);
     assert_eq!(graph.data.len(), 3);
@@ -181,62 +182,53 @@ fn update_world() {
     let mb = Mat4::from(3.0);
     let maa = Mat4::from(2.5);
 
-    let mut graph = Transform::new(&m);
+    let mut graph = Transform::new(m);
     let x = graph.id();
-    let xa = graph.insert(&graph.id(), &ma);
-    let xb = graph.insert(&graph.id(), &mb);
-    eq_mat(graph.world(&x).clone(), m.clone());
-    eq_mat(graph.world(&xa).clone(), dfl.clone());
-    eq_mat(graph.world(&xb).clone(), dfl.clone());
+    let xa = graph.insert(&graph.id(), ma);
+    let xb = graph.insert(&graph.id(), mb);
+    eq_mat(*graph.world(&x), m);
+    eq_mat(*graph.world(&xa), dfl);
+    eq_mat(*graph.world(&xb), dfl);
 
     graph.update_world();
-    eq_mat(graph.world(&x).clone(), m.clone());
-    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
-    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
+    eq_mat(*graph.world(&x), m);
+    eq_mat(*graph.world(&xa), graph.world(&x) * graph.local(&xa));
+    eq_mat(*graph.world(&xb), graph.world(&x) * graph.local(&xb));
 
-    let xaa = graph.insert(&xa, &maa);
-    eq_mat(graph.world(&x).clone(), m.clone());
-    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
-    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
-    eq_mat(graph.world(&xaa).clone(), dfl.clone());
+    let xaa = graph.insert(&xa, maa);
+    eq_mat(*graph.world(&x), m);
+    eq_mat(*graph.world(&xa), graph.world(&x) * graph.local(&xa));
+    eq_mat(*graph.world(&xb), graph.world(&x) * graph.local(&xb));
+    eq_mat(*graph.world(&xaa), dfl);
 
     graph.update_world();
-    eq_mat(graph.world(&x).clone(), m.clone());
-    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
-    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
-    eq_mat(
-        graph.world(&xaa).clone(),
-        graph.world(&xa) * graph.local(&xaa),
-    );
+    eq_mat(*graph.world(&x), m);
+    eq_mat(*graph.world(&xa), graph.world(&x) * graph.local(&xa));
+    eq_mat(*graph.world(&xb), graph.world(&x) * graph.local(&xb));
+    eq_mat(*graph.world(&xaa), graph.world(&xa) * graph.local(&xaa));
 
     let m = Mat4::translation(-10.0, 0.0, 10.0);
-    *graph.local_mut(&x) = m.clone();
+    *graph.local_mut(&x) = m;
     graph.update_world();
-    eq_mat(graph.world(&x).clone(), m.clone());
-    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
-    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
-    eq_mat(
-        graph.world(&xaa).clone(),
-        graph.world(&xa) * graph.local(&xaa),
-    );
+    eq_mat(*graph.world(&x), m);
+    eq_mat(*graph.world(&xa), graph.world(&x) * graph.local(&xa));
+    eq_mat(*graph.world(&xb), graph.world(&x) * graph.local(&xb));
+    eq_mat(*graph.world(&xaa), graph.world(&xa) * graph.local(&xaa));
 
     *graph.local_mut(&xa) = Mat4::translation(2.0, -20.0, -2.0);
     graph.update_world();
-    eq_mat(graph.world(&x).clone(), m.clone());
-    eq_mat(graph.world(&xa).clone(), graph.world(&x) * graph.local(&xa));
-    eq_mat(graph.world(&xb).clone(), graph.world(&x) * graph.local(&xb));
-    eq_mat(
-        graph.world(&xaa).clone(),
-        graph.world(&xa) * graph.local(&xaa),
-    );
+    eq_mat(*graph.world(&x), m);
+    eq_mat(*graph.world(&xa), graph.world(&x) * graph.local(&xa));
+    eq_mat(*graph.world(&xb), graph.world(&x) * graph.local(&xb));
+    eq_mat(*graph.world(&xaa), graph.world(&xa) * graph.local(&xaa));
 }
 
 #[test]
 fn changed() {
-    let mut graph = Transform::new(&Mat4::from(1.0));
+    let mut graph = Transform::default();
     assert!(!graph.changed(&graph.id()));
 
-    let xa = graph.insert(&graph.id(), &Mat4::from(1.0));
+    let xa = graph.insert(&graph.id(), Mat4::from(1.0));
     assert!(!graph.changed(&graph.id()));
     assert!(graph.changed(&xa));
 
@@ -244,12 +236,12 @@ fn changed() {
     assert!(!graph.changed(&graph.id()));
     assert!(!graph.changed(&xa));
 
-    let xb = graph.insert(&graph.id(), &Mat4::from(1.0));
+    let xb = graph.insert(&graph.id(), Mat4::from(1.0));
     assert!(!graph.changed(&graph.id()));
     assert!(!graph.changed(&xa));
     assert!(graph.changed(&xb));
 
-    let xaa = graph.insert(&graph.id(), &Mat4::from(1.0));
+    let xaa = graph.insert(&graph.id(), Mat4::from(1.0));
     assert!(!graph.changed(&graph.id()));
     assert!(!graph.changed(&xa));
     assert!(graph.changed(&xb));
@@ -282,10 +274,10 @@ fn changed() {
 
 #[test]
 fn changed_upward() {
-    let mut graph = Transform::new(&Mat4::from(1.0));
+    let mut graph = Transform::default();
     assert!(!graph.changed_upward(&graph.id()));
 
-    let xa = graph.insert(&graph.id(), &Mat4::from(1.0));
+    let xa = graph.insert(&graph.id(), Mat4::from(1.0));
     assert!(!graph.changed_upward(&graph.id()));
     assert!(graph.changed_upward(&xa));
 
@@ -293,9 +285,9 @@ fn changed_upward() {
     assert!(!graph.changed_upward(&graph.id()));
     assert!(!graph.changed_upward(&xa));
 
-    let xb = graph.insert(&graph.id(), &Mat4::from(1.0));
-    let xc = graph.insert(&graph.id(), &Mat4::from(1.0));
-    let xbb = graph.insert(&xb, &Mat4::from(1.0));
+    let xb = graph.insert(&graph.id(), Mat4::from(1.0));
+    let xc = graph.insert(&graph.id(), Mat4::from(1.0));
+    let xbb = graph.insert(&xb, Mat4::from(1.0));
     assert!(!graph.changed_upward(&graph.id()));
     assert!(!graph.changed_upward(&xa));
     assert!(graph.changed_upward(&xb));
@@ -323,7 +315,7 @@ fn changed_upward() {
     assert!(!graph.changed_upward(&xc));
     assert!(graph.changed_upward(&xbb));
 
-    let xbbb = graph.insert(&xbb, &Mat4::from(1.0));
+    let xbbb = graph.insert(&xbb, Mat4::from(1.0));
     assert!(!graph.changed_upward(&graph.id()));
     assert!(graph.changed_upward(&xa));
     assert!(graph.changed_upward(&xb));
