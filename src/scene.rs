@@ -34,7 +34,6 @@ pub enum Node {
 }
 
 /// Scene.
-#[allow(dead_code)] // TODO
 #[derive(Debug)]
 pub struct Scene {
     graph: Transform,
@@ -72,9 +71,8 @@ impl Scene {
     ///
     /// NOTE: The `NodeId` returned by this method must not be used
     /// with `Scene`s other than the one that produced it.
-    #[allow(unused_variables)] // TODO
     pub fn insert(&mut self, prev: Option<&NodeId>, node: Node) -> NodeId {
-        // If `prev` is not provided, insert the new node into the
+        // If `prev` is not provided, we insert the new node into the
         // graph's root transform. Each of these nodes can then be
         // treated as a separate graph.
         let root = self.graph.id();
@@ -131,14 +129,55 @@ impl Scene {
     /// Removes a given node.
     ///
     /// NOTE: `node_id` must have been produced by a call to `Scene::insert`.
-    #[allow(unused_variables)] // TODO
     pub fn remove(&mut self, node_id: NodeId) -> Node {
-        todo!();
+        // TODO: Need a quick way to check whether a node is an orphan,
+        // so it can be ignored during rendering (as expected).
+        // Either do it here or in the `Transform`.
+        let index = self.nodes[node_id.index].take().unwrap();
+        self.node_idx = node_id.index;
+        self.none_cnt += 1;
+        match node_id.node_type {
+            NodeType::Drawable => {
+                let swap = self.drawables.last().unwrap().node.as_ref().unwrap().1;
+                let mut drawable = if swap != node_id.index {
+                    self.nodes[swap] = Some(index);
+                    self.drawables.swap_remove(index)
+                } else {
+                    self.drawables.pop().unwrap()
+                };
+                let (xid, _) = drawable.node.take().unwrap();
+                let xform = self.graph.remove(xid);
+                Node::Drawable(drawable, xform)
+            }
+            NodeType::Light => {
+                let swap = self.lights.last().unwrap().node.as_ref().unwrap().1;
+                let mut light = if swap != node_id.index {
+                    self.nodes[swap] = Some(index);
+                    self.lights.swap_remove(index)
+                } else {
+                    self.lights.pop().unwrap()
+                };
+                let (xid, _) = light.node.take().unwrap();
+                let xform = self.graph.remove(xid);
+                Node::Light(light, xform)
+            }
+            NodeType::Xform => {
+                let swap = self.xforms.last().unwrap().1;
+                let (xid, _) = if swap != node_id.index {
+                    self.nodes[swap] = Some(index);
+                    self.xforms.swap_remove(index)
+                } else {
+                    self.xforms.pop().unwrap()
+                };
+                let xform = self.graph.remove(xid);
+                Node::Xform(xform)
+            }
+        }
     }
 
     /// Returns a mutable reference to a node's local transform.
     ///
-    /// NOTE: See `transform::Transform::local_mut`.
+    /// NOTE: See `transform::Transform::local_mut` for usage.
     pub fn local_mut(&mut self, node_id: &NodeId) -> &mut Mat4<f32> {
         let index = self.nodes[node_id.index].unwrap();
         let xform_id = match node_id.node_type {
