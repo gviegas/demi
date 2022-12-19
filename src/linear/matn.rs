@@ -6,15 +6,15 @@ use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAss
 use crate::linear::{Float, Quat, Scalar, Vec2, Vec3, Vec4};
 
 /// Column-major 2x2 matrix.
-#[derive(Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Mat2<T>([Vec2<T>; 2]);
 
 /// Column-major 3x3 matrix.
-#[derive(Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Mat3<T>([Vec3<T>; 3]);
 
 /// Column-major 4x4 matrix.
-#[derive(Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Mat4<T>([Vec4<T>; 4]);
 
 impl<T> Mat2<T> {
@@ -278,7 +278,7 @@ macro_rules! mul_assign_impl {
         impl<T: Copy + Default + AddAssign + Mul<Output = T>> MulAssign<&$t> for $t {
             fn mul_assign(&mut self, other: &Self) {
                 *self = &*self * other;
-                //let m = self.clone();
+                //let m = *self;
                 //*self = &m * other;
             }
         }
@@ -301,7 +301,7 @@ macro_rules! neg_impl {
             type Output = $t;
 
             fn neg(self) -> Self::Output {
-                let mut m = self.clone();
+                let mut m = *self;
                 for i in &mut m.0 {
                     *i = -*i;
                 }

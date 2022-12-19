@@ -235,7 +235,7 @@ fn mat_add() {
 fn mat_add_assign() {
     let mut m = Mat2::new([-1, 4], [8, -256]);
     let n = Mat2::new([-1, 2], [10, 202]);
-    let mut o = m.clone();
+    let mut o = m;
     m += &n;
     for i in 0..2 {
         for j in 0..2 {
@@ -272,7 +272,7 @@ fn mat_sub() {
 fn mat_sub_assign() {
     let mut m = Mat2::new([-1, 4], [8, -256]);
     let n = Mat2::new([-1, 2], [10, 202]);
-    let mut o = m.clone();
+    let mut o = m;
     m -= &n;
     for i in 0..2 {
         for j in 0..2 {
@@ -302,10 +302,10 @@ fn mat_mul() {
     let u = &m * Vec2::new(10, -20);
     assert_eq!(u[0], v[0]);
     assert_eq!(u[1], v[1]);
-    let u = m.clone() * &Vec2::new(10, -20);
+    let u = m * &Vec2::new(10, -20);
     assert_eq!(u[0], v[0]);
     assert_eq!(u[1], v[1]);
-    let u = m.clone() * Vec2::new(10, -20);
+    let u = m * Vec2::new(10, -20);
     assert_eq!(u[0], v[0]);
     assert_eq!(u[1], v[1]);
     let p = m * n;
@@ -319,7 +319,7 @@ fn mat_mul() {
 fn mat_mul_assign() {
     let mut m = Mat2::new([2, 3], [4, 5]);
     let n = Mat2::new([2, 1], [1, 2]);
-    let mut o = m.clone();
+    let mut o = m;
     m *= &n;
     assert_eq!(m[0][0], 8);
     assert_eq!(m[0][1], 11);
@@ -336,7 +336,7 @@ fn mat_mul_assign() {
 fn mat_neg() {
     let m = Mat3::new([-1.0, 2.0, 0.25], [-5.0, 0.1, 5.0], [999.9, -0.0, 0.001]);
     let n = -&m;
-    let o = -n.clone();
+    let o = -n;
     for i in 0..3 {
         for j in 0..3 {
             assert_eq!(n[i][j], -m[i][j]);
@@ -637,12 +637,10 @@ fn vec_conv() {
     }
 
     let m = Mat4::scale(2f32, 3.0, 4.0);
-    let n = m.clone();
     let v = Vec4::from(m);
     for i in 0..4 {
-        assert_eq!(v[i], n[i][i]);
+        assert_eq!(v[i], m[i][i]);
     }
-    //m;
 
     let u = Vec3::from(&v);
     let w = Vec3::from(v);
@@ -707,7 +705,7 @@ fn mat_conv() {
     assert_eq!(n[3][3], 1);
 
     let n = &n + &n;
-    let m = Mat3::from(n.clone());
+    let m = Mat3::from(n);
     for i in 0..3 {
         for j in 0..3 {
             assert_eq!(m[i][j], n[i][j]);
