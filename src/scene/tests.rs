@@ -35,7 +35,7 @@ fn insert() {
 
     let nd0 = scene.insert(None, Node::Light(light, Mat4::rotation_x(0.7854)));
     assert_eq!(NodeType::Light, nd0.node_type);
-    assert_eq!(0, nd0.index);
+    assert_eq!(0, nd0.node_idx);
     assert_eq!(2, scene.graph.len());
     assert_eq!(1, scene.nodes.len());
     assert!(scene.drawables.is_empty());
@@ -44,7 +44,7 @@ fn insert() {
 
     let nd1 = scene.insert(None, Node::Xform(xform));
     assert_eq!(NodeType::Xform, nd1.node_type);
-    assert_eq!(1, nd1.index);
+    assert_eq!(1, nd1.node_idx);
     assert_eq!(3, scene.graph.len());
     assert_eq!(2, scene.nodes.len());
     assert!(scene.drawables.is_empty());
@@ -56,7 +56,7 @@ fn insert() {
         Node::Xform(xform * Mat4::scale(-1.0, -1.0, -1.0)),
     );
     assert_eq!(NodeType::Xform, nd2.node_type);
-    assert_eq!(2, nd2.index);
+    assert_eq!(2, nd2.node_idx);
     assert_eq!(4, scene.graph.len());
     assert_eq!(3, scene.nodes.len());
     assert!(scene.drawables.is_empty());
@@ -71,17 +71,17 @@ fn insert() {
         ),
     );
     assert_eq!(NodeType::Light, nd3.node_type);
-    assert_eq!(3, nd3.index);
+    assert_eq!(3, nd3.node_idx);
     assert_eq!(5, scene.graph.len());
     assert_eq!(4, scene.nodes.len());
     assert!(scene.drawables.is_empty());
     assert_eq!(2, scene.lights.len());
     assert_eq!(2, scene.xforms.len());
 
-    assert_eq!(0, scene.nodes[nd0.index].unwrap()); // Into `scene.lights`.
-    assert_eq!(0, scene.nodes[nd1.index].unwrap()); // Into `scene.xforms`.
-    assert_eq!(1, scene.nodes[nd2.index].unwrap()); // Into `scene.xforms`.
-    assert_eq!(1, scene.nodes[nd3.index].unwrap()); // Into `scene.lights`.
+    assert_eq!(0, scene.nodes[nd0.node_idx].unwrap()); // Into `scene.lights`.
+    assert_eq!(0, scene.nodes[nd1.node_idx].unwrap()); // Into `scene.xforms`.
+    assert_eq!(1, scene.nodes[nd2.node_idx].unwrap()); // Into `scene.xforms`.
+    assert_eq!(1, scene.nodes[nd3.node_idx].unwrap()); // Into `scene.lights`.
 }
 
 #[test]
@@ -134,10 +134,10 @@ fn remove() {
     assert!(scene.drawables.is_empty());
     assert_eq!(2, scene.lights.len());
     assert_eq!(2, scene.xforms.len());
-    assert_eq!(0, scene.nodes[nd0.index].unwrap()); // Into `scene.lights`.
-    assert_eq!(0, scene.nodes[nd1.index].unwrap()); // Into `scene.xforms`.
-    assert_eq!(1, scene.nodes[nd2.index].unwrap()); // Into `scene.xforms`.
-    assert_eq!(1, scene.nodes[nd3.index].unwrap()); // Into `scene.lights`.
+    assert_eq!(0, scene.nodes[nd0.node_idx].unwrap()); // Into `scene.lights`.
+    assert_eq!(0, scene.nodes[nd1.node_idx].unwrap()); // Into `scene.xforms`.
+    assert_eq!(1, scene.nodes[nd2.node_idx].unwrap()); // Into `scene.xforms`.
+    assert_eq!(1, scene.nodes[nd3.node_idx].unwrap()); // Into `scene.lights`.
 
     match scene.remove(nd1) {
         Node::Xform(_) => {
@@ -145,15 +145,15 @@ fn remove() {
             assert_eq!(4, scene.nodes.len());
             assert_eq!(2, scene.lights.len());
             assert_eq!(1, scene.xforms.len());
-            assert_eq!(0, scene.nodes[nd0.index].unwrap()); // Into `scene.lights`.
-                                                            // Should swap-remove.
-            assert_eq!(0, scene.nodes[nd2.index].unwrap()); // Into `scene.xforms`.
-            assert_eq!(1, scene.nodes[nd3.index].unwrap()); // Into `scene.lights`.
+            assert_eq!(0, scene.nodes[nd0.node_idx].unwrap()); // Into `scene.lights`.
+                                                               // Should swap-remove.
+            assert_eq!(0, scene.nodes[nd2.node_idx].unwrap()); // Into `scene.xforms`.
+            assert_eq!(1, scene.nodes[nd3.node_idx].unwrap()); // Into `scene.lights`.
         }
         x => panic!("unexpected Node: {:#?}", x),
     };
 
-    let nd3_idx = nd3.index;
+    let nd3_idx = nd3.node_idx;
     match scene.remove(nd3) {
         Node::Light(..) => {
             assert_eq!(3, scene.graph.len());
@@ -161,8 +161,8 @@ fn remove() {
             assert!(scene.nodes[nd3_idx].is_none());
             assert_eq!(1, scene.lights.len());
             assert_eq!(1, scene.xforms.len());
-            assert_eq!(0, scene.nodes[nd0.index].unwrap()); // Into `scene.lights`.
-            assert_eq!(0, scene.nodes[nd2.index].unwrap()); // Into `scene.xforms`.
+            assert_eq!(0, scene.nodes[nd0.node_idx].unwrap()); // Into `scene.lights`.
+            assert_eq!(0, scene.nodes[nd2.node_idx].unwrap()); // Into `scene.xforms`.
         }
         x => panic!("unexpected Node: {:#?}", x),
     };
@@ -175,7 +175,7 @@ fn remove() {
         scene.nodes.len() - scene.drawables.len() - scene.lights.len() - scene.xforms.len()
     );
 
-    let nd2_idx = nd2.index;
+    let nd2_idx = nd2.node_idx;
     let xform = match scene.remove(nd2) {
         Node::Xform(x) => {
             assert_eq!(2, scene.graph.len());
@@ -183,7 +183,7 @@ fn remove() {
             assert!(scene.nodes[nd2_idx].is_none());
             assert_eq!(1, scene.lights.len());
             assert!(scene.xforms.is_empty());
-            assert_eq!(0, scene.nodes[nd0.index].unwrap()); // Into `scene.lights`.
+            assert_eq!(0, scene.nodes[nd0.node_idx].unwrap()); // Into `scene.lights`.
             x
         }
         x => panic!("unexpected Node: {:#?}", x),
@@ -199,12 +199,12 @@ fn remove() {
 
     let nd4 = scene.insert(Some(&nd0), Node::Xform(xform));
     // Should insert into `scene.nodes[node_idx]` (latest vacancy).
-    assert_eq!(node_idx, nd4.index);
+    assert_eq!(node_idx, nd4.node_idx);
     assert_eq!(none_cnt - 1, scene.none_cnt);
     assert_eq!(3, scene.graph.len());
     assert_eq!(4, scene.nodes.len());
     assert_eq!(1, scene.lights.len());
     assert_eq!(1, scene.xforms.len());
-    assert_eq!(0, scene.nodes[nd0.index].unwrap()); // Into `scene.lights`.
-    assert_eq!(0, scene.nodes[nd4.index].unwrap()); // Into `scene.xforms`.
+    assert_eq!(0, scene.nodes[nd0.node_idx].unwrap()); // Into `scene.lights`.
+    assert_eq!(0, scene.nodes[nd4.node_idx].unwrap()); // Into `scene.xforms`.
 }

@@ -23,7 +23,7 @@ struct NodeData<T> {
 #[derive(Debug)]
 pub struct NodeId {
     node_type: NodeType,
-    index: usize,
+    node_idx: usize,
 }
 
 /// Type of a `Node`.
@@ -46,14 +46,10 @@ pub enum Node {
 #[derive(Debug)]
 pub struct Scene {
     graph: Transform,
-    // Entries in `nodes` are indices in `drawables`, `lights`
-    // or `xforms`. `NodeId.node_type` is used to identify the
-    // vector to index into.
+    // `nodes` contains indices into `NodeData` vectors.
     nodes: Vec<Option<usize>>,
     node_idx: usize,
     none_cnt: usize,
-    // The `usize` here (in the case of `drawables` and `lights`,
-    // stored in the structs) is a back-reference into `nodes`.
     drawables: Vec<NodeData<Drawable>>,
     lights: Vec<NodeData<Light>>,
     xforms: Vec<NodeData<()>>,
@@ -86,7 +82,7 @@ impl Scene {
         // treated as a separate graph.
         let root = self.graph.id();
         let prev = if let Some(x) = prev {
-            let prev_idx = self.nodes[x.index].unwrap();
+            let prev_idx = self.nodes[x.node_idx].unwrap();
             match x.node_type {
                 NodeType::Drawable => &self.drawables[prev_idx].xform_id,
                 NodeType::Light => &self.lights[prev_idx].xform_id,
@@ -95,7 +91,7 @@ impl Scene {
         } else {
             &root
         };
-        let index = if self.none_cnt > 0 {
+        let node_idx = if self.none_cnt > 0 {
             // There is a vacant node that we can use.
             let n = self.nodes.len();
             let mut i = self.node_idx;
@@ -113,34 +109,37 @@ impl Scene {
         };
         let node_type = match node {
             Node::Drawable(d, x) => {
-                self.nodes[index] = Some(self.drawables.len());
+                self.nodes[node_idx] = Some(self.drawables.len());
                 self.drawables.push(NodeData {
                     data: d,
                     xform_id: self.graph.insert(prev, x),
-                    node_idx: index,
+                    node_idx,
                 });
                 NodeType::Drawable
             }
             Node::Light(l, x) => {
-                self.nodes[index] = Some(self.lights.len());
+                self.nodes[node_idx] = Some(self.lights.len());
                 self.lights.push(NodeData {
                     data: l,
                     xform_id: self.graph.insert(prev, x),
-                    node_idx: index,
+                    node_idx,
                 });
                 NodeType::Light
             }
             Node::Xform(x) => {
-                self.nodes[index] = Some(self.xforms.len());
+                self.nodes[node_idx] = Some(self.xforms.len());
                 self.xforms.push(NodeData {
                     data: (),
                     xform_id: self.graph.insert(prev, x),
-                    node_idx: index,
+                    node_idx,
                 });
                 NodeType::Xform
             }
         };
-        NodeId { node_type, index }
+        NodeId {
+            node_type,
+            node_idx,
+        }
     }
 
     /// Removes a given node.
@@ -150,15 +149,15 @@ impl Scene {
         // TODO: Need a quick way to check whether a node is an orphan,
         // so it can be ignored during rendering (as expected).
         // Either do it here or in the `Transform`.
-        let index = self.nodes[node_id.index].take().unwrap();
-        self.node_idx = node_id.index;
+        let data_idx = self.nodes[node_id.node_idx].take().unwrap();
+        self.node_idx = node_id.node_idx;
         self.none_cnt += 1;
         match node_id.node_type {
             NodeType::Drawable => {
                 let swap = self.drawables.last().unwrap().node_idx;
-                let drawable = if swap != node_id.index {
-                    self.nodes[swap] = Some(index);
-                    self.drawables.swap_remove(index)
+                let drawable = if swap != node_id.node_idx {
+                    self.nodes[swap] = Some(data_idx);
+                    self.drawables.swap_remove(data_idx)
                 } else {
                     self.drawables.pop().unwrap()
                 };
@@ -167,9 +166,9 @@ impl Scene {
             }
             NodeType::Light => {
                 let swap = self.lights.last().unwrap().node_idx;
-                let light = if swap != node_id.index {
-                    self.nodes[swap] = Some(index);
-                    self.lights.swap_remove(index)
+                let light = if swap != node_id.node_idx {
+                    self.nodes[swap] = Some(data_idx);
+                    self.lights.swap_remove(data_idx)
                 } else {
                     self.lights.pop().unwrap()
                 };
@@ -178,9 +177,9 @@ impl Scene {
             }
             NodeType::Xform => {
                 let swap = self.xforms.last().unwrap().node_idx;
-                let xform = if swap != node_id.index {
-                    self.nodes[swap] = Some(index);
-                    self.xforms.swap_remove(index)
+                let xform = if swap != node_id.node_idx {
+                    self.nodes[swap] = Some(data_idx);
+                    self.xforms.swap_remove(data_idx)
                 } else {
                     self.xforms.pop().unwrap()
                 };
@@ -194,7 +193,7 @@ impl Scene {
     ///
     /// NOTE: See `transform::Transform::local_mut` for usage.
     pub fn local_mut(&mut self, node_id: &NodeId) -> &mut Mat4<f32> {
-        let index = self.nodes[node_id.index].unwrap();
+        let index = self.nodes[node_id.node_idx].unwrap();
         let xform_id = match node_id.node_type {
             NodeType::Drawable => &self.drawables[index].xform_id,
             NodeType::Light => &self.lights[index].xform_id,
@@ -221,7 +220,7 @@ impl Scene {
     /// Mutable access is not provided. To update the local transform, call
     /// `Scene::local_mut` passing the `NodeId` itself.
     pub fn xform_id(&self, node_id: &NodeId) -> &XformId {
-        let index = self.nodes[node_id.index].unwrap();
+        let index = self.nodes[node_id.node_idx].unwrap();
         match node_id.node_type {
             NodeType::Drawable => &self.drawables[index].xform_id,
             NodeType::Light => &self.lights[index].xform_id,
