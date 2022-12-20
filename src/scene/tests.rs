@@ -29,6 +29,7 @@ fn insert() {
     assert!(scene.lights.is_empty());
     assert!(scene.xforms.is_empty());
 
+    // TODO: Drawable.
     let light = Light::new_white(LightType::Directional, 1e6);
     let xform = Mat4::translation(2.0, 1.0, -5.0);
 
@@ -87,6 +88,7 @@ fn insert() {
 fn remove() {
     let mut scene = Scene::default();
 
+    // TODO: Drawable.
     let light = Light::new_white(LightType::Directional, 1e6);
     let xform = Mat4::translation(2.0, 1.0, -5.0);
 
@@ -98,7 +100,6 @@ fn remove() {
     assert!(scene.xforms.is_empty());
     let light = match scene.remove(nd0) {
         Node::Light(l, _) => {
-            assert!(l.node.is_none());
             assert_eq!(1, scene.graph.len());
             // Should keep node entry as `None` (vacant).
             assert_eq!(1, scene.nodes.len());
@@ -154,8 +155,7 @@ fn remove() {
 
     let nd3_idx = nd3.index;
     match scene.remove(nd3) {
-        Node::Light(l, _) => {
-            assert!(l.node.is_none());
+        Node::Light(..) => {
             assert_eq!(3, scene.graph.len());
             assert_eq!(4, scene.nodes.len());
             assert!(scene.nodes[nd3_idx].is_none());

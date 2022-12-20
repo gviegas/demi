@@ -1,12 +1,10 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use crate::linear::Vec3;
-use crate::transform::XformId;
 
 /// Punctual light source.
 #[derive(Debug)]
 pub struct Light {
-    pub(crate) node: Option<(XformId, usize)>,
     light_type: LightType,
     intensity: f32,
     color: Vec3<f32>,
@@ -31,7 +29,6 @@ impl Light {
     /// Creates a new punctual light.
     pub fn new(light_type: LightType, intensity: f32, color: Vec3<f32>) -> Self {
         Self {
-            node: None,
             light_type,
             intensity,
             color,

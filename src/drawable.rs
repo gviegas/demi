@@ -5,12 +5,10 @@ use std::rc::Rc;
 use crate::mesh::Mesh;
 use crate::shape::{Bbox, Sphere};
 use crate::skin::Skin;
-use crate::transform::XformId;
 
 /// Drawable.
 #[derive(Debug)]
 pub struct Drawable {
-    pub(crate) node: Option<(XformId, usize)>,
     // TODO: These resources will likely need to use `Arc`.
     mesh: Rc<Mesh>,
     shape: Shape,
