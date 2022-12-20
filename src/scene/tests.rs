@@ -1,7 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use crate::light::{Light, LightType};
-use crate::linear::Mat4;
+use crate::linear::{Mat4, Vec3};
 use crate::scene::{Node, NodeType, Scene};
 
 #[test]
@@ -207,4 +207,64 @@ fn remove() {
     assert_eq!(1, scene.xforms.len());
     assert_eq!(0, scene.nodes[nd0.node_idx].unwrap()); // Into `scene.lights`.
     assert_eq!(0, scene.nodes[nd4.node_idx].unwrap()); // Into `scene.xforms`.
+}
+
+#[test]
+#[should_panic = "Not a Drawable node: NodeId { node_type: Light, node_idx: 1 }"]
+fn not_drawable_node() {
+    let mut scene = Scene::default();
+    let nd0 = scene.insert(None, Node::Xform(Mat4::from(1.0)));
+    let nd1 = scene.insert(
+        Some(&nd0),
+        Node::Light(
+            Light::new_white(LightType::Point { range: 4.5 }, 300.0),
+            Mat4::translation(0.5, 3.0, -2.0),
+        ),
+    );
+    let _ = scene.drawable(&nd1);
+}
+
+#[test]
+#[should_panic = "Not a Light node: NodeId { node_type: Xform, node_idx: 0 }"]
+fn not_light_node() {
+    let mut scene = Scene::default();
+    let nd0 = scene.insert(None, Node::Xform(Mat4::from(1.0)));
+    let nd1 = scene.insert(
+        None,
+        Node::Light(
+            Light::new_white(LightType::Point { range: 4.5 }, 300.0),
+            Mat4::translation(0.5, 3.0, -2.0),
+        ),
+    );
+    let _ = scene.light(&nd1); // OK.
+    let _ = scene.light(&nd0);
+}
+
+#[test]
+fn node_access() {
+    // TODO: Drawable.
+    let light0 = Light::new(LightType::Directional, 1000.0, Vec3::new(0.9, 0.9, 0.5));
+    let light1 = Light::new_white(LightType::Point { range: 4.5 }, 300.0);
+    let m0 = Mat4::from(-1.0);
+    let m1 = Mat4::translation(0.0, 16.0, 0.0);
+
+    let mut scene = Scene::default();
+    let nd0 = scene.insert(None, Node::Light(light0, m0));
+    let nd1 = scene.insert(None, Node::Light(light1, m1));
+
+    let ref0 = (scene.light(&nd0), scene.local(&nd0));
+    let ref1 = (scene.light(&nd1), scene.local(&nd1));
+    assert_eq!(1000.0, ref0.0.intensity());
+    assert_eq!(300.0, ref1.0.intensity());
+    assert_eq!(-1.0, ref0.1[0][0]);
+    assert_eq!(16.0, ref1.1[3][1]);
+
+    let mut0 = scene.light_mut(&nd0);
+    assert_eq!(1000.0, mut0.intensity());
+    let mut0 = scene.local_mut(&nd0);
+    assert_eq!(-1.0, mut0[0][0]);
+    let mut1 = scene.light_mut(&nd1);
+    assert_eq!(300.0, mut1.intensity());
+    let mut1 = scene.local_mut(&nd1);
+    assert_eq!(16.0, mut1[3][1]);
 }
