@@ -144,7 +144,7 @@ impl Scene {
 
     /// Removes a given node.
     ///
-    /// NOTE: `node_id` must have been produced by a call to `Scene::insert`.
+    /// NOTE: `node_id` must have been produced by a call to `self.insert`.
     pub fn remove(&mut self, node_id: NodeId) -> Node {
         // TODO: Need a quick way to check whether a node is an orphan,
         // so it can be ignored during rendering (as expected).
@@ -189,15 +189,24 @@ impl Scene {
         }
     }
 
+    /// Returns a reference to a node's local transform.
+    ///
+    /// This is a shorthand for `scene.graph().local(scene.xform_id(node_id))`.
+    ///
+    /// Call this method rather than `local_mut` whenever possible.
+    pub fn local(&self, node_id: &NodeId) -> &Mat4<f32> {
+        self.graph.local(self.xform_id(node_id))
+    }
+
     /// Returns a mutable reference to a node's local transform.
     ///
-    /// NOTE: See `transform::Transform::local_mut` for usage.
+    /// NOTE: See `transform::Transform::local_mut` for usage advice.
     pub fn local_mut(&mut self, node_id: &NodeId) -> &mut Mat4<f32> {
-        let index = self.nodes[node_id.node_idx].unwrap();
+        let data_idx = self.nodes[node_id.node_idx].unwrap();
         let xform_id = match node_id.node_type {
-            NodeType::Drawable => &self.drawables[index].xform_id,
-            NodeType::Light => &self.lights[index].xform_id,
-            NodeType::Xform => &self.xforms[index].xform_id,
+            NodeType::Drawable => &self.drawables[data_idx].xform_id,
+            NodeType::Light => &self.lights[data_idx].xform_id,
+            NodeType::Xform => &self.xforms[data_idx].xform_id,
         };
         self.graph.local_mut(xform_id)
     }
@@ -220,11 +229,11 @@ impl Scene {
     /// Mutable access is not provided. To update the local transform, call
     /// `Scene::local_mut` passing the `NodeId` itself.
     pub fn xform_id(&self, node_id: &NodeId) -> &XformId {
-        let index = self.nodes[node_id.node_idx].unwrap();
+        let data_idx = self.nodes[node_id.node_idx].unwrap();
         match node_id.node_type {
-            NodeType::Drawable => &self.drawables[index].xform_id,
-            NodeType::Light => &self.lights[index].xform_id,
-            NodeType::Xform => &self.xforms[index].xform_id,
+            NodeType::Drawable => &self.drawables[data_idx].xform_id,
+            NodeType::Light => &self.lights[data_idx].xform_id,
+            NodeType::Xform => &self.xforms[data_idx].xform_id,
         }
     }
 
