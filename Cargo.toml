@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+vk-sys.workspace = true
 
 [workspace]
 members = ["platform/vk-sys"]

@@ -13,3 +13,5 @@ pub mod shape;
 pub mod skin;
 pub mod texture;
 pub mod transform;
+
+mod gpu;
