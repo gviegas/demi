@@ -4,58 +4,67 @@ use std::ffi::c_char;
 use std::ptr;
 
 use vk_sys::{
-    ApplicationInfo, Instance, InstanceCreateInfo, InstanceFp, STRUCTURE_TYPE_APPLICATION_INFO,
-    STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS,
+    ApplicationInfo, Instance, InstanceCreateInfo, InstanceFp, API_VERSION_1_3,
+    STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS,
 };
 
 use crate::gpu::Gpu;
 
+/// Initializes the `vk_sys` back-end.
 pub fn init() -> Option<Box<dyn Gpu>> {
     match vk_sys::init() {
         Ok(_) => {
-            let (maj, min, pat) = check_version()?;
-            println!("[i] Using Vulkan v{}.{}.{}", maj, min, pat);
-
+            let inst_vers = check_version()?;
             let inst = create_instance()?;
             let inst_fp = match unsafe { InstanceFp::new(inst) } {
                 Ok(x) => x,
                 Err(e) => {
-                    println!("[!] could not load instance functions ({})", e);
+                    eprintln!("[!] could not load instance functions ({})", e);
                     return None;
                 }
             };
-
             // TODO
-            Some(Box::new(Impl { inst, inst_fp }))
+            Some(Box::new(Impl {
+                inst,
+                inst_fp,
+                inst_vers,
+            }))
         }
         Err(e) => {
-            println!("[!] gpu::vk: could not initialize library ({})", e);
+            eprintln!("[!] gpu::vk: could not initialize library ({})", e);
             None
         }
     }
 }
 
-fn check_version() -> Option<(u32, u32, u32)> {
+/// Checks whether the instance version is adequate (i.e., not a variant).
+/// Returns the raw version.
+fn check_version() -> Option<u32> {
     let mut vers = 0;
     let res = unsafe { vk_sys::enumerate_instance_version(&mut vers) };
     if res == SUCCESS {
         match vk_sys::api_version_variant(vers) {
-            0 => Some((
-                vk_sys::api_version_major(vers),
-                vk_sys::api_version_minor(vers),
-                vk_sys::api_version_patch(vers),
-            )),
+            0 => {
+                println!(
+                    "Using Vulkan v{}.{}.{}",
+                    vk_sys::api_version_major(vers),
+                    vk_sys::api_version_minor(vers),
+                    vk_sys::api_version_patch(vers)
+                );
+                Some(vers)
+            }
             x => {
-                println!("[!] gpu::vk: implementation is a variant (#{})", x);
+                eprintln!("[!] gpu::vk: implementation is a variant (#{})", x);
                 None
             }
         }
     } else {
-        println!("[!] gpu::vk: could not check version ({})", res);
+        eprintln!("[!] gpu::vk: could not check version ({})", res);
         None
     }
 }
 
+/// Creates a new instance.
 fn create_instance() -> Option<Instance> {
     const NAME: *const c_char = b"demi\0" as *const u8 as *const _;
     const VERS: u32 = 1;
@@ -67,7 +76,7 @@ fn create_instance() -> Option<Instance> {
         application_version: 0,        // TODO
         engine_name: NAME,
         engine_version: VERS,
-        api_version: vk_sys::make_api_version(0, 1, 3, 0),
+        api_version: API_VERSION_1_3,
     };
 
     const EXTS: &[*const c_char; 2] = if cfg!(target_os = "linux") {
@@ -99,20 +108,26 @@ fn create_instance() -> Option<Instance> {
     let res = unsafe { vk_sys::create_instance(&info, ptr::null(), &mut inst) };
     match res {
         SUCCESS => {
-            assert!(!inst.is_null(), "unexpected null vk_sys::Instance");
-            Some(inst)
+            if !inst.is_null() {
+                Some(inst)
+            } else {
+                eprintln!("[!] gpu::vk: unexpected null instance");
+                None
+            }
         }
         x => {
-            println!("[!] gpu::vk: could not create instance ({})", x);
+            eprintln!("[!] gpu::vk: could not create instance ({})", x);
             None
         }
     }
 }
 
+/// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
 pub struct Impl {
     inst: Instance,
     inst_fp: InstanceFp,
+    inst_vers: u32,
 }
 
 impl Gpu for Impl {}
@@ -120,6 +135,10 @@ impl Gpu for Impl {}
 impl Drop for Impl {
     fn drop(&mut self) {
         // TODO
+        unsafe {
+            // NOTE: This call invalidates `self.inst_fp`.
+            self.inst_fp.destroy_instance(self.inst, ptr::null());
+        }
         vk_sys::fini();
     }
 }
