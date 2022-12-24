@@ -18,7 +18,7 @@ use crate::gpu::Gpu;
 pub fn init() -> Option<Box<dyn Gpu>> {
     match vk_sys::init() {
         Ok(_) => {
-            let inst_vers = check_version()?;
+            let inst_vers = check_instance_version()?;
             let inst = create_instance()?;
             let inst_fp = match unsafe { InstanceFp::new(inst) } {
                 Ok(x) => x,
@@ -44,15 +44,16 @@ pub fn init() -> Option<Box<dyn Gpu>> {
 }
 
 /// Checks whether the instance version is adequate (i.e., not a variant).
-/// Returns the raw version.
-fn check_version() -> Option<u32> {
+///
+/// Returns the raw version on success.
+fn check_instance_version() -> Option<u32> {
     let mut vers = 0;
     let res = unsafe { vk_sys::enumerate_instance_version(&mut vers) };
     if res == SUCCESS {
         match vk_sys::api_version_variant(vers) {
             0 => {
                 println!(
-                    "Using Vulkan v{}.{}.{}",
+                    "gpu::vk: instance version is {}.{}.{}",
                     vk_sys::api_version_major(vers),
                     vk_sys::api_version_minor(vers),
                     vk_sys::api_version_patch(vers)
@@ -70,44 +71,90 @@ fn check_version() -> Option<u32> {
     }
 }
 
+#[cfg(target_os = "linux")]
+const INSTANCE_EXTS: &[*const c_char; 2] = &[
+    b"VK_KHR_surface\0" as *const u8 as _,
+    b"VK_KHR_wayland_surface\0" as *const u8 as _,
+];
+
+#[cfg(windows)]
+const INSTANCE_EXTS: &[*const c_char; 2] = &[
+    b"VK_KHR_surface\0" as *const u8 as _,
+    b"VK_KHR_win32_surface\0" as *const u8 as _,
+];
+
+/// Checks whether the instance has all required extensions.
+fn instance_has_extensions() -> bool {
+    let mut count = 0;
+    let res = unsafe {
+        vk_sys::enumerate_instance_extension_properties(ptr::null(), &mut count, ptr::null_mut())
+    };
+    if res != SUCCESS {
+        eprintln!(
+            "[!] gpu::vk: could not enumerate instance extensions ({})",
+            res
+        );
+        return false;
+    }
+    unsafe {
+        let mut props = Vec::with_capacity(count as _);
+        match vk_sys::enumerate_instance_extension_properties(
+            ptr::null(),
+            &mut count,
+            props.as_mut_ptr(),
+        ) {
+            SUCCESS => {
+                props.set_len(count as _);
+                assert!(props.iter().all(|x| x.extension_name.last() == Some(&0)));
+                'outer: for i in INSTANCE_EXTS {
+                    let ext = CStr::from_ptr(i.cast());
+                    for j in &props {
+                        if ext == CStr::from_ptr(&j.extension_name as _) {
+                            continue 'outer;
+                        }
+                    }
+                    eprintln!("[!] gpu::vk: instance does not support {:?}", ext);
+                    return false;
+                }
+                true
+            }
+            x => {
+                eprintln!(
+                    "[!] gpu::vk: could not enumerate instance extensions ({})",
+                    x
+                );
+                false
+            }
+        }
+    }
+}
+
 /// Creates a new instance.
 fn create_instance() -> Option<Instance> {
     const NAME: *const c_char = b"demi\0" as *const u8 as _;
     const VERS: u32 = 1;
 
-    let app_info = ApplicationInfo {
-        s_type: STRUCTURE_TYPE_APPLICATION_INFO,
-        next: ptr::null(),
-        application_name: ptr::null(), // TODO
-        application_version: 0,        // TODO
-        engine_name: NAME,
-        engine_version: VERS,
-        api_version: API_VERSION_1_3,
-    };
-
-    const EXTS: &[*const c_char; 2] = if cfg!(target_os = "linux") {
-        &[
-            b"VK_KHR_surface\0" as *const u8 as _,
-            b"VK_KHR_wayland_surface\0" as *const u8 as _,
-        ]
-    } else if cfg!(windows) {
-        &[
-            b"VK_KHR_surface\0" as *const u8 as _,
-            b"VK_KHR_win32_surface\0" as *const u8 as _,
-        ]
-    } else {
-        unreachable!();
-    };
+    if !instance_has_extensions() {
+        return None;
+    }
 
     let info = InstanceCreateInfo {
         s_type: STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         next: ptr::null(),
         flags: 0,
-        application_info: &app_info,
+        application_info: &ApplicationInfo {
+            s_type: STRUCTURE_TYPE_APPLICATION_INFO,
+            next: ptr::null(),
+            application_name: ptr::null(), // TODO
+            application_version: 0,        // TODO
+            engine_name: NAME,
+            engine_version: VERS,
+            api_version: API_VERSION_1_3,
+        },
         enabled_layer_count: 0,
         enabled_layer_names: ptr::null(),
-        enabled_extension_count: EXTS.len() as _,
-        enabled_extension_names: EXTS as _,
+        enabled_extension_count: INSTANCE_EXTS.len() as _,
+        enabled_extension_names: INSTANCE_EXTS as _,
     };
 
     let mut inst = ptr::null_mut();
