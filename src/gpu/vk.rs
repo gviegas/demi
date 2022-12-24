@@ -61,7 +61,7 @@ fn check_instance_version() -> Option<u32> {
                 Some(vers)
             }
             x => {
-                eprintln!("[!] gpu::vk: implementation is a variant (#{})", x);
+                eprintln!("[!] gpu::vk: instance is a variant ({})", x);
                 None
             }
         }
@@ -198,7 +198,8 @@ fn select_device(inst: Instance, fp: &InstanceFp) -> Option<PhysicalDevice> {
         let mut dev = ptr::null_mut();
         for i in devs {
             fp.get_physical_device_properties(i, &mut dev_prop);
-            if check_device_queue(i, fp).is_none()
+            if check_device_version(i, Some(&dev_prop), None).is_none()
+                || check_device_queue(i, fp).is_none()
                 || !device_has_features(i, fp)
                 || !device_has_extensions(i, fp)
             {
@@ -222,12 +223,60 @@ fn select_device(inst: Instance, fp: &InstanceFp) -> Option<PhysicalDevice> {
             }
         }
         if !dev.is_null() {
-            println!("gpu::vk: device is {:?}", device_name(dev, None, Some(fp)));
+            println!(
+                "gpu::vk: chose device {:?}",
+                device_name(dev, None, Some(fp))
+            );
             Some(dev)
         } else {
             eprintln!("[!] gpu::vk: could not find a suitable device");
             None
         }
+    }
+}
+
+/// Checks whether the device version is adequate (i.e., not a variant).
+///
+/// Either `prop` or `fp` must be a `Some` variant.
+///
+/// Returns the raw version on success.
+fn check_device_version(
+    dev: PhysicalDevice,
+    prop: Option<&PhysicalDeviceProperties>,
+    fp: Option<&InstanceFp>,
+) -> Option<u32> {
+    let check =
+        |prop: &PhysicalDeviceProperties| match vk_sys::api_version_variant(prop.api_version) {
+            0 => {
+                println!(
+                    "gpu::vk: {:?} version is {}.{}.{}",
+                    device_name(dev, Some(prop), None),
+                    vk_sys::api_version_major(prop.api_version),
+                    vk_sys::api_version_minor(prop.api_version),
+                    vk_sys::api_version_patch(prop.api_version)
+                );
+                Some(prop.api_version)
+            }
+            x => {
+                eprintln!(
+                    "[!] gpu::vk: {:?} is a variant ({})",
+                    device_name(dev, Some(prop), None),
+                    x
+                );
+                None
+            }
+        };
+
+    if let Some(x) = prop {
+        check(x)
+    } else if let Some(x) = fp {
+        unsafe {
+            let mut prop = mem::zeroed();
+            x.get_physical_device_properties(dev, &mut prop);
+            check(&prop)
+        }
+    } else {
+        unreachable!();
     }
 }
 
