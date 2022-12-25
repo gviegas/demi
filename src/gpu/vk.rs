@@ -5,11 +5,12 @@ use std::mem;
 use std::ptr;
 
 use vk_sys::{
-    ApplicationInfo, Instance, InstanceCreateInfo, InstanceFp, PhysicalDevice,
+    ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo, Instance,
+    InstanceCreateInfo, InstanceFp, PhysicalDevice, PhysicalDeviceFeatures,
     PhysicalDeviceProperties, QueueFlags, API_VERSION_1_3, FALSE,
     PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, QUEUE_COMPUTE_BIT,
-    QUEUE_GRAPHICS_BIT, STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-    SUCCESS,
+    QUEUE_GRAPHICS_BIT, STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+    STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS, TRUE,
 };
 
 use crate::gpu::Gpu;
@@ -28,12 +29,22 @@ pub fn init() -> Option<Box<dyn Gpu>> {
                 }
             };
             let phys_dev = select_device(inst, &inst_fp)?;
+            let dev = create_device(phys_dev, &inst_fp)?;
+            let dev_fp = match unsafe { DeviceFp::new(dev, &inst_fp) } {
+                Ok(x) => x,
+                Err(e) => {
+                    eprintln!("[!] could not load device functions ({})", e);
+                    return None;
+                }
+            };
             // TODO
             Some(Box::new(Impl {
                 inst,
                 inst_fp,
                 inst_vers,
                 phys_dev,
+                dev,
+                dev_fp,
             }))
         }
         Err(e) => {
@@ -60,8 +71,8 @@ fn check_instance_version() -> Option<u32> {
                 );
                 Some(vers)
             }
-            x => {
-                eprintln!("[!] gpu::vk: instance is a variant ({})", x);
+            other => {
+                eprintln!("[!] gpu::vk: instance is a variant ({})", other);
                 None
             }
         }
@@ -118,10 +129,10 @@ fn instance_has_extensions() -> bool {
                 }
                 true
             }
-            x => {
+            other => {
                 eprintln!(
                     "[!] gpu::vk: could not enumerate instance extensions ({})",
-                    x
+                    other
                 );
                 false
             }
@@ -158,8 +169,7 @@ fn create_instance() -> Option<Instance> {
     };
 
     let mut inst = ptr::null_mut();
-    let res = unsafe { vk_sys::create_instance(&info, ptr::null(), &mut inst) };
-    match res {
+    match unsafe { vk_sys::create_instance(&info, ptr::null(), &mut inst) } {
         SUCCESS => {
             if !inst.is_null() {
                 Some(inst)
@@ -168,8 +178,8 @@ fn create_instance() -> Option<Instance> {
                 None
             }
         }
-        x => {
-            eprintln!("[!] gpu::vk: could not create instance ({})", x);
+        other => {
+            eprintln!("[!] gpu::vk: could not create instance ({})", other);
             None
         }
     }
@@ -187,8 +197,8 @@ fn select_device(inst: Instance, fp: &InstanceFp) -> Option<PhysicalDevice> {
     unsafe {
         match fp.enumerate_physical_devices(inst, &mut count, devs.as_mut_ptr()) {
             SUCCESS => devs.set_len(count as _),
-            x => {
-                eprintln!("[!] gpu::vk: could not enumerate devices ({})", x);
+            other => {
+                eprintln!("[!] gpu::vk: could not enumerate devices ({})", other);
                 return None;
             }
         }
@@ -257,11 +267,11 @@ fn check_device_version(
                 );
                 Some(prop.api_version)
             }
-            x => {
+            other => {
                 eprintln!(
                     "[!] gpu::vk: {:?} is a variant ({})",
                     device_name(dev, Some(prop), None),
-                    x
+                    other
                 );
                 None
             }
@@ -303,33 +313,33 @@ fn check_device_queue(dev: PhysicalDevice, fp: &InstanceFp) -> Option<u32> {
 
 /// Checks whether a given physical device has all required features.
 fn device_has_features(dev: PhysicalDevice, fp: &InstanceFp) -> bool {
-    let mut feats = unsafe { mem::zeroed() };
+    let mut feat = unsafe { mem::zeroed() };
     unsafe {
-        fp.get_physical_device_features(dev, &mut feats);
+        fp.get_physical_device_features(dev, &mut feat);
     }
     // Dynamically uniform.
-    if feats.shader_uniform_buffer_array_dynamic_indexing == FALSE {
+    if feat.shader_uniform_buffer_array_dynamic_indexing == FALSE {
         eprintln!(
             "[!] gpu::vk: {:?} does not support dynamic indexing of uniform buffers",
             device_name(dev, None, Some(fp))
         );
         return false;
     }
-    if feats.shader_sampled_image_array_dynamic_indexing == FALSE {
+    if feat.shader_sampled_image_array_dynamic_indexing == FALSE {
         eprintln!(
             "[!] gpu::vk: {:?} does not support dynamic indexing of sampled images",
             device_name(dev, None, Some(fp))
         );
         return false;
     }
-    if feats.shader_storage_buffer_array_dynamic_indexing == FALSE {
+    if feat.shader_storage_buffer_array_dynamic_indexing == FALSE {
         eprintln!(
             "[!] gpu::vk: {:?} does not support dynamic indexing of storage buffers",
             device_name(dev, None, Some(fp))
         );
         return false;
     }
-    if feats.shader_storage_image_array_dynamic_indexing == FALSE {
+    if feat.shader_storage_image_array_dynamic_indexing == FALSE {
         eprintln!(
             "[!] gpu::vk: {:?} does not support dynamic indexing of storage images",
             device_name(dev, None, Some(fp))
@@ -381,8 +391,11 @@ fn device_has_extensions(dev: PhysicalDevice, fp: &InstanceFp) -> bool {
                 }
                 true
             }
-            x => {
-                eprintln!("[!] gpu::vk: could not enumerate device extensions ({})", x);
+            other => {
+                eprintln!(
+                    "[!] gpu::vk: could not enumerate device extensions ({})",
+                    other
+                );
                 false
             }
         }
@@ -416,6 +429,65 @@ fn device_name(
     }
 }
 
+/// Creates a new device.
+fn create_device(phys_dev: PhysicalDevice, fp: &InstanceFp) -> Option<Device> {
+    // NOTE: There is no reliable way to know beforehand which
+    // queue family can be used for presentation, so we create
+    // one queue of every family available.
+    // TODO: Skip this on Android (when supported).
+    let mut queue_cnt = 0;
+    unsafe {
+        fp.get_physical_device_queue_family_properties(phys_dev, &mut queue_cnt, ptr::null_mut());
+    }
+    let mut queue_infos = Vec::with_capacity(queue_cnt as _);
+    for i in 0..queue_cnt {
+        queue_infos.push(DeviceQueueCreateInfo {
+            s_type: STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            next: ptr::null(),
+            flags: 0,
+            queue_family_index: i,
+            queue_count: 1,
+            queue_priorities: &1f32,
+        });
+    }
+
+    // TODO: Enable other supported features.
+    let mut feat: PhysicalDeviceFeatures = unsafe { mem::zeroed() };
+    feat.shader_uniform_buffer_array_dynamic_indexing = TRUE;
+    feat.shader_sampled_image_array_dynamic_indexing = TRUE;
+    feat.shader_storage_buffer_array_dynamic_indexing = TRUE;
+    feat.shader_storage_image_array_dynamic_indexing = TRUE;
+
+    let info = DeviceCreateInfo {
+        s_type: STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        next: ptr::null(),
+        flags: 0,
+        queue_create_info_count: queue_cnt,
+        queue_create_infos: queue_infos.as_ptr(),
+        enabled_layer_count: 0,
+        enabled_layer_names: ptr::null(),
+        enabled_extension_count: DEVICE_EXTS.len() as _,
+        enabled_extension_names: DEVICE_EXTS as _,
+        enabled_features: &feat,
+    };
+
+    let mut dev = ptr::null_mut();
+    match unsafe { fp.create_device(phys_dev, &info, ptr::null(), &mut dev) } {
+        SUCCESS => {
+            if !dev.is_null() {
+                Some(dev)
+            } else {
+                eprintln!("[!] gpu::vk: unexpected null device");
+                None
+            }
+        }
+        other => {
+            eprintln!("[!] gpu::vk: could not create device ({})", other);
+            None
+        }
+    }
+}
+
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
 pub struct Impl {
@@ -423,6 +495,8 @@ pub struct Impl {
     inst_fp: InstanceFp,
     inst_vers: u32,
     phys_dev: PhysicalDevice,
+    dev: Device,
+    dev_fp: DeviceFp,
 }
 
 impl Gpu for Impl {}
@@ -430,6 +504,10 @@ impl Gpu for Impl {}
 impl Drop for Impl {
     fn drop(&mut self) {
         // TODO
+        unsafe {
+            // NOTE: This call invalidates `self.dev_fp`.
+            self.dev_fp.destroy_device(self.dev, ptr::null());
+        }
         unsafe {
             // NOTE: This call invalidates `self.inst_fp`.
             self.inst_fp.destroy_instance(self.inst, ptr::null());
