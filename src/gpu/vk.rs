@@ -7,7 +7,7 @@ use std::ptr;
 use vk_sys::{
     ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo, Instance,
     InstanceCreateInfo, InstanceFp, PhysicalDevice, PhysicalDeviceFeatures,
-    PhysicalDeviceProperties, QueueFlags, API_VERSION_1_3, FALSE,
+    PhysicalDeviceProperties, Queue, QueueFlags, API_VERSION_1_3, FALSE,
     PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, QUEUE_COMPUTE_BIT,
     QUEUE_GRAPHICS_BIT, STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_DEVICE_CREATE_INFO,
     STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS, TRUE,
@@ -37,6 +37,8 @@ pub fn init() -> Option<Box<dyn Gpu>> {
                     return None;
                 }
             };
+            let fam_idx = check_device_queue(phys_dev, &inst_fp).unwrap();
+            let queue = (first_queue(fam_idx, dev, &dev_fp), fam_idx);
             // TODO
             Some(Box::new(Impl {
                 inst,
@@ -45,6 +47,7 @@ pub fn init() -> Option<Box<dyn Gpu>> {
                 phys_dev,
                 dev,
                 dev_fp,
+                queue,
             }))
         }
         Err(e) => {
@@ -488,6 +491,15 @@ fn create_device(phys_dev: PhysicalDevice, fp: &InstanceFp) -> Option<Device> {
     }
 }
 
+/// Gets the first queue of a given family.
+fn first_queue(fam_idx: u32, dev: Device, fp: &DeviceFp) -> Queue {
+    let mut queue = ptr::null_mut();
+    unsafe {
+        fp.get_device_queue(dev, fam_idx, 0, &mut queue);
+    }
+    queue
+}
+
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
 pub struct Impl {
@@ -497,6 +509,7 @@ pub struct Impl {
     phys_dev: PhysicalDevice,
     dev: Device,
     dev_fp: DeviceFp,
+    queue: (Queue, u32),
 }
 
 impl Gpu for Impl {}
