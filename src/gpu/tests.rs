@@ -13,4 +13,5 @@ fn init() {
     for i in join {
         i.join().unwrap();
     }
+    gpu::shutdown();
 }

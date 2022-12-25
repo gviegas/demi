@@ -11,7 +11,7 @@ mod vk;
 
 static mut IMPL: Option<Box<dyn Gpu>> = None;
 
-/// Initializes the underlying `Gpu` implementation.
+/// Initializes the underlying implementation.
 ///
 /// Panics if all back-ends fail to initialize.
 #[cfg(any(target_os = "linux", windows))]
@@ -24,5 +24,16 @@ pub fn init() {
     });
 }
 
+/// Drops the underlying implementation.
+///
+/// NOTE: One must ensure this function is called only once,
+/// just before the program terminates.
+pub fn shutdown() {
+    unsafe {
+        IMPL = None;
+    }
+}
+
 /// Graphics back-end interface.
-pub trait Gpu {}
+// TODO
+trait Gpu {}
