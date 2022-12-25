@@ -28,7 +28,7 @@ pub fn init() -> Option<Box<dyn Gpu>> {
                 }
             };
             let (phys_dev, dev_prop, queue_fam) = select_device(inst, &inst_fp)?;
-            let dev = create_device(phys_dev, &inst_fp)?;
+            let (dev, feat) = create_device(phys_dev, &inst_fp)?;
             let dev_fp = match unsafe { DeviceFp::new(dev, &inst_fp) } {
                 Ok(x) => x,
                 Err(e) => {
@@ -46,6 +46,7 @@ pub fn init() -> Option<Box<dyn Gpu>> {
                 dev,
                 dev_fp,
                 dev_prop,
+                feat,
                 queue,
             }))
         }
@@ -338,6 +339,7 @@ fn check_device_features(dev: PhysicalDevice, fp: &InstanceFp) -> Option<Physica
     unsafe {
         fp.get_physical_device_features(dev, &mut feat);
     }
+    // NOTE: Keep in sync with `create_device`.
     // Dynamically uniform.
     if feat.shader_uniform_buffer_array_dynamic_indexing == FALSE {
         eprintln!(
@@ -457,7 +459,12 @@ fn device_name(
 }
 
 /// Creates a new device.
-fn create_device(phys_dev: PhysicalDevice, fp: &InstanceFp) -> Option<Device> {
+///
+/// On success, returns the device and the enabled features.
+fn create_device(
+    phys_dev: PhysicalDevice,
+    fp: &InstanceFp,
+) -> Option<(Device, PhysicalDeviceFeatures)> {
     // NOTE: There is no reliable way to know beforehand which
     // queue family can be used for presentation, so we create
     // one queue of every family available.
@@ -478,12 +485,32 @@ fn create_device(phys_dev: PhysicalDevice, fp: &InstanceFp) -> Option<Device> {
         });
     }
 
-    // TODO: Enable other supported features.
     let mut feat: PhysicalDeviceFeatures = unsafe { mem::zeroed() };
+    let mut supp_feat = unsafe { mem::zeroed() };
+    unsafe {
+        fp.get_physical_device_features(phys_dev, &mut supp_feat);
+    }
+    // The following ones were checked during device selection.
+    // NOTE: Keep in sync with `check_device_features`.
     feat.shader_uniform_buffer_array_dynamic_indexing = TRUE;
     feat.shader_sampled_image_array_dynamic_indexing = TRUE;
     feat.shader_storage_buffer_array_dynamic_indexing = TRUE;
     feat.shader_storage_image_array_dynamic_indexing = TRUE;
+    // The following ones are optional.
+    feat.full_draw_index_uint32 = supp_feat.full_draw_index_uint32;
+    feat.image_cube_array = supp_feat.image_cube_array;
+    feat.multi_draw_indirect = supp_feat.multi_draw_indirect;
+    feat.depth_clamp = supp_feat.depth_clamp;
+    feat.depth_bias_clamp = supp_feat.depth_bias_clamp;
+    feat.fill_mode_non_solid = supp_feat.fill_mode_non_solid;
+    feat.depth_bounds = supp_feat.depth_bounds;
+    feat.wide_lines = supp_feat.wide_lines;
+    feat.large_points = supp_feat.large_points;
+    feat.alpha_to_one = supp_feat.alpha_to_one;
+    feat.multi_viewport = supp_feat.multi_viewport;
+    feat.sampler_anisotropy = supp_feat.sampler_anisotropy;
+    feat.fragment_stores_and_atomics = supp_feat.fragment_stores_and_atomics;
+    feat.shader_image_gather_extended = supp_feat.shader_image_gather_extended;
 
     let info = DeviceCreateInfo {
         s_type: STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -502,7 +529,7 @@ fn create_device(phys_dev: PhysicalDevice, fp: &InstanceFp) -> Option<Device> {
     match unsafe { fp.create_device(phys_dev, &info, ptr::null(), &mut dev) } {
         SUCCESS => {
             if !dev.is_null() {
-                Some(dev)
+                Some((dev, feat))
             } else {
                 eprintln!("[!] gpu::vk: unexpected null device");
                 None
@@ -535,6 +562,8 @@ pub struct Impl {
     dev_fp: DeviceFp,
     // TODO: Keep only properties that will be used.
     dev_prop: PhysicalDeviceProperties,
+    // TODO: Newer features (v1.1+).
+    feat: PhysicalDeviceFeatures,
     queue: (Queue, u32),
 }
 
