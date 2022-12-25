@@ -15,45 +15,79 @@ use vk_sys::{
 
 use crate::gpu::Gpu;
 
-/// Initializes the `vk_sys` back-end.
-pub fn init() -> Option<Box<dyn Gpu>> {
-    match vk_sys::init() {
-        Ok(_) => {
-            let (inst, inst_vers) = create_instance()?;
-            let inst_fp = match unsafe { InstanceFp::new(inst) } {
-                Ok(x) => x,
-                Err(e) => {
-                    eprintln!("[!] could not load instance functions ({})", e);
-                    return None;
-                }
-            };
-            let (phys_dev, dev_prop, queue_fam) = select_device(inst, &inst_fp)?;
-            let (dev, feat) = create_device(phys_dev, &inst_fp)?;
-            let dev_fp = match unsafe { DeviceFp::new(dev, &inst_fp) } {
-                Ok(x) => x,
-                Err(e) => {
-                    eprintln!("[!] could not load device functions ({})", e);
-                    return None;
-                }
-            };
-            let queue = (first_queue(queue_fam, dev, &dev_fp), queue_fam);
-            // TODO
-            Some(Box::new(Impl {
-                inst,
-                inst_fp,
-                inst_vers,
-                phys_dev,
-                dev,
-                dev_fp,
-                dev_prop,
-                feat,
-                queue,
-            }))
+/// `Gpu` implementation using `vk_sys` as back-end.
+#[derive(Debug)]
+pub(super) struct Impl {
+    inst: Instance,
+    inst_fp: InstanceFp,
+    inst_vers: u32,
+    phys_dev: PhysicalDevice,
+    dev: Device,
+    dev_fp: DeviceFp,
+    // TODO: Keep only properties that will be used.
+    dev_prop: PhysicalDeviceProperties,
+    // TODO: Newer features (v1.1+).
+    feat: PhysicalDeviceFeatures,
+    queue: (Queue, u32),
+}
+
+impl Impl {
+    /// Creates a new `Gpu` implementation.
+    pub fn new() -> Option<Box<dyn Gpu>> {
+        match vk_sys::init() {
+            Ok(_) => {
+                let (inst, inst_vers) = create_instance()?;
+                let inst_fp = match unsafe { InstanceFp::new(inst) } {
+                    Ok(x) => x,
+                    Err(e) => {
+                        eprintln!("[!] could not load instance functions ({})", e);
+                        return None;
+                    }
+                };
+                let (phys_dev, dev_prop, queue_fam) = select_device(inst, &inst_fp)?;
+                let (dev, feat) = create_device(phys_dev, &inst_fp)?;
+                let dev_fp = match unsafe { DeviceFp::new(dev, &inst_fp) } {
+                    Ok(x) => x,
+                    Err(e) => {
+                        eprintln!("[!] could not load device functions ({})", e);
+                        return None;
+                    }
+                };
+                let queue = (first_queue(queue_fam, dev, &dev_fp), queue_fam);
+                Some(Box::new(Impl {
+                    inst,
+                    inst_fp,
+                    inst_vers,
+                    phys_dev,
+                    dev,
+                    dev_fp,
+                    dev_prop,
+                    feat,
+                    queue,
+                }))
+            }
+            Err(e) => {
+                eprintln!("[!] gpu::vk: could not initialize library ({})", e);
+                None
+            }
         }
-        Err(e) => {
-            eprintln!("[!] gpu::vk: could not initialize library ({})", e);
-            None
+    }
+}
+
+impl Gpu for Impl {}
+
+impl Drop for Impl {
+    fn drop(&mut self) {
+        // TODO
+        unsafe {
+            // NOTE: This call invalidates `self.dev_fp`.
+            self.dev_fp.destroy_device(self.dev, ptr::null());
         }
+        unsafe {
+            // NOTE: This call invalidates `self.inst_fp`.
+            self.inst_fp.destroy_instance(self.inst, ptr::null());
+        }
+        vk_sys::fini();
     }
 }
 
@@ -549,37 +583,4 @@ fn first_queue(fam_idx: u32, dev: Device, fp: &DeviceFp) -> Queue {
         fp.get_device_queue(dev, fam_idx, 0, &mut queue);
     }
     queue
-}
-
-/// `Gpu` implementation using `vk_sys` as back-end.
-#[derive(Debug)]
-pub struct Impl {
-    inst: Instance,
-    inst_fp: InstanceFp,
-    inst_vers: u32,
-    phys_dev: PhysicalDevice,
-    dev: Device,
-    dev_fp: DeviceFp,
-    // TODO: Keep only properties that will be used.
-    dev_prop: PhysicalDeviceProperties,
-    // TODO: Newer features (v1.1+).
-    feat: PhysicalDeviceFeatures,
-    queue: (Queue, u32),
-}
-
-impl Gpu for Impl {}
-
-impl Drop for Impl {
-    fn drop(&mut self) {
-        // TODO
-        unsafe {
-            // NOTE: This call invalidates `self.dev_fp`.
-            self.dev_fp.destroy_device(self.dev, ptr::null());
-        }
-        unsafe {
-            // NOTE: This call invalidates `self.inst_fp`.
-            self.inst_fp.destroy_instance(self.inst, ptr::null());
-        }
-        vk_sys::fini();
-    }
 }

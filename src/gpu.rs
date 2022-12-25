@@ -18,7 +18,7 @@ static mut IMPL: Option<Box<dyn Gpu>> = None;
 pub fn init() {
     static INIT: Once = Once::new();
     INIT.call_once(|| unsafe {
-        IMPL = vk::init();
+        IMPL = vk::Impl::new();
         IMPL.is_none()
             .then(|| panic!("no graphics back-end that we can use"));
     });
