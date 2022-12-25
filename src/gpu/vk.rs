@@ -5,9 +5,9 @@ use std::mem;
 use std::ptr;
 
 use vk_sys::{
-    ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo, Instance,
-    InstanceCreateInfo, InstanceFp, PhysicalDevice, PhysicalDeviceFeatures,
-    PhysicalDeviceProperties, Queue, QueueFlags, API_VERSION_1_3, FALSE,
+    ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo,
+    ExtensionProperties, Instance, InstanceCreateInfo, InstanceFp, PhysicalDevice,
+    PhysicalDeviceFeatures, PhysicalDeviceProperties, Queue, QueueFlags, API_VERSION_1_3, FALSE,
     PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, QUEUE_COMPUTE_BIT,
     QUEUE_GRAPHICS_BIT, STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_DEVICE_CREATE_INFO,
     STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS, TRUE,
@@ -64,7 +64,7 @@ fn create_instance() -> Option<(Instance, u32)> {
     const VERS: u32 = 1;
 
     let vers = check_instance_version()?;
-    instance_has_extensions().then_some(())?;
+    check_instance_extensions()?;
 
     let info = InstanceCreateInfo {
         s_type: STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -143,7 +143,10 @@ const INSTANCE_EXTS: &[*const c_char; 2] = &[
 ];
 
 /// Checks whether the instance has all required extensions.
-fn instance_has_extensions() -> bool {
+///
+/// On success, returns a vector containing all extensions
+/// advertised by the instance.
+fn check_instance_extensions() -> Option<Vec<ExtensionProperties>> {
     let mut count = 0;
     let res = unsafe {
         vk_sys::enumerate_instance_extension_properties(ptr::null(), &mut count, ptr::null_mut())
@@ -153,7 +156,7 @@ fn instance_has_extensions() -> bool {
             "[!] gpu::vk: could not enumerate instance extensions ({})",
             res
         );
-        return false;
+        return None;
     }
     unsafe {
         let mut props = Vec::with_capacity(count as _);
@@ -173,16 +176,16 @@ fn instance_has_extensions() -> bool {
                         }
                     }
                     eprintln!("[!] gpu::vk: instance does not support {:?}", ext);
-                    return false;
+                    return None;
                 }
-                true
+                Some(props)
             }
             other => {
                 eprintln!(
                     "[!] gpu::vk: could not enumerate instance extensions ({})",
                     other
                 );
-                false
+                None
             }
         }
     }
@@ -190,8 +193,8 @@ fn instance_has_extensions() -> bool {
 
 /// Selects a physical device.
 ///
-/// On success, returns the physical device, its properties and
-/// the queue family index.
+/// On success, returns the physical device, its properties and the
+/// index of a queue family supporting graphics/compute.
 fn select_device(
     inst: Instance,
     fp: &InstanceFp,
@@ -222,7 +225,10 @@ fn select_device(
                 continue;
             }
             fam = check_device_queue(i, fp);
-            if fam.is_none() || !device_has_features(i, fp) || !device_has_extensions(i, fp) {
+            if fam.is_none()
+                || check_device_features(i, fp).is_none()
+                || check_device_extensions(i, fp).is_none()
+            {
                 continue;
             }
             match prop.device_type {
@@ -304,7 +310,7 @@ fn check_device_version(
 }
 
 /// Checks whether a given physical device has at least one queue that
-/// can be used for graphics.
+/// can be used for graphics/compute.
 ///
 /// On success, returns the queue family index.
 fn check_device_queue(dev: PhysicalDevice, fp: &InstanceFp) -> Option<u32> {
@@ -325,7 +331,9 @@ fn check_device_queue(dev: PhysicalDevice, fp: &InstanceFp) -> Option<u32> {
 }
 
 /// Checks whether a given physical device has all required features.
-fn device_has_features(dev: PhysicalDevice, fp: &InstanceFp) -> bool {
+///
+/// On success, returns the features supported by the device.
+fn check_device_features(dev: PhysicalDevice, fp: &InstanceFp) -> Option<PhysicalDeviceFeatures> {
     let mut feat = unsafe { mem::zeroed() };
     unsafe {
         fp.get_physical_device_features(dev, &mut feat);
@@ -336,36 +344,42 @@ fn device_has_features(dev: PhysicalDevice, fp: &InstanceFp) -> bool {
             "[!] gpu::vk: {:?} does not support dynamic indexing of uniform buffers",
             device_name(dev, None, Some(fp))
         );
-        return false;
+        return None;
     }
     if feat.shader_sampled_image_array_dynamic_indexing == FALSE {
         eprintln!(
             "[!] gpu::vk: {:?} does not support dynamic indexing of sampled images",
             device_name(dev, None, Some(fp))
         );
-        return false;
+        return None;
     }
     if feat.shader_storage_buffer_array_dynamic_indexing == FALSE {
         eprintln!(
             "[!] gpu::vk: {:?} does not support dynamic indexing of storage buffers",
             device_name(dev, None, Some(fp))
         );
-        return false;
+        return None;
     }
     if feat.shader_storage_image_array_dynamic_indexing == FALSE {
         eprintln!(
             "[!] gpu::vk: {:?} does not support dynamic indexing of storage images",
             device_name(dev, None, Some(fp))
         );
-        return false;
+        return None;
     }
-    true
+    Some(feat)
 }
 
 const DEVICE_EXTS: &[*const c_char; 1] = &[b"VK_KHR_swapchain\0" as *const u8 as _];
 
 /// Checks whether a given physical device has all required extensions.
-fn device_has_extensions(dev: PhysicalDevice, fp: &InstanceFp) -> bool {
+///
+/// On success, returns a vector containing all extensions
+/// advertised by the device.
+fn check_device_extensions(
+    dev: PhysicalDevice,
+    fp: &InstanceFp,
+) -> Option<Vec<ExtensionProperties>> {
     let mut count = 0;
     let res = unsafe {
         fp.enumerate_device_extension_properties(dev, ptr::null(), &mut count, ptr::null_mut())
@@ -375,7 +389,7 @@ fn device_has_extensions(dev: PhysicalDevice, fp: &InstanceFp) -> bool {
             "[!] gpu::vk: could not enumerate device extensions ({})",
             res
         );
-        return false;
+        return None;
     }
     unsafe {
         let mut props = Vec::with_capacity(count as _);
@@ -400,16 +414,16 @@ fn device_has_extensions(dev: PhysicalDevice, fp: &InstanceFp) -> bool {
                         device_name(dev, None, Some(fp)),
                         ext
                     );
-                    return false;
+                    return None;
                 }
-                true
+                Some(props)
             }
             other => {
                 eprintln!(
                     "[!] gpu::vk: could not enumerate device extensions ({})",
                     other
                 );
-                false
+                None
             }
         }
     }
