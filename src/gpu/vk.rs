@@ -19,8 +19,7 @@ use crate::gpu::Gpu;
 pub fn init() -> Option<Box<dyn Gpu>> {
     match vk_sys::init() {
         Ok(_) => {
-            let inst_vers = check_instance_version()?;
-            let inst = create_instance()?;
+            let (inst, inst_vers) = create_instance()?;
             let inst_fp = match unsafe { InstanceFp::new(inst) } {
                 Ok(x) => x,
                 Err(e) => {
@@ -28,7 +27,7 @@ pub fn init() -> Option<Box<dyn Gpu>> {
                     return None;
                 }
             };
-            let phys_dev = select_device(inst, &inst_fp)?;
+            let (phys_dev, dev_prop, queue_fam) = select_device(inst, &inst_fp)?;
             let dev = create_device(phys_dev, &inst_fp)?;
             let dev_fp = match unsafe { DeviceFp::new(dev, &inst_fp) } {
                 Ok(x) => x,
@@ -37,8 +36,7 @@ pub fn init() -> Option<Box<dyn Gpu>> {
                     return None;
                 }
             };
-            let fam_idx = check_device_queue(phys_dev, &inst_fp).unwrap();
-            let queue = (first_queue(fam_idx, dev, &dev_fp), fam_idx);
+            let queue = (first_queue(queue_fam, dev, &dev_fp), queue_fam);
             // TODO
             Some(Box::new(Impl {
                 inst,
@@ -47,6 +45,7 @@ pub fn init() -> Option<Box<dyn Gpu>> {
                 phys_dev,
                 dev,
                 dev_fp,
+                dev_prop,
                 queue,
             }))
         }
@@ -57,9 +56,55 @@ pub fn init() -> Option<Box<dyn Gpu>> {
     }
 }
 
+/// Creates a new instance.
+///
+/// On success, returns the instance and the raw version.
+fn create_instance() -> Option<(Instance, u32)> {
+    const NAME: *const c_char = b"demi\0" as *const u8 as _;
+    const VERS: u32 = 1;
+
+    let vers = check_instance_version()?;
+    instance_has_extensions().then_some(())?;
+
+    let info = InstanceCreateInfo {
+        s_type: STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        next: ptr::null(),
+        flags: 0,
+        application_info: &ApplicationInfo {
+            s_type: STRUCTURE_TYPE_APPLICATION_INFO,
+            next: ptr::null(),
+            application_name: ptr::null(), // TODO
+            application_version: 0,        // TODO
+            engine_name: NAME,
+            engine_version: VERS,
+            api_version: API_VERSION_1_3,
+        },
+        enabled_layer_count: 0,
+        enabled_layer_names: ptr::null(),
+        enabled_extension_count: INSTANCE_EXTS.len() as _,
+        enabled_extension_names: INSTANCE_EXTS as _,
+    };
+
+    let mut inst = ptr::null_mut();
+    match unsafe { vk_sys::create_instance(&info, ptr::null(), &mut inst) } {
+        SUCCESS => {
+            if !inst.is_null() {
+                Some((inst, vers))
+            } else {
+                eprintln!("[!] gpu::vk: unexpected null instance");
+                None
+            }
+        }
+        other => {
+            eprintln!("[!] gpu::vk: could not create instance ({})", other);
+            None
+        }
+    }
+}
+
 /// Checks whether the instance version is adequate (i.e., not a variant).
 ///
-/// Returns the raw version on success.
+/// On success, returns the raw version.
 fn check_instance_version() -> Option<u32> {
     let mut vers = 0;
     let res = unsafe { vk_sys::enumerate_instance_version(&mut vers) };
@@ -143,53 +188,14 @@ fn instance_has_extensions() -> bool {
     }
 }
 
-/// Creates a new instance.
-fn create_instance() -> Option<Instance> {
-    const NAME: *const c_char = b"demi\0" as *const u8 as _;
-    const VERS: u32 = 1;
-
-    if !instance_has_extensions() {
-        return None;
-    }
-
-    let info = InstanceCreateInfo {
-        s_type: STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-        next: ptr::null(),
-        flags: 0,
-        application_info: &ApplicationInfo {
-            s_type: STRUCTURE_TYPE_APPLICATION_INFO,
-            next: ptr::null(),
-            application_name: ptr::null(), // TODO
-            application_version: 0,        // TODO
-            engine_name: NAME,
-            engine_version: VERS,
-            api_version: API_VERSION_1_3,
-        },
-        enabled_layer_count: 0,
-        enabled_layer_names: ptr::null(),
-        enabled_extension_count: INSTANCE_EXTS.len() as _,
-        enabled_extension_names: INSTANCE_EXTS as _,
-    };
-
-    let mut inst = ptr::null_mut();
-    match unsafe { vk_sys::create_instance(&info, ptr::null(), &mut inst) } {
-        SUCCESS => {
-            if !inst.is_null() {
-                Some(inst)
-            } else {
-                eprintln!("[!] gpu::vk: unexpected null instance");
-                None
-            }
-        }
-        other => {
-            eprintln!("[!] gpu::vk: could not create instance ({})", other);
-            None
-        }
-    }
-}
-
 /// Selects a physical device.
-fn select_device(inst: Instance, fp: &InstanceFp) -> Option<PhysicalDevice> {
+///
+/// On success, returns the physical device, its properties and
+/// the queue family index.
+fn select_device(
+    inst: Instance,
+    fp: &InstanceFp,
+) -> Option<(PhysicalDevice, PhysicalDeviceProperties, u32)> {
     let mut count = 0;
     let res = unsafe { fp.enumerate_physical_devices(inst, &mut count, ptr::null_mut()) };
     if res != SUCCESS {
@@ -207,18 +213,19 @@ fn select_device(inst: Instance, fp: &InstanceFp) -> Option<PhysicalDevice> {
         }
     }
     unsafe {
-        let mut dev_prop = mem::zeroed();
+        let mut prop = mem::zeroed();
         let mut dev = ptr::null_mut();
+        let mut fam = None;
         for i in devs {
-            fp.get_physical_device_properties(i, &mut dev_prop);
-            if check_device_version(i, Some(&dev_prop), None).is_none()
-                || check_device_queue(i, fp).is_none()
-                || !device_has_features(i, fp)
-                || !device_has_extensions(i, fp)
-            {
+            fp.get_physical_device_properties(i, &mut prop);
+            if check_device_version(i, Some(&prop), None).is_none() {
                 continue;
             }
-            match dev_prop.device_type {
+            fam = check_device_queue(i, fp);
+            if fam.is_none() || !device_has_features(i, fp) || !device_has_extensions(i, fp) {
+                continue;
+            }
+            match prop.device_type {
                 PHYSICAL_DEVICE_TYPE_DISCRETE_GPU => {
                     // This one will do.
                     dev = i;
@@ -236,11 +243,14 @@ fn select_device(inst: Instance, fp: &InstanceFp) -> Option<PhysicalDevice> {
             }
         }
         if !dev.is_null() {
+            if count > 1 {
+                fp.get_physical_device_properties(dev, &mut prop);
+            }
             println!(
                 "gpu::vk: chose device {:?}",
-                device_name(dev, None, Some(fp))
+                device_name(dev, Some(&prop), None)
             );
-            Some(dev)
+            Some((dev, prop, fam.unwrap()))
         } else {
             eprintln!("[!] gpu::vk: could not find a suitable device");
             None
@@ -252,7 +262,7 @@ fn select_device(inst: Instance, fp: &InstanceFp) -> Option<PhysicalDevice> {
 ///
 /// Either `prop` or `fp` must be a `Some` variant.
 ///
-/// Returns the raw version on success.
+/// On success, returns the raw version.
 fn check_device_version(
     dev: PhysicalDevice,
     prop: Option<&PhysicalDeviceProperties>,
@@ -296,7 +306,7 @@ fn check_device_version(
 /// Checks whether a given physical device has at least one queue that
 /// can be used for graphics.
 ///
-/// Returns the queue family index on success.
+/// On success, returns the queue family index.
 fn check_device_queue(dev: PhysicalDevice, fp: &InstanceFp) -> Option<u32> {
     let mut count = 0;
     unsafe {
@@ -509,6 +519,8 @@ pub struct Impl {
     phys_dev: PhysicalDevice,
     dev: Device,
     dev_fp: DeviceFp,
+    // TODO: Keep only properties that will be used.
+    dev_prop: PhysicalDeviceProperties,
     queue: (Queue, u32),
 }
 
