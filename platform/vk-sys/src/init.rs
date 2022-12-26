@@ -1,9 +1,10 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use std::ffi::c_char;
+use std::hint;
 use std::mem;
 use std::ptr;
-use std::sync::Once;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::init::proc::Proc;
 use crate::{
@@ -22,22 +23,54 @@ pub use crate::init::device::*;
 
 static mut PROC: Option<Proc> = None;
 static mut GLOBAL_FP: Option<GlobalFp> = None;
+static RC: AtomicUsize = AtomicUsize::new(0);
 
 /// Initializes the library.
+///
+/// NOTE: Whether this works on all multi-thread scenarios
+/// is an open question. Avoid concurrent calls to this
+/// function outside of tests.
 pub fn init() -> Result<(), &'static str> {
-    static INIT: Once = Once::new();
     static mut ERR: String = String::new();
-    unsafe {
-        INIT.call_once(|| match Proc::new() {
-            Ok(proc) => match GlobalFp::new(proc.fp()) {
-                Ok(globl) => {
-                    PROC = Some(proc);
-                    GLOBAL_FP = Some(globl);
+    match RC.compare_exchange(0, 1, Ordering::SeqCst, Ordering::SeqCst) {
+        Ok(0) => {
+            // We are responsible for initialization.
+            match Proc::new() {
+                Ok(proc) => match GlobalFp::new(proc.fp()) {
+                    Ok(globl) => unsafe {
+                        PROC = Some(proc);
+                        GLOBAL_FP = Some(globl);
+                    },
+                    Err(e) => unsafe {
+                        ERR = e;
+                    },
+                },
+                Err(e) => unsafe {
+                    ERR = e;
+                },
+            }
+            // Unblock waiting threads.
+            RC.store(2, Ordering::SeqCst);
+        }
+        Err(1) => loop {
+            // Find out what is going on.
+            match RC.load(Ordering::SeqCst) {
+                1 => (),            // Wait.
+                0 => return init(), // `fini` has shut the lib down.
+                _ => {
+                    // Other thread did the initialization.
+                    RC.fetch_add(1, Ordering::SeqCst);
+                    break;
                 }
-                Err(e) => ERR = e,
-            },
-            Err(e) => ERR = e,
-        });
+            }
+            hint::spin_loop();
+        },
+        _ => {
+            // Already initialized.
+            RC.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+    unsafe {
         if PROC.is_some() {
             Ok(())
         } else {
@@ -47,14 +80,22 @@ pub fn init() -> Result<(), &'static str> {
 }
 
 /// Finalizes the library.
+///
+/// NOTE: Whether this works on all multi-thread scenarios
+/// is an open question. Avoid concurrent calls to this
+/// function outside of tests.
 pub fn fini() {
-    static FINI: Once = Once::new();
-    unsafe {
-        // Ensure that `drop` is called only once.
-        FINI.call_once(|| {
+    match RC.compare_exchange(2, 1, Ordering::SeqCst, Ordering::SeqCst) {
+        Ok(2) => unsafe {
+            // This is the last reference.
             PROC = None;
             GLOBAL_FP = None;
-        });
+            RC.store(0, Ordering::SeqCst);
+        },
+        Err(0..=1) => (),
+        _ => {
+            RC.fetch_sub(1, Ordering::SeqCst);
+        }
     }
 }
 
