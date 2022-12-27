@@ -6,6 +6,9 @@ use std::mem;
 use std::ptr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+#[cfg(test)]
+mod tests;
+
 use crate::init::proc::Proc;
 use crate::{
     CreateInstance, Device, EnumerateInstanceExtensionProperties, EnumerateInstanceLayerProperties,
