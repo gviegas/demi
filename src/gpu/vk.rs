@@ -16,6 +16,9 @@ use vk_sys::{
 
 use crate::gpu::Gpu;
 
+#[cfg(test)]
+mod tests;
+
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
 pub(super) struct Impl {
@@ -35,6 +38,15 @@ pub(super) struct Impl {
 impl Impl {
     /// Creates a new `Gpu` implementation.
     pub fn new() -> Option<Box<dyn Gpu>> {
+        //Self::_new().map::<Box<dyn Gpu>, _>(|x| Box::new(x))
+        match Self::_new() {
+            Some(x) => Some(Box::new(x)),
+            _ => None,
+        }
+    }
+
+    /// Creates a new `Impl`.
+    fn _new() -> Option<Self> {
         match vk_sys::init() {
             Ok(_) => {
                 let (inst, inst_vers) = create_instance()?;
@@ -55,7 +67,7 @@ impl Impl {
                     }
                 };
                 let queue = (first_queue(queue_fam, dev, &dev_fp), queue_fam);
-                Some(Box::new(Impl {
+                Some(Self {
                     inst,
                     inst_fp,
                     inst_vers,
@@ -65,7 +77,7 @@ impl Impl {
                     dev_prop,
                     feat,
                     queue,
-                }))
+                })
             }
             Err(e) => {
                 eprintln!("[!] gpu::vk: could not initialize library ({})", e);
