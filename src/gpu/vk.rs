@@ -1,6 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use std::ffi::{c_char, CStr};
+use std::fmt;
 use std::mem;
 use std::ptr;
 
@@ -88,6 +89,19 @@ impl Drop for Impl {
             self.inst_fp.destroy_instance(self.inst, ptr::null());
         }
         vk_sys::fini();
+    }
+}
+
+impl fmt::Display for Impl {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "gpu::vk back-end using \"{}\" (Vulkan API v{}.{}.{})",
+            device_name(self.phys_dev, Some(&self.dev_prop), None),
+            vk_sys::api_version_major(self.dev_prop.api_version),
+            vk_sys::api_version_minor(self.dev_prop.api_version),
+            vk_sys::api_version_patch(self.dev_prop.api_version)
+        )
     }
 }
 

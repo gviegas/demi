@@ -2,6 +2,8 @@
 
 //! Interface to the graphics back-end.
 
+use std::fmt;
+
 #[cfg(test)]
 mod tests;
 
@@ -38,4 +40,4 @@ pub fn shutdown() {
 
 /// Graphics back-end interface.
 // TODO
-trait Gpu {}
+trait Gpu: fmt::Display + fmt::Debug {}
