@@ -93,6 +93,8 @@ impl Drop for Impl {
     fn drop(&mut self) {
         // TODO
         unsafe {
+            // TODO: This call can actually fail.
+            self.dev_fp.device_wait_idle(self.dev);
             // NOTE: This call invalidates `self.dev_fp`.
             self.dev_fp.destroy_device(self.dev, ptr::null());
         }
