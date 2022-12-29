@@ -6,9 +6,6 @@ use std::mem;
 use std::ptr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-#[cfg(test)]
-mod tests;
-
 use crate::init::proc::Proc;
 use crate::{
     CreateInstance, Device, EnumerateInstanceExtensionProperties, EnumerateInstanceLayerProperties,
@@ -183,4 +180,74 @@ mod proc {
 }
 
 #[cfg(not(unix))]
-compile_error!("not implemented");
+// TODO
+compile_error!("not yet implemented");
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::Ordering;
+    use std::thread;
+
+    use crate::init::{fini, init, GLOBAL_FP, PROC, RC};
+
+    #[test]
+    #[ignore]
+    // NOTE: This cannot run in parallel with other tests.
+    fn crate_init_and_fini() {
+        let eq = |x| {
+            assert_eq!(x, RC.load(Ordering::Acquire));
+            unsafe {
+                if x > 0 {
+                    assert!(PROC.is_some());
+                    assert!(GLOBAL_FP.is_some());
+                } else {
+                    assert!(PROC.is_none());
+                    assert!(GLOBAL_FP.is_none());
+                }
+            }
+        };
+
+        eq(0);
+        init().unwrap();
+        eq(1);
+        fini();
+        eq(0);
+        init().unwrap();
+        init().unwrap();
+        eq(2);
+        fini();
+        eq(1);
+        fini();
+        eq(0);
+
+        const N: usize = 15;
+        let mut join = Vec::with_capacity(N);
+
+        for _ in 0..N {
+            join.push(thread::spawn(|| init().unwrap()));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        eq(N);
+
+        for _ in 0..N {
+            join.push(thread::spawn(fini));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        eq(0);
+
+        for _ in 0..N {
+            join.push(thread::spawn(|| {
+                init().unwrap();
+                fini();
+            }));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        eq(0);
+    }
+}
