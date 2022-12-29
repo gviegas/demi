@@ -8,8 +8,6 @@ use std::io::Write;
 use std::os::unix::io::AsRawFd;
 use std::pin::Pin;
 use std::ptr;
-use std::thread;
-use std::time::{Duration, Instant};
 
 use wlc_sys::{
     self, Buffer, BufferListener, Compositor, Display, Keyboard, KeyboardListener, Output, Pointer,
@@ -20,9 +18,6 @@ use wlc_sys::{
 
 #[test]
 fn test_client() {
-    for _ in 0..3 {
-        thread::spawn(|| wlc_sys::init().unwrap());
-    }
     wlc_sys::init().unwrap();
 
     let display = connect();
@@ -56,9 +51,9 @@ fn test_client() {
         .create(true)
         .open("/var/tmp/demi.wlc-sys.test.0")
         .unwrap();
-    let mut data = vec![0u8; SIZE as usize];
-    data.chunks_exact_mut((BPP / 8 * 4) as usize)
-        .for_each(|x| x[..(BPP / 8 * 2) as usize].copy_from_slice(&[255; (BPP / 8 * 2) as usize]));
+    let mut data = vec![0u8; SIZE as _];
+    data.chunks_exact_mut((BPP / 8 * 4) as _)
+        .for_each(|x| x[..(BPP / 8 * 2) as _].copy_from_slice(&[255; (BPP / 8 * 2) as _]));
     file.write(&data).unwrap();
     file.flush().unwrap();
     let fd = file.as_raw_fd();
@@ -84,17 +79,13 @@ fn test_client() {
         dispatch(display);
     }
 
-    //wait_wm_ping(display, Duration::new(30, 0));
-
     disconnect(display);
 
-    for _ in 0..3 {
-        thread::spawn(wlc_sys::fini);
-    }
     wlc_sys::fini();
 }
 
 static mut QUIT: bool = false;
+static mut PING: usize = 0;
 
 fn quit() -> bool {
     unsafe { QUIT }
@@ -161,7 +152,7 @@ fn bind(display: *mut Display) -> Pin<Box<Global>> {
             wlc_sys::registry_add_listener(
                 registry,
                 &REGISTRY_LISTENER,
-                &mut *global as *mut _ as *mut _
+                &mut *global as *mut _ as _
             ),
             0
         );
@@ -207,7 +198,7 @@ impl Global {
                 wlc_sys::wm_base_add_listener(
                     self.wm_base.0,
                     &WM_BASE_LISTENER,
-                    &mut PING_CHECK as *mut _ as *mut _,
+                    &mut PING as *mut _ as *mut _,
                 ),
                 0
             );
@@ -247,11 +238,7 @@ impl Global {
             });
 
             assert_eq!(
-                wlc_sys::seat_add_listener(
-                    self.seat.0,
-                    &SEAT_LISTENER,
-                    &mut *input as *mut _ as *mut _
-                ),
+                wlc_sys::seat_add_listener(self.seat.0, &SEAT_LISTENER, &mut *input as *mut _ as _),
                 0
             );
 
@@ -284,26 +271,13 @@ impl Global {
             }
             if (*input).touch.is_null() {
                 println!("[!] no touch device!");
+            } else {
+                // TODO
+                println!("[!] TODO touch device");
             }
 
             input
         }
-    }
-}
-
-static mut PING_CHECK: isize = -50;
-
-fn wait_wm_ping(display: *mut Display, timeout: Duration) {
-    let start = Instant::now();
-    unsafe {
-        while PING_CHECK < 0 {
-            wlc_sys::display_roundtrip(display);
-            if start.elapsed() >= timeout {
-                break;
-            }
-            thread::sleep(Duration::from_millis(33));
-        }
-        println!("PING_CHECK: {}", PING_CHECK);
     }
 }
 
@@ -445,7 +419,7 @@ static WM_BASE_LISTENER: WmBaseListener = WmBaseListener { ping: wm_ping };
 unsafe extern "C" fn wm_ping(data: *mut c_void, wm_base: *mut WmBase, serial: u32) {
     println!("wm_base.ping: {:?} {:?} {:?}", data, wm_base, serial);
     wlc_sys::wm_base_pong(wm_base, serial);
-    *data.cast::<isize>() += 1;
+    *data.cast::<usize>() += 1;
 }
 
 static XDG_SURFACE_LISTENER: XdgSurfaceListener = XdgSurfaceListener {

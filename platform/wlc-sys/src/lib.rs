@@ -3,8 +3,9 @@
 #![cfg(unix)]
 
 use std::ffi::{c_char, c_int, c_void};
+use std::hint;
 use std::mem;
-use std::sync::Once;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use dl::Dl;
 
@@ -20,6 +21,9 @@ macro_rules! proxy_marshal_flags {
         )
     };
 }
+
+#[cfg(test)]
+mod tests;
 
 mod wl;
 pub use crate::wl::*;
@@ -185,25 +189,36 @@ fn get_fp(lib: &Dl) -> Result<Fp, String> {
 
 const LIB_NAME: &str = "libwayland-client.so.0";
 static mut LIB: Option<(Dl, Fp)> = None;
+static RC: AtomicUsize = AtomicUsize::new(0);
 
 /// Initializes the library.
+///
+/// NOTE: It should be paired with a subsequent `fini` call.
 pub fn init() -> Result<(), &'static str> {
-    static INIT: Once = Once::new();
     static mut ERR: String = String::new();
-    unsafe {
-        INIT.call_once(|| {
-            let lib = match Dl::new(LIB_NAME, dl::LAZY | dl::LOCAL) {
-                Ok(x) => x,
-                Err(e) => {
-                    ERR = e;
-                    return;
-                }
-            };
-            match get_fp(&lib) {
-                Ok(x) => LIB = Some((lib, x)),
-                Err(e) => ERR = e,
+    match RC.swap(usize::MAX, Ordering::AcqRel) {
+        0 => {
+            match Dl::new(LIB_NAME, dl::LAZY | dl::LOCAL) {
+                Ok(lib) => match get_fp(&lib) {
+                    Ok(fp) => unsafe { LIB = Some((lib, fp)) },
+                    Err(e) => unsafe { ERR = e },
+                },
+                Err(e) => unsafe { ERR = e },
             }
-        });
+            RC.store(1, Ordering::Release);
+        }
+        usize::MAX => {
+            while RC.load(Ordering::Acquire) == usize::MAX {
+                hint::spin_loop();
+            }
+            return init();
+        }
+        x => {
+            assert!(x < isize::MAX as _, "RC overflow");
+            RC.store(x + 1, Ordering::Release);
+        }
+    }
+    unsafe {
         if LIB.is_some() {
             Ok(())
         } else {
@@ -213,11 +228,28 @@ pub fn init() -> Result<(), &'static str> {
 }
 
 /// Finalizes the library.
+///
+/// NOTE: It should be paired with a previous `init` call.
 pub fn fini() {
-    static FINI: Once = Once::new();
-    unsafe {
-        // Ensure that `drop` is called only once.
-        FINI.call_once(|| LIB = None);
+    match RC.swap(usize::MAX, Ordering::AcqRel) {
+        0 => {
+            RC.store(0, Ordering::Release);
+        }
+        1 => {
+            unsafe {
+                LIB = None;
+            }
+            RC.store(0, Ordering::Release);
+        }
+        usize::MAX => {
+            while RC.load(Ordering::Acquire) == usize::MAX {
+                hint::spin_loop();
+            }
+            return fini();
+        }
+        x => {
+            RC.store(x - 1, Ordering::Release);
+        }
     }
 }
 
