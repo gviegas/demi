@@ -11,8 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use dl::Dl;
 
-#[cfg(test)]
-mod tests;
+const MARSHAL_FLAG_DESTROY: u32 = 1 << 0;
 
 // wl_proxy_marshal_flags
 macro_rules! proxy_marshal_flags {
@@ -330,4 +329,69 @@ pub unsafe fn display_get_error(display: *mut Display) -> c_int {
     (LIB.as_ref().unwrap().1.display_get_error)(display)
 }
 
-const MARSHAL_FLAG_DESTROY: u32 = 1 << 0;
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::Ordering;
+    use std::thread;
+
+    use crate::{fini, init, LIB, RC};
+
+    #[test]
+    #[ignore]
+    // NOTE: This cannot run in parallel with other tests.
+    fn crate_init_and_fini() {
+        let eq = |x| {
+            assert_eq!(x, RC.load(Ordering::Acquire));
+            unsafe {
+                if x > 0 {
+                    assert!(LIB.is_some());
+                } else {
+                    assert!(LIB.is_none());
+                }
+            }
+        };
+
+        eq(0);
+        init().unwrap();
+        eq(1);
+        fini();
+        eq(0);
+        init().unwrap();
+        init().unwrap();
+        eq(2);
+        fini();
+        eq(1);
+        fini();
+        eq(0);
+
+        const N: usize = 15;
+        let mut join = Vec::with_capacity(N);
+
+        for _ in 0..N {
+            join.push(thread::spawn(|| init().unwrap()));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        eq(N);
+
+        for _ in 0..N {
+            join.push(thread::spawn(fini));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        eq(0);
+
+        for _ in 0..N {
+            join.push(thread::spawn(|| {
+                init().unwrap();
+                fini();
+            }));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        eq(0);
+    }
+}
