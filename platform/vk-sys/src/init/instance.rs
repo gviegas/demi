@@ -79,7 +79,7 @@ pub struct InstanceFp {
 }
 
 impl InstanceFp {
-    /// Initializes the function pointers for a given `Instance`.
+    /// Initializes the function pointers for a given [`Instance`].
     pub unsafe fn new(instance: Instance) -> result::Result<Self, String> {
         if instance.is_null() {
             return Err(String::from("InstanceFp::new: instance should be non-null"));
@@ -166,7 +166,7 @@ impl InstanceFp {
 impl InstanceFp {
     /// vkDestroyInstance
     ///
-    /// The `InstanceFp` must not be used anymore.
+    /// NOTE: This call invalidates the [`InstanceFp`] itself.
     pub unsafe fn destroy_instance(
         &mut self,
         instance: Instance,

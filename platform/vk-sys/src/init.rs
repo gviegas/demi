@@ -30,7 +30,7 @@ static RC: AtomicUsize = AtomicUsize::new(0);
 
 /// Initializes the library.
 ///
-/// NOTE: It should be paired with a subsequent `fini` call.
+/// NOTE: It should be paired with a subsequent [`fini`] call.
 pub fn init() -> Result<(), &'static str> {
     static mut ERR: String = String::new();
     match RC.swap(usize::MAX, Ordering::AcqRel) {
@@ -69,7 +69,7 @@ pub fn init() -> Result<(), &'static str> {
 
 /// Finalizes the library.
 ///
-/// NOTE: It should be paired with a previous `init` call.
+/// NOTE: It should be paired with a previous [`init`] call.
 pub fn fini() {
     match RC.swap(usize::MAX, Ordering::AcqRel) {
         0 => {

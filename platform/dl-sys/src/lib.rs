@@ -1,5 +1,9 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+//! dlopen API.
+//!
+//! Do not use it directly; use the [`dl`](../dl/index.html) wrapper instead.
+
 #![cfg(unix)]
 
 use core::ffi::{c_char, c_int, c_void};

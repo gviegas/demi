@@ -1,5 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+//! Wrapper exposing basic functionality of the dlopen API.
+
 #![cfg(unix)]
 
 use std::ffi::{c_int, c_void, CStr, CString};
@@ -37,6 +39,10 @@ impl Dl {
 }
 
 impl Drop for Dl {
+    /// Closes the shared object.
+    ///
+    /// [`Dlsym`] symbols obtained from `self` must not be used
+    /// after dropping.
     fn drop(&mut self) {
         unsafe {
             dl_sys::dlclose(self.0);
@@ -46,7 +52,7 @@ impl Drop for Dl {
 
 /// RTLD_* flags.
 ///
-/// The default is LAZY | LOCAL.
+/// The default is [`LAZY`] | [`LOCAL`].
 pub type Flags = u32;
 pub const LAZY: Flags = 0;
 pub const NOW: Flags = 0x1;

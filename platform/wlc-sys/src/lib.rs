@@ -1,5 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+//! Wayland client API.
+
 #![cfg(unix)]
 
 use std::ffi::{c_char, c_int, c_void};
@@ -9,6 +11,10 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use dl::Dl;
 
+#[cfg(test)]
+mod tests;
+
+// wl_proxy_marshal_flags
 macro_rules! proxy_marshal_flags {
     ($proxy:expr, $opcode:expr, $iface:expr, $vers:expr, $flags:expr, $( $x:expr ),*) => {
         (crate::LIB.as_ref().unwrap().1.proxy_marshal_flags)(
@@ -21,9 +27,6 @@ macro_rules! proxy_marshal_flags {
         )
     };
 }
-
-#[cfg(test)]
-mod tests;
 
 mod wl;
 pub use crate::wl::*;
@@ -193,7 +196,7 @@ static RC: AtomicUsize = AtomicUsize::new(0);
 
 /// Initializes the library.
 ///
-/// NOTE: It should be paired with a subsequent `fini` call.
+/// NOTE: It should be paired with a subsequent [`fini`] call.
 pub fn init() -> Result<(), &'static str> {
     static mut ERR: String = String::new();
     match RC.swap(usize::MAX, Ordering::AcqRel) {
@@ -229,7 +232,7 @@ pub fn init() -> Result<(), &'static str> {
 
 /// Finalizes the library.
 ///
-/// NOTE: It should be paired with a previous `init` call.
+/// NOTE: It should be paired with a previous [`init`] call.
 pub fn fini() {
     match RC.swap(usize::MAX, Ordering::AcqRel) {
         0 => {

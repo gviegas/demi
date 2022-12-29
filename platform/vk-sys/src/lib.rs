@@ -1,5 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+//! Vulkan API.
+
 use std::ffi::c_void;
 
 #[allow(non_camel_case_types)]
@@ -91,12 +93,12 @@ pub const fn null_handle<T>() -> *mut T {
     std::ptr::null_mut()
 }
 
-/// Checks whether `ndh` is equal to `null_handle()`.
+/// Checks whether `ndh` is equal to [`null_handle()`].
 #[cfg(not(target_pointer_width = "64"))]
 pub const fn is_null_handle(ndh: u64) -> bool {
     ndh == 0
 }
-/// Checks whether `ndh` is equal to `null_handle()`.
+/// Checks whether `ndh` is equal to [`null_handle()`].
 #[cfg(target_pointer_width = "64")]
 pub fn is_null_handle<T>(ndh: *mut T) -> bool {
     ndh.is_null()

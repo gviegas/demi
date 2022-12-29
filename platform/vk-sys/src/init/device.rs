@@ -206,7 +206,7 @@ pub struct DeviceFp {
 }
 
 impl DeviceFp {
-    /// Initializes the function pointers for a given `Device`.
+    /// Initializes the function pointers for a given [`Device`].
     ///
     /// `device` must have been created from `instance_fp`.
     pub unsafe fn new(device: Device, instance_fp: &InstanceFp) -> result::Result<Self, String> {
@@ -371,7 +371,7 @@ impl DeviceFp {
 impl DeviceFp {
     /// vkDestroyDevice
     ///
-    /// The `DeviceFp` must not be used anymore.
+    /// NOTE: This call invalidates the [`DeviceFp`] itself.
     pub unsafe fn destroy_device(&mut self, device: Device, allocator: *const AllocationCallbacks) {
         (self.destroy_device)(device, allocator);
     }
