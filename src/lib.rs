@@ -30,52 +30,104 @@ static RC: AtomicUsize = AtomicUsize::new(0);
 ///
 /// NOTE: The crate must not be used until this function completes.
 pub fn init() {
-    match RC.compare_exchange(0, 1, Ordering::SeqCst, Ordering::SeqCst) {
-        Ok(0) => {
+    match RC.swap(usize::MAX, Ordering::AcqRel) {
+        0 => {
             // NOTE: Initialization of global data must
             // be done here.
             gpu::init();
-            RC.store(2, Ordering::SeqCst);
+            RC.store(1, Ordering::Release);
         }
-        Err(1) => loop {
-            match RC.load(Ordering::SeqCst) {
-                0 => return init(),
-                1 => (),
-                _ => {
-                    RC.fetch_add(1, Ordering::SeqCst);
-                    break;
-                }
+        usize::MAX => {
+            while RC.load(Ordering::Acquire) == usize::MAX {
+                hint::spin_loop();
             }
-            hint::spin_loop();
-        },
-        _ => {
-            RC.fetch_add(1, Ordering::SeqCst);
+            return init();
+        }
+        x => {
+            assert!(x < isize::MAX as _, "RC overflow");
+            RC.store(x + 1, Ordering::Release);
         }
     }
 }
 
-/// Finalizes the crate.
+/// Finalizes the crate after use.
 ///
-/// NOTE: The crate must not be used afterwards.
+/// NOTE: The crate must not be used after calling this function.
 pub fn shutdown() {
-    match RC.compare_exchange(2, 1, Ordering::SeqCst, Ordering::SeqCst) {
-        Ok(2) => {
+    match RC.swap(usize::MAX, Ordering::AcqRel) {
+        0 => {
+            RC.store(0, Ordering::Release);
+        }
+        1 => {
             // NOTE: Finalization of global data must
             // be done here.
             gpu::shutdown();
-            RC.store(0, Ordering::SeqCst);
+            RC.store(0, Ordering::Release);
         }
-        Err(1) => loop {
-            match RC.load(Ordering::SeqCst) {
-                0 => break,
-                1 => (),
-                _ => return shutdown(),
+        usize::MAX => {
+            while RC.load(Ordering::Acquire) == usize::MAX {
+                hint::spin_loop();
             }
-            hint::spin_loop();
-        },
-        Err(0) => (),
-        _ => {
-            RC.fetch_sub(1, Ordering::SeqCst);
+            return shutdown();
         }
+        x => {
+            RC.store(x - 1, Ordering::Release);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::Ordering;
+    use std::thread;
+
+    use super::RC;
+
+    #[test]
+    #[ignore]
+    // NOTE: This cannot run in parallel with other tests.
+    fn crate_init_and_shutdown() {
+        assert_eq!(0, RC.load(Ordering::Relaxed));
+        crate::init();
+        assert_eq!(1, RC.load(Ordering::Relaxed));
+        crate::shutdown();
+        assert_eq!(0, RC.load(Ordering::Relaxed));
+        crate::init();
+        crate::init();
+        assert_eq!(2, RC.load(Ordering::Relaxed));
+        crate::shutdown();
+        assert_eq!(1, RC.load(Ordering::Relaxed));
+        crate::shutdown();
+        assert_eq!(0, RC.load(Ordering::Relaxed));
+
+        const N: usize = 15;
+        let mut join = Vec::with_capacity(N);
+
+        for _ in 0..N {
+            join.push(thread::spawn(crate::init));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        assert_eq!(N, RC.load(Ordering::Acquire));
+
+        for _ in 0..N {
+            join.push(thread::spawn(crate::shutdown));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        assert_eq!(0, RC.load(Ordering::Acquire));
+
+        for _ in 0..N {
+            join.push(thread::spawn(|| {
+                crate::init();
+                crate::shutdown();
+            }));
+        }
+        while let Some(x) = join.pop() {
+            x.join().unwrap();
+        }
+        assert_eq!(0, RC.load(Ordering::Acquire));
     }
 }
