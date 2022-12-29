@@ -23,7 +23,7 @@ fn mt_init_and_fini() {
     while let Some(x) = join.pop() {
         x.join().unwrap();
     }
-    assert_eq!(RC.load(Ordering::Acquire), 2 + N - 1);
+    assert_eq!(RC.load(Ordering::Acquire), N);
     for _ in 0..N {
         join.push(thread::spawn(maybe_fini));
     }
@@ -41,15 +41,33 @@ fn mt_init_and_fini() {
     while let Some(x) = join.pop() {
         x.join().unwrap();
     }
-    assert_eq!(RC.load(Ordering::Acquire), 2 + N);
+    assert_eq!(RC.load(Ordering::Acquire), 1 + N);
     for _ in 0..N {
         join.push(thread::spawn(maybe_fini));
     }
     while let Some(x) = join.pop() {
         x.join().unwrap();
     }
-    assert_eq!(RC.load(Ordering::Acquire), 2);
+    assert_eq!(RC.load(Ordering::Acquire), 1);
     do_fini();
+
+    const M: usize = N * 8;
+
+    let mut join = Vec::with_capacity(M);
+    for _ in 0..M {
+        join.push(thread::spawn(|| {
+            maybe_init();
+            maybe_fini();
+        }));
+    }
+    for i in join {
+        i.join().unwrap();
+    }
+    unsafe {
+        assert!(PROC.is_none());
+        assert!(GLOBAL_FP.is_none());
+    }
+    assert_eq!(RC.load(Ordering::Acquire), 0);
 }
 
 fn init_and_fini_once() {
@@ -60,7 +78,7 @@ fn init_and_fini_once() {
         init::init().unwrap();
         assert!(PROC.is_some());
         assert!(GLOBAL_FP.is_some());
-        assert_eq!(RC.load(Ordering::SeqCst), 2);
+        assert_eq!(RC.load(Ordering::SeqCst), 1);
         init::fini();
         assert!(PROC.is_none());
         assert!(GLOBAL_FP.is_none());
@@ -76,7 +94,7 @@ fn do_init() {
         init::init().unwrap();
         assert!(PROC.is_some());
         assert!(GLOBAL_FP.is_some());
-        assert!(RC.load(Ordering::SeqCst) >= 2);
+        assert!(RC.load(Ordering::SeqCst) >= 1);
     }
 }
 
@@ -85,7 +103,7 @@ fn maybe_init() {
         init::init().unwrap();
         assert!(PROC.is_some());
         assert!(GLOBAL_FP.is_some());
-        assert!(RC.load(Ordering::SeqCst) >= 2);
+        assert!(RC.load(Ordering::SeqCst) >= 1);
     }
 }
 
@@ -93,7 +111,7 @@ fn do_fini() {
     unsafe {
         assert!(PROC.is_some());
         assert!(GLOBAL_FP.is_some());
-        assert_eq!(RC.load(Ordering::SeqCst), 2);
+        assert_eq!(RC.load(Ordering::SeqCst), 1);
         init::fini();
         assert!(PROC.is_none());
         assert!(GLOBAL_FP.is_none());
@@ -105,7 +123,7 @@ fn maybe_fini() {
     unsafe {
         assert!(PROC.is_some());
         assert!(GLOBAL_FP.is_some());
-        assert!(RC.load(Ordering::SeqCst) >= 2);
+        assert!(RC.load(Ordering::SeqCst) >= 1);
         init::fini();
     }
 }

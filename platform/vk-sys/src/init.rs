@@ -30,47 +30,32 @@ static RC: AtomicUsize = AtomicUsize::new(0);
 
 /// Initializes the library.
 ///
-/// NOTE: Whether this works on all multi-thread scenarios
-/// is an open question. Avoid concurrent calls to this
-/// function outside of tests.
+/// NOTE: It should be paired with a subsequent `fini` call.
 pub fn init() -> Result<(), &'static str> {
     static mut ERR: String = String::new();
-    match RC.compare_exchange(0, 1, Ordering::SeqCst, Ordering::SeqCst) {
-        Ok(0) => {
-            // We are responsible for initialization.
+    match RC.swap(usize::MAX, Ordering::AcqRel) {
+        0 => {
             match Proc::new() {
                 Ok(proc) => match GlobalFp::new(proc.fp()) {
                     Ok(globl) => unsafe {
                         PROC = Some(proc);
                         GLOBAL_FP = Some(globl);
                     },
-                    Err(e) => unsafe {
-                        ERR = e;
-                    },
+                    Err(e) => unsafe { ERR = e },
                 },
-                Err(e) => unsafe {
-                    ERR = e;
-                },
+                Err(e) => unsafe { ERR = e },
             }
-            // Unblock waiting threads.
-            RC.store(2, Ordering::SeqCst);
+            RC.store(1, Ordering::Release);
         }
-        Err(1) => loop {
-            // Find out what is going on.
-            match RC.load(Ordering::SeqCst) {
-                1 => (),            // Wait.
-                0 => return init(), // `fini` has shut the lib down.
-                _ => {
-                    // Other thread did the initialization.
-                    RC.fetch_add(1, Ordering::SeqCst);
-                    break;
-                }
+        usize::MAX => {
+            while RC.load(Ordering::Acquire) == usize::MAX {
+                hint::spin_loop();
             }
-            hint::spin_loop();
-        },
-        _ => {
-            // Already initialized.
-            RC.fetch_add(1, Ordering::SeqCst);
+            return init();
+        }
+        x => {
+            assert!(x < isize::MAX as _, "RC overflow");
+            RC.store(x + 1, Ordering::Release);
         }
     }
     unsafe {
@@ -84,20 +69,27 @@ pub fn init() -> Result<(), &'static str> {
 
 /// Finalizes the library.
 ///
-/// NOTE: Whether this works on all multi-thread scenarios
-/// is an open question. Avoid concurrent calls to this
-/// function outside of tests.
+/// NOTE: It should be paired with a previous `init` call.
 pub fn fini() {
-    match RC.compare_exchange(2, 1, Ordering::SeqCst, Ordering::SeqCst) {
-        Ok(2) => unsafe {
-            // This is the last reference.
-            PROC = None;
-            GLOBAL_FP = None;
-            RC.store(0, Ordering::SeqCst);
-        },
-        Err(0..=1) => (),
-        _ => {
-            RC.fetch_sub(1, Ordering::SeqCst);
+    match RC.swap(usize::MAX, Ordering::AcqRel) {
+        0 => {
+            RC.store(0, Ordering::Release);
+        }
+        1 => {
+            unsafe {
+                PROC = None;
+                GLOBAL_FP = None;
+            }
+            RC.store(0, Ordering::Release);
+        }
+        usize::MAX => {
+            while RC.load(Ordering::Acquire) == usize::MAX {
+                hint::spin_loop();
+            }
+            return fini();
+        }
+        x => {
+            RC.store(x - 1, Ordering::Release);
         }
     }
 }
