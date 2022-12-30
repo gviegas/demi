@@ -36,17 +36,8 @@ pub(super) struct Impl {
 }
 
 impl Impl {
-    /// Creates a new `Gpu` implementation.
-    pub fn new() -> Option<Box<dyn Gpu>> {
-        //Self::_new().map::<Box<dyn Gpu>, _>(|x| Box::new(x))
-        match Self::_new() {
-            Some(x) => Some(Box::new(x)),
-            _ => None,
-        }
-    }
-
     /// Creates a new `Impl`.
-    fn _new() -> Option<Self> {
+    pub fn new() -> Option<Self> {
         match vk_sys::init() {
             Ok(_) => {
                 let (inst, inst_vers) = create_instance()?;

@@ -22,9 +22,9 @@ static mut IMPL: Option<Box<dyn Gpu>> = None;
 #[cfg(any(target_os = "linux", windows))]
 pub fn init() {
     unsafe {
-        IMPL = vk::Impl::new();
-        IMPL.is_none()
-            .then(|| panic!("no graphics back-end that we can use"));
+        IMPL = Some(Box::new(
+            vk::Impl::new().expect("no graphics back-end that we can use"),
+        ));
     }
 }
 

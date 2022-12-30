@@ -4,7 +4,7 @@ use crate::gpu::vk::*;
 
 #[test]
 fn new() {
-    let imp = Impl::_new().unwrap();
+    let imp = Impl::new().unwrap();
     assert!(!imp.inst.is_null());
     assert_eq!(0, vk_sys::api_version_variant(imp.inst_vers));
     assert!(!imp.phys_dev.is_null());
