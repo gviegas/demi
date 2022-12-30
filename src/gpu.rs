@@ -3,6 +3,7 @@
 //! Interface to the graphics back-end.
 
 use std::fmt;
+use std::ptr::NonNull;
 
 #[cfg(test)]
 mod tests;
@@ -36,6 +37,13 @@ pub fn shutdown() {
     unsafe {
         IMPL = None;
     }
+}
+
+/// Identifier for GPU resources.
+#[derive(Debug)]
+pub enum Id {
+    Ptr(NonNull<()>),
+    Num(u64),
 }
 
 /// Graphics back-end interface.
