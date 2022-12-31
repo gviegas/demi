@@ -2,6 +2,7 @@
 
 use std::ffi::{c_char, CStr};
 use std::fmt;
+use std::io;
 use std::mem;
 use std::ptr;
 
@@ -14,7 +15,7 @@ use vk_sys::{
     STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS, TRUE,
 };
 
-use crate::gpu::Gpu;
+use crate::gpu::{Gpu, TexId, TexOptions};
 
 #[cfg(test)]
 mod tests;
@@ -78,7 +79,24 @@ impl Impl {
     }
 }
 
-impl Gpu for Impl {}
+#[allow(unused_variables)] // TODO
+impl Gpu for Impl {
+    fn create_2d(&self, options: &TexOptions) -> io::Result<TexId> {
+        todo!();
+    }
+
+    fn create_3d(&self, options: &TexOptions) -> io::Result<TexId> {
+        todo!();
+    }
+
+    fn create_cube(&self, options: &TexOptions) -> io::Result<TexId> {
+        todo!();
+    }
+
+    fn create_rt(&self, options: &TexOptions) -> io::Result<TexId> {
+        todo!();
+    }
+}
 
 impl Drop for Impl {
     fn drop(&mut self) {
