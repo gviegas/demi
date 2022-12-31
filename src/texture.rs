@@ -2,6 +2,8 @@
 
 use std::io;
 
+use crate::gpu::TexOptions;
+
 /// Texture.
 pub struct Texture {
     // TODO
@@ -25,44 +27,98 @@ pub enum Format {
 
 /// Texture builder.
 pub struct Builder {
-    // TODO
+    options: TexOptions,
+    mask: u32,
 }
 
-#[allow(unused_variables)] // TODO
 impl Builder {
+    const FORMAT: u32 = 1 << 0;
+    const SIZE: u32 = 1 << 1;
+    const MASK: u32 = Self::FORMAT | Self::SIZE;
+
+    /// Creates a new texture builder.
     pub fn new() -> Self {
-        todo!();
+        Self {
+            options: TexOptions {
+                format: Format::Rgba8888,
+                width: 0,
+                height: 0,
+                depth: 0,
+                levels: 1,
+                samples: 1,
+            },
+            mask: 0,
+        }
     }
 
+    /// Sets the pixel format.
     pub fn set_format(&mut self, format: Format) -> &mut Self {
-        todo!();
+        self.options.format = format;
+        self.mask |= Self::FORMAT;
+        self
     }
 
+    /// Sets the dimensions of the texture.
+    ///
+    /// For 2D textures, the `depth` is interpreted as the number
+    /// of array layers that the texture will contain.
+    ///
+    /// `width`, `height` and `depth` must be greater than zero.
     pub fn set_size(&mut self, width: u32, height: u32, depth: u32) -> &mut Self {
-        todo!();
+        assert!(width > 0);
+        assert!(height > 0);
+        assert!(depth > 0);
+        self.options.width = width;
+        self.options.height = height;
+        self.options.depth = depth;
+        self.mask |= Self::SIZE;
+        self
     }
 
+    /// Sets the number of mip levels in the texture.
+    ///
+    /// `levels` must be greater than zero.
+    ///
+    /// This value need not be set. It defaults to one.
     pub fn set_mipmap(&mut self, levels: u32) -> &mut Self {
-        todo!();
+        assert!(levels > 0);
+        self.options.levels = levels;
+        self
     }
 
+    /// Sets the number of samples in the texture.
+    ///
+    /// `samples` must be greater than zero and a power of two.
+    ///
+    /// This value need not be set. It defaults to one.
     pub fn set_multisample(&mut self, samples: u32) -> &mut Self {
-        todo!()
+        assert!(samples > 0);
+        assert!(samples & (samples - 1) == 0);
+        self.options.samples = samples;
+        self
     }
 
+    /// Creates a 2D texture.
     pub fn create_2d(&mut self) -> io::Result<Texture> {
+        assert_eq!(self.mask & Self::MASK, Self::MASK);
         todo!();
     }
 
+    /// Creates a 3D texture.
     pub fn create_3d(&mut self) -> io::Result<Texture> {
+        assert_eq!(self.mask & Self::MASK, Self::MASK);
         todo!();
     }
 
+    /// Creates a cube texture.
     pub fn create_cube(&mut self) -> io::Result<Texture> {
+        assert_eq!(self.mask & Self::MASK, Self::MASK);
         todo!();
     }
 
+    /// Creates a render target texture.
     pub fn create_rt(&mut self) -> io::Result<Texture> {
+        assert_eq!(self.mask & Self::MASK, Self::MASK);
         todo!();
     }
 }
