@@ -9,9 +9,10 @@ use std::ptr;
 use vk_sys::{
     ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo,
     ExtensionProperties, Instance, InstanceCreateInfo, InstanceFp, PhysicalDevice,
-    PhysicalDeviceFeatures, PhysicalDeviceProperties, Queue, QueueFlags, API_VERSION_1_3, FALSE,
-    PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, QUEUE_COMPUTE_BIT,
-    QUEUE_GRAPHICS_BIT, STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+    PhysicalDeviceFeatures, PhysicalDeviceMemoryProperties, PhysicalDeviceProperties, Queue,
+    QueueFlags, API_VERSION_1_3, FALSE, PHYSICAL_DEVICE_TYPE_DISCRETE_GPU,
+    PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, QUEUE_COMPUTE_BIT, QUEUE_GRAPHICS_BIT,
+    STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_DEVICE_CREATE_INFO,
     STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS, TRUE,
 };
 
@@ -33,6 +34,7 @@ pub(super) struct Impl {
     dev_prop: PhysicalDeviceProperties,
     // TODO: Newer features (v1.1+).
     feat: PhysicalDeviceFeatures,
+    mem_prop: PhysicalDeviceMemoryProperties,
     queue: (Queue, u32),
 }
 
@@ -58,6 +60,7 @@ impl Impl {
                         return None;
                     }
                 };
+                let mem_prop = memory_properties(phys_dev, &inst_fp);
                 let queue = (first_queue(queue_fam, dev, &dev_fp), queue_fam);
                 Some(Self {
                     inst,
@@ -68,6 +71,7 @@ impl Impl {
                     dev_fp,
                     dev_prop,
                     feat,
+                    mem_prop,
                     queue,
                 })
             }
@@ -614,6 +618,15 @@ fn create_device(
             eprintln!("[!] gpu::vk: could not create device ({})", other);
             None
         }
+    }
+}
+
+/// Gets the memory properties of a given device.
+fn memory_properties(dev: PhysicalDevice, fp: &InstanceFp) -> PhysicalDeviceMemoryProperties {
+    unsafe {
+        let mut prop = mem::zeroed();
+        fp.get_physical_device_memory_properties(dev, &mut prop);
+        prop
     }
 }
 
