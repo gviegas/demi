@@ -2,14 +2,17 @@
 
 use std::io;
 
-use crate::gpu::TexOptions;
+use crate::gpu::{self, TexId, TexOptions};
 
 /// Texture.
+#[derive(Debug)]
 pub struct Texture {
-    // TODO
+    options: TexOptions,
+    gid: TexId,
 }
 
 /// Texture pixel formats.
+#[derive(Copy, Clone, Debug)]
 pub enum Format {
     Xrgb8888,
     Argb8888,
@@ -101,24 +104,36 @@ impl Builder {
     /// Creates a 2D texture.
     pub fn create_2d(&mut self) -> io::Result<Texture> {
         assert_eq!(self.mask & Self::MASK, Self::MASK);
-        todo!();
+        Ok(Texture {
+            options: self.options,
+            gid: gpu::create_2d(&self.options)?,
+        })
     }
 
     /// Creates a 3D texture.
     pub fn create_3d(&mut self) -> io::Result<Texture> {
         assert_eq!(self.mask & Self::MASK, Self::MASK);
-        todo!();
+        Ok(Texture {
+            options: self.options,
+            gid: gpu::create_3d(&self.options)?,
+        })
     }
 
     /// Creates a cube texture.
     pub fn create_cube(&mut self) -> io::Result<Texture> {
         assert_eq!(self.mask & Self::MASK, Self::MASK);
-        todo!();
+        Ok(Texture {
+            options: self.options,
+            gid: gpu::create_cube(&self.options)?,
+        })
     }
 
     /// Creates a render target texture.
     pub fn create_rt(&mut self) -> io::Result<Texture> {
         assert_eq!(self.mask & Self::MASK, Self::MASK);
-        todo!();
+        Ok(Texture {
+            options: self.options,
+            gid: gpu::create_rt(&self.options)?,
+        })
     }
 }

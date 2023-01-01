@@ -54,6 +54,7 @@ pub enum Id {
 pub struct TexId(Id);
 
 /// Options for texture creation.
+#[derive(Copy, Clone, Debug)]
 pub struct TexOptions {
     pub format: Format,
     pub width: u32,
