@@ -64,7 +64,11 @@ pub struct TexOptions {
 }
 
 /// Graphics back-end interface.
-// TODO
+///
+/// NOTE: Keeping this trait private allow us to change it
+/// without breaking non-`gpu` code.
+///
+// TODO...
 trait Gpu: fmt::Display + fmt::Debug {
     /// Creates a 2D texture.
     ///
@@ -91,4 +95,37 @@ trait Gpu: fmt::Display + fmt::Debug {
     /// It must also be valid for use as either a color or
     /// depth/stencil render target.
     fn create_rt(&self, options: &TexOptions) -> io::Result<TexId>;
+}
+
+/// Gets a reference to the `Gpu` implementation.
+///
+/// NOTE: The `Gpu` returned by this function is only guaranteed
+/// to be valid if retrieved after a call to [`init`] and before
+/// a call to [`shutdown`]. Attempts to use the `Gpu` outside of
+/// this scope will lead to undefined behavior.
+fn get<'a>() -> &'a dyn Gpu {
+    unsafe {
+        debug_assert!(IMPL.is_some());
+        &**IMPL.as_ref().unwrap_unchecked()
+    }
+}
+
+/// Creates a 2D texture.
+pub fn create_2d(options: &TexOptions) -> io::Result<TexId> {
+    get().create_2d(options)
+}
+
+/// Creates a 3D texture.
+pub fn create_3d(options: &TexOptions) -> io::Result<TexId> {
+    get().create_3d(options)
+}
+
+/// Creates a cube texture.
+pub fn create_cube(options: &TexOptions) -> io::Result<TexId> {
+    get().create_cube(options)
+}
+
+/// Creates a render target texture.
+pub fn create_rt(options: &TexOptions) -> io::Result<TexId> {
+    get().create_rt(options)
 }
