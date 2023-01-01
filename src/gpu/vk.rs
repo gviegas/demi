@@ -7,13 +7,16 @@ use std::mem;
 use std::ptr;
 
 use vk_sys::{
-    ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo,
-    ExtensionProperties, Instance, InstanceCreateInfo, InstanceFp, PhysicalDevice,
-    PhysicalDeviceFeatures, PhysicalDeviceMemoryProperties, PhysicalDeviceProperties, Queue,
-    QueueFlags, API_VERSION_1_3, FALSE, PHYSICAL_DEVICE_TYPE_DISCRETE_GPU,
+    ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceMemory, DeviceQueueCreateInfo,
+    ExtensionProperties, Instance, InstanceCreateInfo, InstanceFp, MemoryAllocateInfo,
+    MemoryRequirements, PhysicalDevice, PhysicalDeviceFeatures, PhysicalDeviceMemoryProperties,
+    PhysicalDeviceProperties, Queue, QueueFlags, API_VERSION_1_3, FALSE,
+    MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MEMORY_PROPERTY_HOST_COHERENT_BIT,
+    MEMORY_PROPERTY_HOST_VISIBLE_BIT, PHYSICAL_DEVICE_TYPE_DISCRETE_GPU,
     PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, QUEUE_COMPUTE_BIT, QUEUE_GRAPHICS_BIT,
     STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-    STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS, TRUE,
+    STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+    STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, SUCCESS, TRUE,
 };
 
 use crate::gpu::{Gpu, SplrId, SplrOptions, TexId, TexOptions};
@@ -77,6 +80,60 @@ impl Impl {
             }
             Err(e) => {
                 eprintln!("[!] gpu::vk: could not initialize library ({})", e);
+                None
+            }
+        }
+    }
+
+    /// Allocates device memory.
+    fn alloc(&self, req: &MemoryRequirements, cpu_visible: bool) -> Option<DeviceMemory> {
+        // This returns either an index in `self.mem_prop.memory_types`
+        // indicating a suitable memory type, or `None` if there is no
+        // memory type in `req.memory_type_bits` that matches a given
+        // `mem_prop_flags`.
+        let get_mem_type = |mem_prop_flags| {
+            for i in 0..self.mem_prop.memory_type_count {
+                if 1 << i & req.memory_type_bits != 0 {
+                    let flags = self.mem_prop.memory_types[i as usize].property_flags;
+                    if flags & mem_prop_flags == mem_prop_flags {
+                        return Some(i);
+                    }
+                }
+            }
+            None
+        };
+
+        // TODO: Consider using non-coherent memory.
+        let mut mem_prop_flags =
+            MEMORY_PROPERTY_DEVICE_LOCAL_BIT | MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        if cpu_visible {
+            mem_prop_flags |= MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        }
+
+        // Choose device-local memory/heap if possible.
+        let mem_type = if let Some(x) = get_mem_type(mem_prop_flags) {
+            x
+        } else if let Some(x) = get_mem_type(mem_prop_flags & !MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
+            x
+        } else {
+            return None;
+        };
+
+        let info = MemoryAllocateInfo {
+            s_type: STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            next: ptr::null(),
+            allocation_size: req.size,
+            memory_type_index: mem_type,
+        };
+        let mut mem = ptr::null_mut();
+        match unsafe {
+            self.dev_fp
+                .allocate_memory(self.dev, &info, ptr::null(), &mut mem)
+        } {
+            SUCCESS => Some(mem),
+            other => {
+                // TODO: Consider using `Result` rather than `Option`.
+                eprintln!("gpu::vk: could not allocate memory ({})", other);
                 None
             }
         }
