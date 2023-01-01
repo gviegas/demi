@@ -2,11 +2,13 @@
 
 use std::io;
 
-use crate::gpu::SplrOptions;
+use crate::gpu::{self, SplrId, SplrOptions};
 
 /// Sampler.
+#[derive(Debug)]
 pub struct Sampler {
-    // TODO
+    options: SplrOptions,
+    gid: SplrId,
 }
 
 /// Sampler wrapping modes.
@@ -42,7 +44,6 @@ pub struct Builder {
     options: SplrOptions,
 }
 
-#[allow(unused_variables)] // TODO
 impl Builder {
     /// Creates a new sampler builder.
     pub fn new() -> Self {
@@ -98,11 +99,21 @@ impl Builder {
         self
     }
 
+    /// Creates a sampler.
     pub fn create(&mut self) -> io::Result<Sampler> {
-        todo!();
+        Ok(Sampler {
+            options: self.options,
+            gid: gpu::create_sampler(&self.options)?,
+        })
     }
 
+    /// Creates a shadow sampler.
     pub fn create_shadow(&mut self, compare: Compare) -> io::Result<Sampler> {
-        todo!();
+        let mut options = self.options;
+        options.compare = Some(compare);
+        Ok(Sampler {
+            options,
+            gid: gpu::create_sampler(&options)?,
+        })
     }
 }

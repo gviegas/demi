@@ -149,3 +149,8 @@ pub fn create_cube(options: &TexOptions) -> io::Result<TexId> {
 pub fn create_rt(options: &TexOptions) -> io::Result<TexId> {
     get().create_rt(options)
 }
+
+/// Creates a texture sampler.
+pub fn create_sampler(options: &SplrOptions) -> io::Result<SplrId> {
+    get().create_sampler(options)
+}
