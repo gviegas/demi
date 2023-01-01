@@ -6,6 +6,7 @@ use std::fmt;
 use std::io;
 use std::ptr::NonNull;
 
+use crate::sampler::{Compare, Filter, Wrap};
 use crate::texture::Format;
 
 #[cfg(test)]
@@ -64,6 +65,21 @@ pub struct TexOptions {
     pub samples: u32,
 }
 
+/// GPU sampler.
+#[derive(Debug)]
+pub struct SplrId(Id);
+
+/// Options for sampler creation.
+#[derive(Copy, Clone, Debug)]
+pub struct SplrOptions {
+    pub u_wrap: Wrap,
+    pub v_wrap: Wrap,
+    pub w_wrap: Wrap,
+    pub mag_filter: Filter,
+    pub min_filter: (Filter, Option<Filter>),
+    pub compare: Option<Compare>,
+}
+
 /// Graphics back-end interface.
 ///
 /// NOTE: Keeping this trait private allow us to change it
@@ -96,6 +112,9 @@ trait Gpu: fmt::Display + fmt::Debug {
     /// It must also be valid for use as either a color or
     /// depth/stencil render target.
     fn create_rt(&self, options: &TexOptions) -> io::Result<TexId>;
+
+    /// Creates a texture sampler.
+    fn create_sampler(&self, options: &SplrOptions) -> io::Result<SplrId>;
 }
 
 /// Gets a reference to the `Gpu` implementation.

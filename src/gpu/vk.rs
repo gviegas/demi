@@ -15,7 +15,7 @@ use vk_sys::{
     STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO, SUCCESS, TRUE,
 };
 
-use crate::gpu::{Gpu, TexId, TexOptions};
+use crate::gpu::{Gpu, SplrId, SplrOptions, TexId, TexOptions};
 
 #[cfg(test)]
 mod tests;
@@ -94,6 +94,10 @@ impl Gpu for Impl {
     }
 
     fn create_rt(&self, options: &TexOptions) -> io::Result<TexId> {
+        todo!();
+    }
+
+    fn create_sampler(&self, options: &SplrOptions) -> io::Result<SplrId> {
         todo!();
     }
 }

@@ -8,6 +8,7 @@ pub struct Sampler {
 }
 
 /// Sampler wrapping modes.
+#[derive(Copy, Clone, Debug)]
 pub enum Wrap {
     Repeat,
     MirroredRepeat,
@@ -15,12 +16,14 @@ pub enum Wrap {
 }
 
 /// Sampler filters.
+#[derive(Copy, Clone, Debug)]
 pub enum Filter {
     Nearest,
     Linear,
 }
 
 /// Comparison functions.
+#[derive(Copy, Clone, Debug)]
 pub enum Compare {
     Never,
     Less,
