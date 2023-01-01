@@ -20,6 +20,18 @@ pub enum Filter {
     Linear,
 }
 
+/// Comparison functions.
+pub enum Compare {
+    Never,
+    Less,
+    LessEqual,
+    Equal,
+    NotEqual,
+    GreaterEqual,
+    Greater,
+    Always,
+}
+
 /// Sampler builder.
 pub struct Builder {
     // TODO
@@ -55,7 +67,7 @@ impl Builder {
         todo!();
     }
 
-    pub fn create_shadow(&mut self /* TODO: cmp op */) -> io::Result<Sampler> {
+    pub fn create_shadow(&mut self, compare: Compare) -> io::Result<Sampler> {
         todo!();
     }
 }
