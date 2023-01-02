@@ -4,7 +4,7 @@ use std::ffi::{c_char, c_void, CStr};
 use std::fmt;
 use std::io;
 use std::mem;
-use std::ptr;
+use std::ptr::{self, NonNull};
 
 use vk_sys::{
     ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceMemory, DeviceQueueCreateInfo,
@@ -19,7 +19,7 @@ use vk_sys::{
     STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, SUCCESS, TRUE,
 };
 
-use crate::gpu::{Gpu, SplrId, SplrOptions, TexId, TexOptions};
+use crate::gpu::{Gpu, Id, SplrId, SplrOptions, TexId, TexOptions};
 
 #[cfg(test)]
 mod tests;
@@ -28,6 +28,7 @@ mod conv;
 use conv::FmtConv;
 
 mod tex_impl;
+use tex_impl::TexImpl;
 
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
@@ -181,7 +182,10 @@ impl Impl {
 #[allow(unused_variables)] // TODO
 impl Gpu for Impl {
     fn create_2d(&self, options: &TexOptions) -> io::Result<TexId> {
-        todo!();
+        let tex_imp = TexImpl::new_2d(self, options)?;
+        let raw_ptr = Box::into_raw(Box::new(tex_imp)) as *mut ();
+        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
+        Ok(TexId(Id::Ptr(non_null)))
     }
 
     fn create_3d(&self, options: &TexOptions) -> io::Result<TexId> {

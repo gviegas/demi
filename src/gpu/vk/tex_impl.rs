@@ -5,11 +5,15 @@ use std::mem;
 use std::ptr;
 
 use vk_sys::{
-    DeviceMemory, Image, ImageCreateInfo, ERROR_OUT_OF_DEVICE_MEMORY, ERROR_OUT_OF_HOST_MEMORY,
-    STRUCTURE_TYPE_IMAGE_CREATE_INFO, SUCCESS,
+    DeviceMemory, Extent3d, Image, ImageCreateInfo, ERROR_OUT_OF_DEVICE_MEMORY,
+    ERROR_OUT_OF_HOST_MEMORY, IMAGE_LAYOUT_UNDEFINED, IMAGE_TILING_OPTIMAL, IMAGE_TYPE_2D,
+    IMAGE_USAGE_SAMPLED_BIT, IMAGE_USAGE_TRANSFER_DST_BIT, IMAGE_USAGE_TRANSFER_SRC_BIT,
+    SHARING_MODE_EXCLUSIVE, STRUCTURE_TYPE_IMAGE_CREATE_INFO, SUCCESS,
 };
 
+use crate::gpu::vk::conv;
 use crate::gpu::vk::Impl;
+use crate::gpu::TexOptions;
 
 /// Texture implementation.
 #[derive(Debug)]
@@ -61,6 +65,43 @@ impl TexImpl {
                     imp.dealloc(mem);
                     Err(io::Error::from(io::ErrorKind::Other))
                 }
+            }
+        }
+    }
+
+    /// Creates a new `TexImpl` to use as a 2D texture.
+    ///
+    /// It supports sampling in shaders and copying.
+    pub fn new_2d(imp: &Impl, options: &TexOptions) -> io::Result<Self> {
+        let info = ImageCreateInfo {
+            s_type: STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+            next: ptr::null(),
+            flags: 0,
+            image_type: IMAGE_TYPE_2D,
+            format: imp.fmt_conv.from_texture_format(options.format).0,
+            extent: Extent3d {
+                width: options.width,
+                height: options.height,
+                depth: 1,
+            },
+            mip_levels: options.levels, // TODO: May be incorrect.
+            array_layers: options.depth,
+            samples: conv::from_sample_count(options.samples), // TODO: May be unsupported.
+            tiling: IMAGE_TILING_OPTIMAL,
+            usage: IMAGE_USAGE_SAMPLED_BIT
+                | IMAGE_USAGE_TRANSFER_SRC_BIT
+                | IMAGE_USAGE_TRANSFER_DST_BIT,
+            sharing_mode: SHARING_MODE_EXCLUSIVE,
+            queue_family_index_count: 0,
+            queue_family_indices: ptr::null(),
+            initial_layout: IMAGE_LAYOUT_UNDEFINED,
+        };
+        let img = Self::create_image(imp, &info)?;
+        match Self::bind(imp, img) {
+            Ok(mem) => Ok(Self { img, mem }),
+            Err(e) => {
+                Self::destroy_image(imp, img);
+                Err(e)
             }
         }
     }
