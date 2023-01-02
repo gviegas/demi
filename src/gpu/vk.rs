@@ -24,6 +24,7 @@ use crate::gpu::{Gpu, SplrId, SplrOptions, TexId, TexOptions};
 #[cfg(test)]
 mod tests;
 
+mod conv;
 mod tex_impl;
 
 /// `Gpu` implementation using `vk_sys` as back-end.
