@@ -1,6 +1,6 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
-use std::ffi::{c_char, CStr};
+use std::ffi::{c_char, c_void, CStr};
 use std::fmt;
 use std::io;
 use std::mem;
@@ -10,11 +10,11 @@ use vk_sys::{
     ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceMemory, DeviceQueueCreateInfo,
     ExtensionProperties, Instance, InstanceCreateInfo, InstanceFp, MemoryAllocateInfo,
     MemoryRequirements, PhysicalDevice, PhysicalDeviceFeatures, PhysicalDeviceMemoryProperties,
-    PhysicalDeviceProperties, Queue, QueueFlags, API_VERSION_1_3, FALSE,
-    MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MEMORY_PROPERTY_HOST_COHERENT_BIT,
-    MEMORY_PROPERTY_HOST_VISIBLE_BIT, PHYSICAL_DEVICE_TYPE_DISCRETE_GPU,
-    PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, QUEUE_COMPUTE_BIT, QUEUE_GRAPHICS_BIT,
-    STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+    PhysicalDeviceProperties, Queue, QueueFlags, API_VERSION_1_3, ERROR_OUT_OF_DEVICE_MEMORY,
+    ERROR_OUT_OF_HOST_MEMORY, FALSE, MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+    MEMORY_PROPERTY_HOST_COHERENT_BIT, MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+    PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, QUEUE_COMPUTE_BIT,
+    QUEUE_GRAPHICS_BIT, STRUCTURE_TYPE_APPLICATION_INFO, STRUCTURE_TYPE_DEVICE_CREATE_INFO,
     STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
     STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, SUCCESS, TRUE,
 };
@@ -131,7 +131,8 @@ impl Impl {
                 .allocate_memory(self.dev, &info, ptr::null(), &mut mem)
         } {
             SUCCESS => Ok(mem),
-            other => Err(io::Error::from(io::ErrorKind::OutOfMemory)),
+            // TODO: Don't assume.
+            _ => Err(io::Error::from(io::ErrorKind::OutOfMemory)),
         }
     }
 
@@ -139,6 +140,32 @@ impl Impl {
     fn dealloc(&self, mem: DeviceMemory) {
         unsafe {
             self.dev_fp.free_memory(self.dev, mem, ptr::null());
+        }
+    }
+
+    /// Maps device memory.
+    ///
+    /// NOTE: The caller must ensure that `mem` is not currently mapped.
+    fn map(&self, mem: DeviceMemory, offset: u64, size: u64) -> io::Result<*mut c_void> {
+        let mut data = ptr::null_mut();
+        match unsafe {
+            self.dev_fp
+                .map_memory(self.dev, mem, offset, size, 0, &mut data)
+        } {
+            SUCCESS => Ok(data),
+            ERROR_OUT_OF_DEVICE_MEMORY | ERROR_OUT_OF_HOST_MEMORY => {
+                Err(io::Error::from(io::ErrorKind::OutOfMemory))
+            }
+            _ => Err(io::Error::from(io::ErrorKind::Other)),
+        }
+    }
+
+    /// Unmaps device memory.
+    ///
+    /// NOTE: The caller must ensure that `mem` is currently mapped.
+    fn unmap(&self, mem: DeviceMemory) {
+        unsafe {
+            self.dev_fp.unmap_memory(self.dev, mem);
         }
     }
 }
