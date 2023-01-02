@@ -3,10 +3,13 @@
 use std::mem;
 
 use vk_sys::{
-    ComponentMapping, FormatFeatureFlags, InstanceFp, PhysicalDevice, COMPONENT_SWIZZLE_A,
-    COMPONENT_SWIZZLE_B, COMPONENT_SWIZZLE_G, COMPONENT_SWIZZLE_IDENTITY, COMPONENT_SWIZZLE_ONE,
-    COMPONENT_SWIZZLE_R, FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    FORMAT_FEATURE_SAMPLED_IMAGE_BIT,
+    ComponentMapping, FormatFeatureFlags, ImageAspectFlags, InstanceFp, PhysicalDevice,
+    SampleCountFlagBits, COMPONENT_SWIZZLE_A, COMPONENT_SWIZZLE_B, COMPONENT_SWIZZLE_G,
+    COMPONENT_SWIZZLE_IDENTITY, COMPONENT_SWIZZLE_ONE, COMPONENT_SWIZZLE_R,
+    FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT, FORMAT_FEATURE_SAMPLED_IMAGE_BIT,
+    IMAGE_ASPECT_COLOR_BIT, IMAGE_ASPECT_DEPTH_BIT, IMAGE_ASPECT_STENCIL_BIT, SAMPLE_COUNT_16_BIT,
+    SAMPLE_COUNT_1_BIT, SAMPLE_COUNT_2_BIT, SAMPLE_COUNT_32_BIT, SAMPLE_COUNT_4_BIT,
+    SAMPLE_COUNT_64_BIT, SAMPLE_COUNT_8_BIT,
 };
 
 use crate::texture;
@@ -104,5 +107,37 @@ impl FmtConv {
             texture::Format::CompressedLdr => todo!(),
             texture::Format::CompressedHdr => todo!(),
         }
+    }
+}
+
+/// Converts from a sample count into a [`vk_sys::SampleCountFlagBits`].
+pub(super) fn from_sample_count(count: u32) -> SampleCountFlagBits {
+    match count {
+        0..=1 => SAMPLE_COUNT_1_BIT,
+        2 => SAMPLE_COUNT_2_BIT,
+        4 => SAMPLE_COUNT_4_BIT,
+        8 => SAMPLE_COUNT_8_BIT,
+        16 => SAMPLE_COUNT_16_BIT,
+        32 => SAMPLE_COUNT_32_BIT,
+        64.. => SAMPLE_COUNT_64_BIT,
+        _ => panic!("gpu::vk: unexpected sample count ({})", count),
+    }
+}
+
+/// Returns the [`vk_sys::ImageAspectFlags`] of a given
+/// [`texture::Format`].
+pub(super) fn aspect_of(fmt: texture::Format) -> ImageAspectFlags {
+    match fmt {
+        texture::Format::Xrgb8888
+        | texture::Format::Argb8888
+        | texture::Format::Rgba8888
+        | texture::Format::Bgra8888
+        | texture::Format::Rgba16161616
+        | texture::Format::GenericLdr
+        | texture::Format::GenericHdr
+        | texture::Format::CompressedLdr
+        | texture::Format::CompressedHdr => IMAGE_ASPECT_COLOR_BIT,
+        texture::Format::GenericDepth => IMAGE_ASPECT_DEPTH_BIT,
+        texture::Format::GenericDepthStencil => IMAGE_ASPECT_DEPTH_BIT | IMAGE_ASPECT_STENCIL_BIT,
     }
 }
