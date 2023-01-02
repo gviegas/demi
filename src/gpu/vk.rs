@@ -25,6 +25,8 @@ use crate::gpu::{Gpu, SplrId, SplrOptions, TexId, TexOptions};
 mod tests;
 
 mod conv;
+use conv::FmtConv;
+
 mod tex_impl;
 
 /// `Gpu` implementation using `vk_sys` as back-end.
@@ -41,6 +43,7 @@ pub(super) struct Impl {
     // TODO: Newer features (v1.1+).
     feat: PhysicalDeviceFeatures,
     mem_prop: PhysicalDeviceMemoryProperties,
+    fmt_conv: FmtConv,
     queue: (Queue, u32),
 }
 
@@ -67,6 +70,7 @@ impl Impl {
                     }
                 };
                 let mem_prop = memory_properties(phys_dev, &inst_fp);
+                let fmt_conv = FmtConv::new(phys_dev, &inst_fp);
                 let queue = (first_queue(queue_fam, dev, &dev_fp), queue_fam);
                 Some(Self {
                     inst,
@@ -78,6 +82,7 @@ impl Impl {
                     dev_prop,
                     feat,
                     mem_prop,
+                    fmt_conv,
                     queue,
                 })
             }
