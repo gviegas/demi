@@ -86,7 +86,7 @@ impl Impl {
     }
 
     /// Allocates device memory.
-    fn alloc(&self, req: &MemoryRequirements, cpu_visible: bool) -> Option<DeviceMemory> {
+    fn alloc(&self, req: &MemoryRequirements, cpu_visible: bool) -> io::Result<DeviceMemory> {
         // This returns either an index in `self.mem_prop.memory_types`
         // indicating a suitable memory type, or `None` if there is no
         // memory type in `req.memory_type_bits` that matches a given
@@ -116,7 +116,7 @@ impl Impl {
         } else if let Some(x) = get_mem_type(mem_prop_flags & !MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
             x
         } else {
-            return None;
+            return Err(io::Error::from(io::ErrorKind::Unsupported));
         };
 
         let info = MemoryAllocateInfo {
@@ -130,12 +130,15 @@ impl Impl {
             self.dev_fp
                 .allocate_memory(self.dev, &info, ptr::null(), &mut mem)
         } {
-            SUCCESS => Some(mem),
-            other => {
-                // TODO: Consider using `Result` rather than `Option`.
-                eprintln!("gpu::vk: could not allocate memory ({})", other);
-                None
-            }
+            SUCCESS => Ok(mem),
+            other => Err(io::Error::from(io::ErrorKind::OutOfMemory)),
+        }
+    }
+
+    /// Frees device memory.
+    fn dealloc(&self, mem: DeviceMemory) {
+        unsafe {
+            self.dev_fp.free_memory(self.dev, mem, ptr::null());
         }
     }
 }
