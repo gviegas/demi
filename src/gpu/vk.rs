@@ -24,6 +24,8 @@ use crate::gpu::{Gpu, SplrId, SplrOptions, TexId, TexOptions};
 #[cfg(test)]
 mod tests;
 
+mod tex_impl;
+
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
 pub(super) struct Impl {
