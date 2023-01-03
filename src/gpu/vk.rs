@@ -30,6 +30,8 @@ use conv::FmtConv;
 mod tex_impl;
 use tex_impl::TexImpl;
 
+mod splr_impl;
+
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
 pub(super) struct Impl {
