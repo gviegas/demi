@@ -196,7 +196,10 @@ impl Gpu for Impl {
     }
 
     fn create_cube(&self, options: &TexOptions) -> io::Result<TexId> {
-        todo!();
+        let tex_imp = TexImpl::new_cube(self, options)?;
+        let raw_ptr = Box::into_raw(Box::new(tex_imp)) as *mut ();
+        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
+        Ok(TexId(Id::Ptr(non_null)))
     }
 
     fn create_rt(&self, options: &TexOptions) -> io::Result<TexId> {
