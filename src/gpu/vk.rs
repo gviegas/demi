@@ -154,7 +154,8 @@ impl Impl {
 
     /// Maps device memory.
     ///
-    /// NOTE: The caller must ensure that `mem` is not currently mapped.
+    /// NOTE: The caller must ensure that `mem` is not currently mapped
+    /// and that it supports CPU access.
     fn map(&self, mem: DeviceMemory, offset: u64, size: u64) -> io::Result<*mut c_void> {
         let mut data = ptr::null_mut();
         match unsafe {
@@ -203,7 +204,10 @@ impl Gpu for Impl {
     }
 
     fn create_rt(&self, options: &TexOptions) -> io::Result<TexId> {
-        todo!();
+        let tex_imp = TexImpl::new_rt(self, options)?;
+        let raw_ptr = Box::into_raw(Box::new(tex_imp)) as *mut ();
+        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
+        Ok(TexId(Id::Ptr(non_null)))
     }
 
     fn create_sampler(&self, options: &SplrOptions) -> io::Result<SplrId> {
