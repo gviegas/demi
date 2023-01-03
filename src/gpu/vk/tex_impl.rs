@@ -7,8 +7,9 @@ use std::ptr;
 use vk_sys::{
     DeviceMemory, Extent3d, Image, ImageCreateInfo, ERROR_OUT_OF_DEVICE_MEMORY,
     ERROR_OUT_OF_HOST_MEMORY, IMAGE_LAYOUT_UNDEFINED, IMAGE_TILING_OPTIMAL, IMAGE_TYPE_2D,
-    IMAGE_USAGE_SAMPLED_BIT, IMAGE_USAGE_TRANSFER_DST_BIT, IMAGE_USAGE_TRANSFER_SRC_BIT,
-    SHARING_MODE_EXCLUSIVE, STRUCTURE_TYPE_IMAGE_CREATE_INFO, SUCCESS,
+    IMAGE_TYPE_3D, IMAGE_USAGE_SAMPLED_BIT, IMAGE_USAGE_TRANSFER_DST_BIT,
+    IMAGE_USAGE_TRANSFER_SRC_BIT, SAMPLE_COUNT_1_BIT, SHARING_MODE_EXCLUSIVE,
+    STRUCTURE_TYPE_IMAGE_CREATE_INFO, SUCCESS,
 };
 
 use crate::gpu::vk::conv;
@@ -87,6 +88,43 @@ impl TexImpl {
             mip_levels: options.levels, // TODO: May be incorrect.
             array_layers: options.depth,
             samples: conv::from_sample_count(options.samples), // TODO: May be unsupported.
+            tiling: IMAGE_TILING_OPTIMAL,
+            usage: IMAGE_USAGE_SAMPLED_BIT
+                | IMAGE_USAGE_TRANSFER_SRC_BIT
+                | IMAGE_USAGE_TRANSFER_DST_BIT,
+            sharing_mode: SHARING_MODE_EXCLUSIVE,
+            queue_family_index_count: 0,
+            queue_family_indices: ptr::null(),
+            initial_layout: IMAGE_LAYOUT_UNDEFINED,
+        };
+        let img = Self::create_image(imp, &info)?;
+        match Self::bind(imp, img) {
+            Ok(mem) => Ok(Self { img, mem }),
+            Err(e) => {
+                Self::destroy_image(imp, img);
+                Err(e)
+            }
+        }
+    }
+
+    /// Creates a new `TexImpl` to use as a 3D texture.
+    ///
+    /// It supports sampling in shaders and copying.
+    pub fn new_3d(imp: &Impl, options: &TexOptions) -> io::Result<Self> {
+        let info = ImageCreateInfo {
+            s_type: STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+            next: ptr::null(),
+            flags: 0,
+            image_type: IMAGE_TYPE_3D,
+            format: imp.fmt_conv.from_texture_format(options.format).0,
+            extent: Extent3d {
+                width: options.width,
+                height: options.height,
+                depth: options.depth,
+            },
+            mip_levels: options.levels, // TODO: May be incorrect.
+            array_layers: 1,
+            samples: SAMPLE_COUNT_1_BIT,
             tiling: IMAGE_TILING_OPTIMAL,
             usage: IMAGE_USAGE_SAMPLED_BIT
                 | IMAGE_USAGE_TRANSFER_SRC_BIT
