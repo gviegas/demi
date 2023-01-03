@@ -236,3 +236,140 @@ impl TexImpl {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::TexImpl;
+    use crate::gpu::{self, Id, TexId, TexOptions};
+    use crate::texture;
+
+    #[test]
+    fn new() {
+        crate::init();
+
+        let from_id = |tex_id: TexId| {
+            let non_null = match tex_id.0 {
+                Id::Ptr(x) => x,
+                _ => unreachable!(),
+            };
+            let raw_ptr = non_null.as_ptr() as *mut TexImpl;
+            unsafe { Box::from_raw(raw_ptr) }
+        };
+        let assert = |tex_imp: &TexImpl| {
+            assert!(!vk_sys::is_null_handle(tex_imp.img));
+            assert!(!vk_sys::is_null_handle(tex_imp.mem));
+        };
+
+        // TODO: Need to destroy resources to avoid OOM errors.
+
+        // 2D layer=1 level=1 no MS.
+        let options = TexOptions {
+            format: texture::Format::Rgba8888,
+            width: 1024,
+            height: 1024,
+            depth: 1,
+            levels: 1,
+            samples: 1,
+        };
+        let tex_imp = from_id(gpu::create_2d(&options).unwrap());
+        assert(&tex_imp);
+
+        // 2D layer>1 level=1 no MS.
+        let options = TexOptions {
+            format: texture::Format::Xrgb8888,
+            width: 1024,
+            height: 1024,
+            depth: 16,
+            levels: 1,
+            samples: 1,
+        };
+        let tex_imp = from_id(gpu::create_2d(&options).unwrap());
+        assert(&tex_imp);
+
+        // 2D layer>1 level>1 no MS.
+        let options = TexOptions {
+            format: texture::Format::Bgra8888,
+            width: 512,
+            height: 512,
+            depth: 3,
+            levels: 10,
+            samples: 1,
+        };
+        let tex_imp = from_id(gpu::create_2d(&options).unwrap());
+        assert(&tex_imp);
+
+        // 3D level=1.
+        let options = TexOptions {
+            format: texture::Format::Rgba8888,
+            width: 512,
+            height: 512,
+            depth: 64,
+            levels: 1,
+            samples: 1,
+        };
+        let tex_imp = from_id(gpu::create_3d(&options).unwrap());
+        assert(&tex_imp);
+
+        // Cube layer=1(6) level=1 no MS.
+        let options = TexOptions {
+            format: texture::Format::Argb8888,
+            width: 640,
+            height: 640,
+            depth: 6,
+            levels: 1,
+            samples: 1,
+        };
+        let tex_imp = from_id(gpu::create_cube(&options).unwrap());
+        assert(&tex_imp);
+
+        // Color (LDR) layer=1 4x MS.
+        let options = TexOptions {
+            format: texture::Format::GenericLdr,
+            width: 1280,
+            height: 720,
+            depth: 1,
+            levels: 1,
+            samples: 4,
+        };
+        let tex_imp = from_id(gpu::create_rt(&options).unwrap());
+        assert(&tex_imp);
+
+        // Color (HDR) layer=1 4x MS.
+        let options = TexOptions {
+            format: texture::Format::GenericHdr,
+            width: 1920,
+            height: 1080,
+            depth: 1,
+            levels: 1,
+            samples: 4,
+        };
+        let tex_imp = from_id(gpu::create_rt(&options).unwrap());
+        assert(&tex_imp);
+
+        // Depth layer=1 no MS.
+        let options = TexOptions {
+            format: texture::Format::GenericDepth,
+            width: 1600,
+            height: 900,
+            depth: 1,
+            levels: 1,
+            samples: 4,
+        };
+        let tex_imp = from_id(gpu::create_rt(&options).unwrap());
+        assert(&tex_imp);
+
+        // Depth/stencil layer=1 no MS.
+        let options = TexOptions {
+            format: texture::Format::GenericDepthStencil,
+            width: 1280,
+            height: 800,
+            depth: 1,
+            levels: 1,
+            samples: 4,
+        };
+        let tex_imp = from_id(gpu::create_rt(&options).unwrap());
+        assert(&tex_imp);
+
+        crate::shutdown();
+    }
+}
