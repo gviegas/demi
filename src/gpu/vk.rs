@@ -134,7 +134,7 @@ impl Impl {
             allocation_size: req.size,
             memory_type_index: mem_type,
         };
-        let mut mem = ptr::null_mut();
+        let mut mem = vk_sys::null_handle();
         match unsafe {
             self.dev_fp
                 .allocate_memory(self.dev, &info, ptr::null(), &mut mem)

@@ -30,7 +30,7 @@ pub(super) struct TexImpl {
 impl TexImpl {
     /// Creates a [`vk_sys::Image`].
     fn create_image(imp: &Impl, info: &ImageCreateInfo) -> io::Result<Image> {
-        let mut img = ptr::null_mut();
+        let mut img = vk_sys::null_handle();
         match unsafe {
             imp.dev_fp
                 .create_image(imp.dev, info, ptr::null(), &mut img)
