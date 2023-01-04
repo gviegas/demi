@@ -3,15 +3,20 @@
 use std::mem;
 
 use vk_sys::{
-    ComponentMapping, FormatFeatureFlags, ImageAspectFlags, InstanceFp, PhysicalDevice,
-    SampleCountFlagBits, COMPONENT_SWIZZLE_A, COMPONENT_SWIZZLE_B, COMPONENT_SWIZZLE_G,
-    COMPONENT_SWIZZLE_IDENTITY, COMPONENT_SWIZZLE_ONE, COMPONENT_SWIZZLE_R,
-    FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT, FORMAT_FEATURE_SAMPLED_IMAGE_BIT,
-    IMAGE_ASPECT_COLOR_BIT, IMAGE_ASPECT_DEPTH_BIT, IMAGE_ASPECT_STENCIL_BIT, SAMPLE_COUNT_16_BIT,
-    SAMPLE_COUNT_1_BIT, SAMPLE_COUNT_2_BIT, SAMPLE_COUNT_32_BIT, SAMPLE_COUNT_4_BIT,
-    SAMPLE_COUNT_64_BIT, SAMPLE_COUNT_8_BIT,
+    CompareOp, ComponentMapping, FormatFeatureFlags, ImageAspectFlags, InstanceFp, PhysicalDevice,
+    SampleCountFlagBits, SamplerAddressMode, SamplerMipmapMode, COMPARE_OP_ALWAYS,
+    COMPARE_OP_EQUAL, COMPARE_OP_GREATER, COMPARE_OP_GREATER_OR_EQUAL, COMPARE_OP_LESS,
+    COMPARE_OP_LESS_OR_EQUAL, COMPARE_OP_NEVER, COMPARE_OP_NOT_EQUAL, COMPONENT_SWIZZLE_A,
+    COMPONENT_SWIZZLE_B, COMPONENT_SWIZZLE_G, COMPONENT_SWIZZLE_IDENTITY, COMPONENT_SWIZZLE_ONE,
+    COMPONENT_SWIZZLE_R, FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    FORMAT_FEATURE_SAMPLED_IMAGE_BIT, IMAGE_ASPECT_COLOR_BIT, IMAGE_ASPECT_DEPTH_BIT,
+    IMAGE_ASPECT_STENCIL_BIT, LOD_CLAMP_NONE, SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT, SAMPLER_ADDRESS_MODE_REPEAT, SAMPLER_MIPMAP_MODE_LINEAR,
+    SAMPLER_MIPMAP_MODE_NEAREST, SAMPLE_COUNT_16_BIT, SAMPLE_COUNT_1_BIT, SAMPLE_COUNT_2_BIT,
+    SAMPLE_COUNT_32_BIT, SAMPLE_COUNT_4_BIT, SAMPLE_COUNT_64_BIT, SAMPLE_COUNT_8_BIT,
 };
 
+use crate::sampler::{self, Compare, Wrap};
 use crate::texture;
 
 /// Format converter.
@@ -139,5 +144,59 @@ pub(super) fn aspect_of(fmt: texture::Format) -> ImageAspectFlags {
         | texture::Format::CompressedHdr => IMAGE_ASPECT_COLOR_BIT,
         texture::Format::GenericDepth => IMAGE_ASPECT_DEPTH_BIT,
         texture::Format::GenericDepthStencil => IMAGE_ASPECT_DEPTH_BIT | IMAGE_ASPECT_STENCIL_BIT,
+    }
+}
+
+/// Converts from a [`sampler::Wrap`] into a [`vk_sys::SamplerAddressMode`].
+pub(super) fn from_wrap_mode(wrap: Wrap) -> SamplerAddressMode {
+    match wrap {
+        Wrap::Repeat => SAMPLER_ADDRESS_MODE_REPEAT,
+        Wrap::MirroredRepeat => SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+        Wrap::ClampToEdge => SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    }
+}
+
+/// Converts from a magnification [`sampler::Filter`] into a
+/// [`vk_sys::Filter`].
+pub(super) fn from_mag_filter(filter: sampler::Filter) -> vk_sys::Filter {
+    match filter {
+        sampler::Filter::Nearest => vk_sys::FILTER_NEAREST,
+        sampler::Filter::Linear => vk_sys::FILTER_LINEAR,
+    }
+}
+
+/// Converts from a minification [`sampler::Filter`] pair into a tuple
+/// containing [`vk_sys::Filter`], [`vk_sys::SamplerMipmapMode`],
+/// min LOD and max LOD values.
+pub(super) fn from_min_filter(
+    filter: sampler::Filter,
+    mipmap: Option<sampler::Filter>,
+) -> (vk_sys::Filter, SamplerMipmapMode, f32, f32) {
+    let min = match filter {
+        sampler::Filter::Nearest => vk_sys::FILTER_NEAREST,
+        sampler::Filter::Linear => vk_sys::FILTER_LINEAR,
+    };
+    let (mip, max_lod) = if let Some(x) = mipmap {
+        match x {
+            sampler::Filter::Nearest => (SAMPLER_MIPMAP_MODE_NEAREST, LOD_CLAMP_NONE),
+            sampler::Filter::Linear => (SAMPLER_MIPMAP_MODE_LINEAR, LOD_CLAMP_NONE),
+        }
+    } else {
+        (SAMPLER_MIPMAP_MODE_NEAREST, 0.25)
+    };
+    (min, mip, 0.0, max_lod)
+}
+
+/// Converts from a [`sampler::Compare`] into a [`vk_sys::CompareOp`].
+pub(super) fn from_compare_fn(compare: Compare) -> CompareOp {
+    match compare {
+        Compare::Never => COMPARE_OP_NEVER,
+        Compare::Less => COMPARE_OP_LESS,
+        Compare::LessEqual => COMPARE_OP_LESS_OR_EQUAL,
+        Compare::Equal => COMPARE_OP_EQUAL,
+        Compare::NotEqual => COMPARE_OP_NOT_EQUAL,
+        Compare::GreaterEqual => COMPARE_OP_GREATER_OR_EQUAL,
+        Compare::Greater => COMPARE_OP_GREATER,
+        Compare::Always => COMPARE_OP_ALWAYS,
     }
 }
