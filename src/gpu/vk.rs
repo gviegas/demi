@@ -31,6 +31,7 @@ mod tex_impl;
 use tex_impl::TexImpl;
 
 mod splr_impl;
+use splr_impl::SplrImpl;
 
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
@@ -213,7 +214,10 @@ impl Gpu for Impl {
     }
 
     fn create_sampler(&self, options: &SplrOptions) -> io::Result<SplrId> {
-        todo!();
+        let splr_imp = SplrImpl::new(self, options)?;
+        let raw_ptr = Box::into_raw(Box::new(splr_imp)) as *mut ();
+        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
+        Ok(SplrId(Id::Ptr(non_null)))
     }
 }
 
