@@ -83,3 +83,77 @@ impl SplrImpl {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::SplrImpl;
+    use crate::gpu::{self, Id, SplrId, SplrOptions};
+    use crate::sampler::{Compare, Filter, Wrap};
+
+    #[test]
+    fn new() {
+        crate::init();
+
+        let from_id = |splr_id: SplrId| {
+            let non_null = match splr_id.0 {
+                Id::Ptr(x) => x,
+                _ => unreachable!(),
+            };
+            let raw_ptr = non_null.as_ptr() as *mut SplrImpl;
+            unsafe { Box::from_raw(raw_ptr) }
+        };
+        let assert = |splr_imp: &SplrImpl| {
+            assert!(!vk_sys::is_null_handle(splr_imp.splr));
+        };
+
+        // Default.
+        let options = SplrOptions {
+            u_wrap: Wrap::Repeat,
+            v_wrap: Wrap::Repeat,
+            w_wrap: Wrap::Repeat,
+            mag_filter: Filter::Nearest,
+            min_filter: (Filter::Nearest, Some(Filter::Nearest)),
+            compare: None,
+        };
+        let splr_imp = from_id(gpu::create_sampler(&options).unwrap());
+        assert(&splr_imp);
+
+        // Bilinear.
+        let options = SplrOptions {
+            u_wrap: Wrap::MirroredRepeat,
+            v_wrap: Wrap::MirroredRepeat,
+            w_wrap: Wrap::ClampToEdge,
+            mag_filter: Filter::Linear,
+            min_filter: (Filter::Linear, Some(Filter::Nearest)),
+            compare: None,
+        };
+        let splr_imp = from_id(gpu::create_sampler(&options).unwrap());
+        assert(&splr_imp);
+
+        // Trilinear.
+        let options = SplrOptions {
+            u_wrap: Wrap::Repeat,
+            v_wrap: Wrap::MirroredRepeat,
+            w_wrap: Wrap::ClampToEdge,
+            mag_filter: Filter::Linear,
+            min_filter: (Filter::Linear, Some(Filter::Linear)),
+            compare: None,
+        };
+        let splr_imp = from_id(gpu::create_sampler(&options).unwrap());
+        assert(&splr_imp);
+
+        // Shadow.
+        let options = SplrOptions {
+            u_wrap: Wrap::ClampToEdge,
+            v_wrap: Wrap::ClampToEdge,
+            w_wrap: Wrap::ClampToEdge,
+            mag_filter: Filter::Linear,
+            min_filter: (Filter::Linear, None),
+            compare: Some(Compare::Less),
+        };
+        let splr_imp = from_id(gpu::create_sampler(&options).unwrap());
+        assert(&splr_imp);
+
+        crate::shutdown();
+    }
+}
