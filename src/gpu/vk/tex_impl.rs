@@ -279,8 +279,6 @@ mod tests {
             assert!(!vk_sys::is_null_handle(tex_imp.mem));
         };
 
-        // TODO: Need to destroy resources to avoid OOM errors.
-
         // 2D layer=1 level=1 no MS.
         let options = TexOptions {
             format: texture::Format::Rgba8888,
@@ -292,6 +290,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         // 2D layer>1 level=1 no MS.
         let options = TexOptions {
@@ -304,6 +303,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         // 2D layer>1 level>1 no MS.
         let options = TexOptions {
@@ -316,6 +316,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         // 3D level=1.
         let options = TexOptions {
@@ -328,6 +329,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         // Cube layer=1(6) level=1 no MS.
         let options = TexOptions {
@@ -340,6 +342,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         // Color (LDR) layer=1 4x MS.
         let options = TexOptions {
@@ -352,6 +355,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         // Color (HDR) layer=1 4x MS.
         let options = TexOptions {
@@ -364,6 +368,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         // Depth layer=1 no MS.
         let options = TexOptions {
@@ -376,6 +381,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         // Depth/stencil layer=1 no MS.
         let options = TexOptions {
@@ -388,6 +394,7 @@ mod tests {
         };
         let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
+        gpu::drop_texture(&mut TexId::from(tex_imp));
 
         crate::shutdown();
     }
