@@ -11,6 +11,12 @@ pub struct Texture {
     gid: TexId,
 }
 
+impl Drop for Texture {
+    fn drop(&mut self) {
+        gpu::drop_texture(&mut self.gid);
+    }
+}
+
 /// Texture pixel formats.
 #[derive(Copy, Clone, Debug)]
 pub enum Format {
