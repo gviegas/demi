@@ -235,6 +235,12 @@ impl TexImpl {
             }
         }
     }
+
+    /// Destroys the `TexImpl`.
+    pub fn drop_with(self, imp: &Impl) {
+        Self::destroy_image(imp, self.img);
+        imp.dealloc(self.mem);
+    }
 }
 
 impl From<TexId> for Box<TexImpl> {

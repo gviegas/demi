@@ -4,6 +4,7 @@
 
 use std::fmt;
 use std::io;
+use std::mem;
 use std::ptr::NonNull;
 
 use crate::sampler::{Compare, Filter, Wrap};
@@ -162,6 +163,12 @@ pub fn create_cube(options: &TexOptions) -> io::Result<TexId> {
 /// Creates a render target texture.
 pub fn create_rt(options: &TexOptions) -> io::Result<TexId> {
     get().create_rt(options)
+}
+
+/// Notifies that `tex_id` will no longer be used.
+pub fn drop_texture(tex_id: &mut TexId) {
+    let tex_id = mem::replace(tex_id, TexId(Id::Num(0)));
+    get().drop_texture(tex_id);
 }
 
 /// Creates a texture sampler.

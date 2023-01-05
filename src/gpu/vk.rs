@@ -206,7 +206,8 @@ impl Gpu for Impl {
     }
 
     fn drop_texture(&self, tex_id: TexId) {
-        todo!();
+        let tex_imp: Box<TexImpl> = Box::from(tex_id);
+        tex_imp.drop_with(self);
     }
 
     fn create_sampler(&self, options: &SplrOptions) -> io::Result<SplrId> {
