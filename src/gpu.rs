@@ -113,8 +113,22 @@ trait Gpu: fmt::Display + fmt::Debug {
     /// depth/stencil render target.
     fn create_rt(&self, options: &TexOptions) -> io::Result<TexId>;
 
+    /// Notifies that `tex_id` will no longer be used.
+    ///
+    /// The implementation is free to discard or reuse its
+    /// resources.
+    fn drop_texture(&self, tex_id: TexId);
+
     /// Creates a texture sampler.
+    ///
+    /// This sampler must be valid for use with any `TexId`.
     fn create_sampler(&self, options: &SplrOptions) -> io::Result<SplrId>;
+
+    /// Notifies that `splr_id` will no longer be used.
+    ///
+    /// The implementation is free to discard or reuse its
+    /// resources.
+    fn drop_sampler(&self, splr_id: SplrId);
 }
 
 /// Gets a reference to the `Gpu` implementation.

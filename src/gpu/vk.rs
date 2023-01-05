@@ -213,11 +213,19 @@ impl Gpu for Impl {
         Ok(TexId(Id::Ptr(non_null)))
     }
 
+    fn drop_texture(&self, tex_id: TexId) {
+        todo!();
+    }
+
     fn create_sampler(&self, options: &SplrOptions) -> io::Result<SplrId> {
         let splr_imp = SplrImpl::new(self, options)?;
         let raw_ptr = Box::into_raw(Box::new(splr_imp)) as *mut ();
         let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
         Ok(SplrId(Id::Ptr(non_null)))
+    }
+
+    fn drop_sampler(&self, splr_id: SplrId) {
+        todo!();
     }
 }
 
