@@ -1,7 +1,7 @@
 // Copyright 2023 Gustavo C. Viegas. All rights reserved.
 
 use std::io;
-use std::ptr;
+use std::ptr::{self, NonNull};
 
 use vk_sys::{
     Sampler, SamplerCreateInfo, BORDER_COLOR_FLOAT_OPAQUE_BLACK, COMPARE_OP_NEVER,
@@ -11,7 +11,7 @@ use vk_sys::{
 
 use crate::gpu::vk::conv;
 use crate::gpu::vk::Impl;
-use crate::gpu::SplrOptions;
+use crate::gpu::{Id, SplrId, SplrOptions};
 
 /// Sampler implementation.
 #[derive(Debug)]
@@ -84,6 +84,27 @@ impl SplrImpl {
     }
 }
 
+impl From<SplrId> for Box<SplrImpl> {
+    /// Converts from a `SplrId` into a boxed `SplrImpl`.
+    fn from(splr_id: SplrId) -> Self {
+        let non_null = match splr_id.0 {
+            Id::Ptr(x) => x,
+            _ => unreachable!(),
+        };
+        let raw_ptr = non_null.as_ptr() as *mut SplrImpl;
+        unsafe { Box::from_raw(raw_ptr) }
+    }
+}
+
+impl From<Box<SplrImpl>> for SplrId {
+    /// Converts from a boxed `SplrImpl` into a `SplrId`.
+    fn from(splr_imp: Box<SplrImpl>) -> Self {
+        let raw_ptr = Box::into_raw(splr_imp) as *mut ();
+        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
+        SplrId(Id::Ptr(non_null))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::SplrImpl;
@@ -94,14 +115,6 @@ mod tests {
     fn new() {
         crate::init();
 
-        let from_id = |splr_id: SplrId| {
-            let non_null = match splr_id.0 {
-                Id::Ptr(x) => x,
-                _ => unreachable!(),
-            };
-            let raw_ptr = non_null.as_ptr() as *mut SplrImpl;
-            unsafe { Box::from_raw(raw_ptr) }
-        };
         let assert = |splr_imp: &SplrImpl| {
             assert!(!vk_sys::is_null_handle(splr_imp.splr));
         };
@@ -115,7 +128,7 @@ mod tests {
             min_filter: (Filter::Nearest, Some(Filter::Nearest)),
             compare: None,
         };
-        let splr_imp = from_id(gpu::create_sampler(&options).unwrap());
+        let splr_imp = Box::<SplrImpl>::from(gpu::create_sampler(&options).unwrap());
         assert(&splr_imp);
 
         // Bilinear.
@@ -127,7 +140,7 @@ mod tests {
             min_filter: (Filter::Linear, Some(Filter::Nearest)),
             compare: None,
         };
-        let splr_imp = from_id(gpu::create_sampler(&options).unwrap());
+        let splr_imp = Box::<SplrImpl>::from(gpu::create_sampler(&options).unwrap());
         assert(&splr_imp);
 
         // Trilinear.
@@ -139,7 +152,7 @@ mod tests {
             min_filter: (Filter::Linear, Some(Filter::Linear)),
             compare: None,
         };
-        let splr_imp = from_id(gpu::create_sampler(&options).unwrap());
+        let splr_imp = Box::<SplrImpl>::from(gpu::create_sampler(&options).unwrap());
         assert(&splr_imp);
 
         // Shadow.
@@ -151,7 +164,7 @@ mod tests {
             min_filter: (Filter::Linear, None),
             compare: Some(Compare::Less),
         };
-        let splr_imp = from_id(gpu::create_sampler(&options).unwrap());
+        let splr_imp = Box::<SplrImpl>::from(gpu::create_sampler(&options).unwrap());
         assert(&splr_imp);
 
         crate::shutdown();
