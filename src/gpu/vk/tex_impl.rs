@@ -2,7 +2,7 @@
 
 use std::io;
 use std::mem;
-use std::ptr;
+use std::ptr::{self, NonNull};
 
 use vk_sys::{
     DeviceMemory, Extent3d, Image, ImageCreateInfo, ERROR_OUT_OF_DEVICE_MEMORY,
@@ -16,7 +16,7 @@ use vk_sys::{
 
 use crate::gpu::vk::conv;
 use crate::gpu::vk::Impl;
-use crate::gpu::TexOptions;
+use crate::gpu::{Id, TexId, TexOptions};
 
 /// Texture implementation.
 #[derive(Debug)]
@@ -237,6 +237,27 @@ impl TexImpl {
     }
 }
 
+impl From<TexId> for Box<TexImpl> {
+    /// Converts from a `TexId` into a boxed `TexImpl`.
+    fn from(tex_id: TexId) -> Self {
+        let non_null = match tex_id.0 {
+            Id::Ptr(x) => x,
+            _ => unreachable!(),
+        };
+        let raw_ptr = non_null.as_ptr() as *mut TexImpl;
+        unsafe { Box::from_raw(raw_ptr) }
+    }
+}
+
+impl From<Box<TexImpl>> for TexId {
+    /// Converts from a boxed `TexImpl` into a `TexId`.
+    fn from(tex_imp: Box<TexImpl>) -> Self {
+        let raw_ptr = Box::into_raw(tex_imp) as *mut ();
+        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
+        TexId(Id::Ptr(non_null))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::TexImpl;
@@ -247,14 +268,6 @@ mod tests {
     fn new() {
         crate::init();
 
-        let from_id = |tex_id: TexId| {
-            let non_null = match tex_id.0 {
-                Id::Ptr(x) => x,
-                _ => unreachable!(),
-            };
-            let raw_ptr = non_null.as_ptr() as *mut TexImpl;
-            unsafe { Box::from_raw(raw_ptr) }
-        };
         let assert = |tex_imp: &TexImpl| {
             assert!(!vk_sys::is_null_handle(tex_imp.img));
             assert!(!vk_sys::is_null_handle(tex_imp.mem));
@@ -271,7 +284,7 @@ mod tests {
             levels: 1,
             samples: 1,
         };
-        let tex_imp = from_id(gpu::create_2d(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         // 2D layer>1 level=1 no MS.
@@ -283,7 +296,7 @@ mod tests {
             levels: 1,
             samples: 1,
         };
-        let tex_imp = from_id(gpu::create_2d(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         // 2D layer>1 level>1 no MS.
@@ -295,7 +308,7 @@ mod tests {
             levels: 10,
             samples: 1,
         };
-        let tex_imp = from_id(gpu::create_2d(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         // 3D level=1.
@@ -307,7 +320,7 @@ mod tests {
             levels: 1,
             samples: 1,
         };
-        let tex_imp = from_id(gpu::create_3d(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         // Cube layer=1(6) level=1 no MS.
@@ -319,7 +332,7 @@ mod tests {
             levels: 1,
             samples: 1,
         };
-        let tex_imp = from_id(gpu::create_cube(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         // Color (LDR) layer=1 4x MS.
@@ -331,7 +344,7 @@ mod tests {
             levels: 1,
             samples: 4,
         };
-        let tex_imp = from_id(gpu::create_rt(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         // Color (HDR) layer=1 4x MS.
@@ -343,7 +356,7 @@ mod tests {
             levels: 1,
             samples: 4,
         };
-        let tex_imp = from_id(gpu::create_rt(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         // Depth layer=1 no MS.
@@ -355,7 +368,7 @@ mod tests {
             levels: 1,
             samples: 4,
         };
-        let tex_imp = from_id(gpu::create_rt(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         // Depth/stencil layer=1 no MS.
@@ -367,7 +380,7 @@ mod tests {
             levels: 1,
             samples: 4,
         };
-        let tex_imp = from_id(gpu::create_rt(&options).unwrap());
+        let tex_imp = Box::<TexImpl>::from(gpu::create_rt(&options).unwrap());
         assert(&tex_imp);
 
         crate::shutdown();

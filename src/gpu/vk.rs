@@ -186,31 +186,23 @@ impl Impl {
 #[allow(unused_variables)] // TODO
 impl Gpu for Impl {
     fn create_2d(&self, options: &TexOptions) -> io::Result<TexId> {
-        let tex_imp = TexImpl::new_2d(self, options)?;
-        let raw_ptr = Box::into_raw(Box::new(tex_imp)) as *mut ();
-        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
-        Ok(TexId(Id::Ptr(non_null)))
+        let tex_imp = Box::new(TexImpl::new_2d(self, options)?);
+        Ok(TexId::from(tex_imp))
     }
 
     fn create_3d(&self, options: &TexOptions) -> io::Result<TexId> {
-        let tex_imp = TexImpl::new_3d(self, options)?;
-        let raw_ptr = Box::into_raw(Box::new(tex_imp)) as *mut ();
-        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
-        Ok(TexId(Id::Ptr(non_null)))
+        let tex_imp = Box::new(TexImpl::new_3d(self, options)?);
+        Ok(TexId::from(tex_imp))
     }
 
     fn create_cube(&self, options: &TexOptions) -> io::Result<TexId> {
-        let tex_imp = TexImpl::new_cube(self, options)?;
-        let raw_ptr = Box::into_raw(Box::new(tex_imp)) as *mut ();
-        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
-        Ok(TexId(Id::Ptr(non_null)))
+        let tex_imp = Box::new(TexImpl::new_cube(self, options)?);
+        Ok(TexId::from(tex_imp))
     }
 
     fn create_rt(&self, options: &TexOptions) -> io::Result<TexId> {
-        let tex_imp = TexImpl::new_rt(self, options)?;
-        let raw_ptr = Box::into_raw(Box::new(tex_imp)) as *mut ();
-        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
-        Ok(TexId(Id::Ptr(non_null)))
+        let tex_imp = Box::new(TexImpl::new_rt(self, options)?);
+        Ok(TexId::from(tex_imp))
     }
 
     fn drop_texture(&self, tex_id: TexId) {
