@@ -82,6 +82,11 @@ impl SplrImpl {
             splr: Self::create_sampler(imp, &info)?,
         })
     }
+
+    /// Destroys the `SplrImpl`.
+    pub fn drop_with(self, imp: &Impl) {
+        Self::destroy_sampler(imp, self.splr)
+    }
 }
 
 impl From<SplrId> for Box<SplrImpl> {

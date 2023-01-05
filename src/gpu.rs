@@ -175,3 +175,9 @@ pub fn drop_texture(tex_id: &mut TexId) {
 pub fn create_sampler(options: &SplrOptions) -> io::Result<SplrId> {
     get().create_sampler(options)
 }
+
+/// Notifies that `splr_id` will no longer be used.
+pub fn drop_sampler(splr_id: &mut SplrId) {
+    let splr_id = mem::replace(splr_id, SplrId(Id::Num(0)));
+    get().drop_sampler(splr_id);
+}

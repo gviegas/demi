@@ -4,7 +4,7 @@ use std::ffi::{c_char, c_void, CStr};
 use std::fmt;
 use std::io;
 use std::mem;
-use std::ptr::{self, NonNull};
+use std::ptr;
 
 use vk_sys::{
     ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceMemory, DeviceQueueCreateInfo,
@@ -19,7 +19,7 @@ use vk_sys::{
     STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, SUCCESS, TRUE,
 };
 
-use crate::gpu::{Gpu, Id, SplrId, SplrOptions, TexId, TexOptions};
+use crate::gpu::{Gpu, SplrId, SplrOptions, TexId, TexOptions};
 
 #[cfg(test)]
 mod tests;
@@ -183,7 +183,6 @@ impl Impl {
     }
 }
 
-#[allow(unused_variables)] // TODO
 impl Gpu for Impl {
     fn create_2d(&self, options: &TexOptions) -> io::Result<TexId> {
         let tex_imp = Box::new(TexImpl::new_2d(self, options)?);
@@ -216,7 +215,8 @@ impl Gpu for Impl {
     }
 
     fn drop_sampler(&self, splr_id: SplrId) {
-        todo!();
+        let splr_imp: Box<SplrImpl> = Box::from(splr_id);
+        splr_imp.drop_with(self);
     }
 }
 
