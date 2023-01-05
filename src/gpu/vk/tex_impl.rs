@@ -19,6 +19,8 @@ use crate::gpu::vk::Impl;
 use crate::gpu::{Id, TexId, TexOptions};
 
 /// Texture implementation.
+///
+/// This type represents a [`TexId`].
 #[derive(Debug)]
 pub(super) struct TexImpl {
     img: Image,
@@ -74,7 +76,7 @@ impl TexImpl {
         }
     }
 
-    /// Creates a new `TexImpl` to use as a 2D texture.
+    /// Creates a new [`TexImpl`] to use as a 2D texture.
     ///
     /// It supports sampling in shaders and copying.
     pub fn new_2d(imp: &Impl, options: &TexOptions) -> io::Result<Self> {
@@ -111,7 +113,7 @@ impl TexImpl {
         }
     }
 
-    /// Creates a new `TexImpl` to use as a 3D texture.
+    /// Creates a new [`TexImpl`] to use as a 3D texture.
     ///
     /// It supports sampling in shaders and copying.
     pub fn new_3d(imp: &Impl, options: &TexOptions) -> io::Result<Self> {
@@ -148,7 +150,7 @@ impl TexImpl {
         }
     }
 
-    /// Creates a new `TexImpl` to use as a cube texture.
+    /// Creates a new [`TexImpl`] to use as a cube texture.
     ///
     /// It supports sampling in shaders and copying.
     pub fn new_cube(imp: &Impl, options: &TexOptions) -> io::Result<Self> {
@@ -186,7 +188,7 @@ impl TexImpl {
         }
     }
 
-    /// Creates a new `TexImpl` to use as a render target texture.
+    /// Creates a new [`TexImpl`] to use as a render target texture.
     ///
     /// It supports sampling in shaders, copying and use as
     /// either color or depth/stencil attachment, depending
@@ -236,7 +238,7 @@ impl TexImpl {
         }
     }
 
-    /// Destroys the `TexImpl`.
+    /// Destroys the [`TexImpl`].
     pub fn drop_with(self, imp: &Impl) {
         Self::destroy_image(imp, self.img);
         imp.dealloc(self.mem);
@@ -244,7 +246,7 @@ impl TexImpl {
 }
 
 impl From<TexId> for Box<TexImpl> {
-    /// Converts from a `TexId` into a boxed `TexImpl`.
+    /// Converts from a [`TexId`] into a boxed [`TexImpl`].
     fn from(tex_id: TexId) -> Self {
         let non_null = match tex_id.0 {
             Id::Ptr(x) => x,
@@ -256,7 +258,7 @@ impl From<TexId> for Box<TexImpl> {
 }
 
 impl From<Box<TexImpl>> for TexId {
-    /// Converts from a boxed `TexImpl` into a `TexId`.
+    /// Converts from a boxed [`TexImpl`] into a [`TexId`].
     fn from(tex_imp: Box<TexImpl>) -> Self {
         let raw_ptr = Box::into_raw(tex_imp) as *mut ();
         let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
@@ -267,7 +269,7 @@ impl From<Box<TexImpl>> for TexId {
 #[cfg(test)]
 mod tests {
     use super::TexImpl;
-    use crate::gpu::{self, Id, TexId, TexOptions};
+    use crate::gpu::{self, TexId, TexOptions};
     use crate::texture;
 
     #[test]

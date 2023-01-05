@@ -14,6 +14,8 @@ use crate::gpu::vk::Impl;
 use crate::gpu::{Id, SplrId, SplrOptions};
 
 /// Sampler implementation.
+///
+/// This type represents a [`SplrId`].
 #[derive(Debug)]
 pub(super) struct SplrImpl {
     splr: Sampler,
@@ -42,7 +44,7 @@ impl SplrImpl {
         }
     }
 
-    /// Creates a new `SplrImpl`.
+    /// Creates a new [`SplrImpl`].
     ///
     /// The value of `options.compare` is used to determine whether
     /// depth comparison is enabled or not.
@@ -83,14 +85,14 @@ impl SplrImpl {
         })
     }
 
-    /// Destroys the `SplrImpl`.
+    /// Destroys the [`SplrImpl`].
     pub fn drop_with(self, imp: &Impl) {
         Self::destroy_sampler(imp, self.splr)
     }
 }
 
 impl From<SplrId> for Box<SplrImpl> {
-    /// Converts from a `SplrId` into a boxed `SplrImpl`.
+    /// Converts from a [`SplrId`] into a boxed [`SplrImpl`].
     fn from(splr_id: SplrId) -> Self {
         let non_null = match splr_id.0 {
             Id::Ptr(x) => x,
@@ -102,7 +104,7 @@ impl From<SplrId> for Box<SplrImpl> {
 }
 
 impl From<Box<SplrImpl>> for SplrId {
-    /// Converts from a boxed `SplrImpl` into a `SplrId`.
+    /// Converts from a boxed [`SplrImpl`] into a [`SplrId`].
     fn from(splr_imp: Box<SplrImpl>) -> Self {
         let raw_ptr = Box::into_raw(splr_imp) as *mut ();
         let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
@@ -113,7 +115,7 @@ impl From<Box<SplrImpl>> for SplrId {
 #[cfg(test)]
 mod tests {
     use super::SplrImpl;
-    use crate::gpu::{self, Id, SplrId, SplrOptions};
+    use crate::gpu::{self, SplrId, SplrOptions};
     use crate::sampler::{Compare, Filter, Wrap};
 
     #[test]
