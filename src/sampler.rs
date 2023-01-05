@@ -11,6 +11,12 @@ pub struct Sampler {
     gid: SplrId,
 }
 
+impl Drop for Sampler {
+    fn drop(&mut self) {
+        gpu::drop_sampler(&mut self.gid)
+    }
+}
+
 /// Sampler wrapping modes.
 #[derive(Copy, Clone, Debug)]
 pub enum Wrap {
