@@ -135,6 +135,7 @@ mod tests {
         };
         let splr_imp = Box::<SplrImpl>::from(gpu::create_sampler(&options).unwrap());
         assert(&splr_imp);
+        gpu::drop_sampler(&mut SplrId::from(splr_imp));
 
         // Bilinear.
         let options = SplrOptions {
@@ -147,6 +148,7 @@ mod tests {
         };
         let splr_imp = Box::<SplrImpl>::from(gpu::create_sampler(&options).unwrap());
         assert(&splr_imp);
+        gpu::drop_sampler(&mut SplrId::from(splr_imp));
 
         // Trilinear.
         let options = SplrOptions {
@@ -159,6 +161,7 @@ mod tests {
         };
         let splr_imp = Box::<SplrImpl>::from(gpu::create_sampler(&options).unwrap());
         assert(&splr_imp);
+        gpu::drop_sampler(&mut SplrId::from(splr_imp));
 
         // Shadow.
         let options = SplrOptions {
@@ -171,6 +174,7 @@ mod tests {
         };
         let splr_imp = Box::<SplrImpl>::from(gpu::create_sampler(&options).unwrap());
         assert(&splr_imp);
+        gpu::drop_sampler(&mut SplrId::from(splr_imp));
 
         crate::shutdown();
     }
