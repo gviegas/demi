@@ -6,8 +6,10 @@ use std::mem;
 use std::ptr;
 
 use vk_sys::{
-    Buffer, BufferCreateInfo, DeviceMemory, ERROR_OUT_OF_DEVICE_MEMORY, ERROR_OUT_OF_HOST_MEMORY,
-    SUCCESS,
+    Buffer, BufferCreateInfo, DeviceMemory, BUFFER_USAGE_INDEX_BUFFER_BIT,
+    BUFFER_USAGE_TRANSFER_DST_BIT, BUFFER_USAGE_TRANSFER_SRC_BIT, BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    BUFFER_USAGE_VERTEX_BUFFER_BIT, ERROR_OUT_OF_DEVICE_MEMORY, ERROR_OUT_OF_HOST_MEMORY,
+    SHARING_MODE_EXCLUSIVE, STRUCTURE_TYPE_BUFFER_CREATE_INFO, SUCCESS, WHOLE_SIZE,
 };
 
 use crate::gpu::vk::Impl;
@@ -20,6 +22,7 @@ use crate::gpu::{BufId, BufOptions, Id};
 pub(super) struct BufImpl {
     buf: Buffer,
     mem: DeviceMemory,
+    cpu_visible: bool,
     data: *mut c_void,
 }
 
@@ -66,6 +69,101 @@ impl BufImpl {
                     imp.dealloc(mem);
                     Err(io::Error::from(io::ErrorKind::Other))
                 }
+            }
+        }
+    }
+
+    /// Creates a new [`BufImpl`] to use as a vertex buffer.
+    ///
+    /// It supports storage of vertices/indices and copying.
+    pub fn new_vb(imp: &Impl, options: &BufOptions) -> io::Result<BufImpl> {
+        let info = BufferCreateInfo {
+            s_type: STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            next: ptr::null(),
+            flags: 0,
+            size: options.size,
+            usage: BUFFER_USAGE_VERTEX_BUFFER_BIT
+                | BUFFER_USAGE_INDEX_BUFFER_BIT
+                | BUFFER_USAGE_TRANSFER_SRC_BIT
+                | BUFFER_USAGE_TRANSFER_DST_BIT,
+            sharing_mode: SHARING_MODE_EXCLUSIVE,
+            queue_family_index_count: 0,
+            queue_family_indices: ptr::null(),
+        };
+        let buf = Self::create_buffer(imp, &info)?;
+        match Self::bind(imp, buf, options.cpu_visible) {
+            Ok(mem) => {
+                let data = if options.cpu_visible {
+                    // TODO: Consider mapping the memory lazily
+                    // and unmapping it when needed.
+                    match imp.map(mem, 0, WHOLE_SIZE) {
+                        Ok(data) => data,
+                        Err(e) => {
+                            Self::destroy_buffer(imp, buf);
+                            imp.dealloc(mem);
+                            return Err(e);
+                        }
+                    }
+                } else {
+                    ptr::null_mut()
+                };
+                Ok(Self {
+                    buf,
+                    mem,
+                    cpu_visible: options.cpu_visible,
+                    data,
+                })
+            }
+            Err(e) => {
+                Self::destroy_buffer(imp, buf);
+                Err(e)
+            }
+        }
+    }
+
+    /// Creates a new [`BufImpl`] to use as an uniform buffer.
+    ///
+    /// It supports storage of shader uniforms and copying.
+    pub fn new_ub(imp: &Impl, options: &BufOptions) -> io::Result<BufImpl> {
+        let info = BufferCreateInfo {
+            s_type: STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            next: ptr::null(),
+            flags: 0,
+            size: options.size,
+            usage: BUFFER_USAGE_UNIFORM_BUFFER_BIT
+                | BUFFER_USAGE_TRANSFER_SRC_BIT
+                | BUFFER_USAGE_TRANSFER_DST_BIT,
+            sharing_mode: SHARING_MODE_EXCLUSIVE,
+            queue_family_index_count: 0,
+            queue_family_indices: ptr::null(),
+        };
+        let buf = Self::create_buffer(imp, &info)?;
+        match Self::bind(imp, buf, options.cpu_visible) {
+            Ok(mem) => {
+                let data = if options.cpu_visible {
+                    // TODO: Consider mapping the memory lazily
+                    // and unmapping it when needed.
+                    match imp.map(mem, 0, WHOLE_SIZE) {
+                        Ok(data) => data,
+                        Err(e) => {
+                            Self::destroy_buffer(imp, buf);
+                            imp.dealloc(mem);
+                            return Err(e);
+                        }
+                    }
+                } else {
+                    ptr::null_mut()
+                };
+                Ok(Self {
+                    buf,
+                    mem,
+                    cpu_visible: options.cpu_visible,
+                    data,
+                })
+            }
+            Err(e) => {
+                Self::destroy_buffer(imp, buf);
+                Err(e)
             }
         }
     }
