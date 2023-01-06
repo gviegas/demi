@@ -195,3 +195,63 @@ impl From<Box<BufImpl>> for BufId {
         BufId(Id::Ptr(non_null))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::gpu::vk::BufImpl;
+    use crate::gpu::{self, BufId, BufOptions};
+
+    #[test]
+    fn new() {
+        crate::init();
+
+        let assert = |buf_imp: &BufImpl| {
+            assert!(!vk_sys::is_null_handle(buf_imp.buf));
+            assert!(!vk_sys::is_null_handle(buf_imp.mem));
+            // NOTE: This assumes that CPU-visible buffer memory
+            // is mapped on creation (the current behavior).
+            assert!(
+                (buf_imp.cpu_visible && !buf_imp.data.is_null())
+                    || (!buf_imp.cpu_visible && buf_imp.data.is_null())
+            );
+        };
+
+        // VB CPU-visible.
+        let options = BufOptions {
+            size: 16 << 20,
+            cpu_visible: true,
+        };
+        let buf_imp = Box::<BufImpl>::from(gpu::create_vb(&options).unwrap());
+        assert(&buf_imp);
+        gpu::drop_buffer(&mut BufId::from(buf_imp));
+
+        // VB GPU-private.
+        let options = BufOptions {
+            size: 64 << 20,
+            cpu_visible: false,
+        };
+        let buf_imp = Box::<BufImpl>::from(gpu::create_vb(&options).unwrap());
+        assert(&buf_imp);
+        gpu::drop_buffer(&mut BufId::from(buf_imp));
+
+        // UB CPU-visible.
+        let options = BufOptions {
+            size: 2 << 20,
+            cpu_visible: true,
+        };
+        let buf_imp = Box::<BufImpl>::from(gpu::create_ub(&options).unwrap());
+        assert(&buf_imp);
+        gpu::drop_buffer(&mut BufId::from(buf_imp));
+
+        // UB GPU-private.
+        let options = BufOptions {
+            size: 1 << 20,
+            cpu_visible: false,
+        };
+        let buf_imp = Box::<BufImpl>::from(gpu::create_ub(&options).unwrap());
+        assert(&buf_imp);
+        gpu::drop_buffer(&mut BufId::from(buf_imp));
+
+        crate::shutdown();
+    }
+}
