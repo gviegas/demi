@@ -34,6 +34,7 @@ mod splr_impl;
 use splr_impl::SplrImpl;
 
 mod buf_impl;
+use buf_impl::BufImpl;
 
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
@@ -222,15 +223,18 @@ impl Gpu for Impl {
     }
 
     fn create_vb(&self, options: &BufOptions) -> io::Result<BufId> {
-        todo!();
+        let buf_imp = Box::new(BufImpl::new_vb(self, options)?);
+        Ok(BufId::from(buf_imp))
     }
 
     fn create_ub(&self, options: &BufOptions) -> io::Result<BufId> {
-        todo!();
+        let buf_imp = Box::new(BufImpl::new_ub(self, options)?);
+        Ok(BufId::from(buf_imp))
     }
 
     fn drop_buffer(&self, buf_id: BufId) {
-        todo!();
+        let buf_imp: Box<BufImpl> = Box::from(buf_id);
+        buf_imp.drop_with(self);
     }
 }
 

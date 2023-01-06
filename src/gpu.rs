@@ -210,3 +210,19 @@ pub fn drop_sampler(splr_id: &mut SplrId) {
     let splr_id = mem::replace(splr_id, SplrId(Id::Num(0)));
     get().drop_sampler(splr_id);
 }
+
+/// Creates a vertex buffer.
+pub fn create_vb(options: &BufOptions) -> io::Result<BufId> {
+    get().create_vb(options)
+}
+
+/// Creates an uniform buffer.
+pub fn create_ub(options: &BufOptions) -> io::Result<BufId> {
+    get().create_ub(options)
+}
+
+/// Notifies that `buf_id` will no longer be used.
+pub fn drop_buffer(buf_id: &mut BufId) {
+    let buf_id = mem::replace(buf_id, BufId(Id::Num(0)));
+    get().drop_buffer(buf_id);
+}
