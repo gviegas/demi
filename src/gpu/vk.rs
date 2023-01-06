@@ -33,6 +33,8 @@ use tex_impl::TexImpl;
 mod splr_impl;
 use splr_impl::SplrImpl;
 
+mod buf_impl;
+
 /// `Gpu` implementation using `vk_sys` as back-end.
 #[derive(Debug)]
 pub(super) struct Impl {
