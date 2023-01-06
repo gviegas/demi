@@ -19,7 +19,7 @@ use vk_sys::{
     STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, SUCCESS, TRUE,
 };
 
-use crate::gpu::{Gpu, SplrId, SplrOptions, TexId, TexOptions};
+use crate::gpu::{BufId, BufOptions, Gpu, SplrId, SplrOptions, TexId, TexOptions};
 
 #[cfg(test)]
 mod tests;
@@ -217,6 +217,18 @@ impl Gpu for Impl {
     fn drop_sampler(&self, splr_id: SplrId) {
         let splr_imp: Box<SplrImpl> = Box::from(splr_id);
         splr_imp.drop_with(self);
+    }
+
+    fn create_vb(&self, options: &BufOptions) -> io::Result<BufId> {
+        todo!();
+    }
+
+    fn create_ub(&self, options: &BufOptions) -> io::Result<BufId> {
+        todo!();
+    }
+
+    fn drop_buffer(&self, buf_id: BufId) {
+        todo!();
     }
 }
 

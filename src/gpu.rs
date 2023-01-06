@@ -81,6 +81,17 @@ pub struct SplrOptions {
     pub compare: Option<Compare>,
 }
 
+/// GPU buffer.
+#[derive(Debug)]
+pub struct BufId(Id);
+
+/// Options for buffer creation.
+#[derive(Copy, Clone, Debug)]
+pub struct BufOptions {
+    pub size: u64,
+    pub cpu_visible: bool,
+}
+
 /// Graphics back-end interface.
 ///
 /// NOTE: Keeping this trait private allow us to change it
@@ -130,6 +141,24 @@ trait Gpu: fmt::Display + fmt::Debug {
     /// The implementation is free to discard or reuse its
     /// resources.
     fn drop_sampler(&self, splr_id: SplrId);
+
+    /// Creates a vertex buffer.
+    ///
+    /// This buffer must support storage of vertices and
+    /// indices for primitive drawing.
+    fn create_vb(&self, options: &BufOptions) -> io::Result<BufId>;
+
+    /// Creates an uniform buffer.
+    ///
+    /// This buffer must support storage of constant data
+    /// for shader read access.
+    fn create_ub(&self, options: &BufOptions) -> io::Result<BufId>;
+
+    /// Notifies that `buf_id` will no longer be used.
+    ///
+    /// The implementation is free to discard or reuse its
+    /// resources.
+    fn drop_buffer(&self, buf_id: BufId);
 }
 
 /// Gets a reference to the `Gpu` implementation.
