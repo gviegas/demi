@@ -167,4 +167,10 @@ impl BufImpl {
             }
         }
     }
+
+    /// Drops the [`BufImpl`].
+    pub fn drop_with(self, imp: &Impl) {
+        Self::destroy_buffer(imp, self.buf);
+        imp.dealloc(self.mem);
+    }
 }
