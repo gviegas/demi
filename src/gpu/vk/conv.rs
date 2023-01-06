@@ -74,7 +74,7 @@ impl FmtConv {
     ///
     /// NOTE: Formats that require remapping of components must only
     /// be used to create sampled textures.
-    pub fn from_texture_format(&self, fmt: texture::Format) -> (vk_sys::Format, ComponentMapping) {
+    pub fn convert(&self, fmt: texture::Format) -> (vk_sys::Format, ComponentMapping) {
         const IDENTITY: ComponentMapping = ComponentMapping {
             r: COMPONENT_SWIZZLE_IDENTITY,
             g: COMPONENT_SWIZZLE_IDENTITY,

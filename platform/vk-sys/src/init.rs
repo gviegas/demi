@@ -83,7 +83,7 @@ pub fn fini() {
             while RC.load(Ordering::Acquire) == usize::MAX {
                 hint::spin_loop();
             }
-            return fini();
+            fini();
         }
         x => {
             RC.store(x - 1, Ordering::Release);

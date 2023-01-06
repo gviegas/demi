@@ -41,7 +41,7 @@ pub fn init() {
             while RC.load(Ordering::Acquire) == usize::MAX {
                 hint::spin_loop();
             }
-            return init();
+            init();
         }
         x => {
             assert!(x < isize::MAX as _, "RC overflow");
@@ -68,7 +68,7 @@ pub fn shutdown() {
             while RC.load(Ordering::Acquire) == usize::MAX {
                 hint::spin_loop();
             }
-            return shutdown();
+            shutdown();
         }
         x => {
             RC.store(x - 1, Ordering::Release);

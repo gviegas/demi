@@ -85,7 +85,7 @@ impl TexImpl {
             next: ptr::null(),
             flags: 0,
             image_type: IMAGE_TYPE_2D,
-            format: imp.fmt_conv.from_texture_format(options.format).0,
+            format: imp.fmt_conv.convert(options.format).0,
             extent: Extent3d {
                 width: options.width,
                 height: options.height,
@@ -122,7 +122,7 @@ impl TexImpl {
             next: ptr::null(),
             flags: 0,
             image_type: IMAGE_TYPE_3D,
-            format: imp.fmt_conv.from_texture_format(options.format).0,
+            format: imp.fmt_conv.convert(options.format).0,
             extent: Extent3d {
                 width: options.width,
                 height: options.height,
@@ -160,7 +160,7 @@ impl TexImpl {
             next: ptr::null(),
             flags: IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
             image_type: IMAGE_TYPE_2D,
-            format: imp.fmt_conv.from_texture_format(options.format).0,
+            format: imp.fmt_conv.convert(options.format).0,
             extent: Extent3d {
                 width: options.width,
                 height: options.height,
@@ -212,7 +212,7 @@ impl TexImpl {
             next: ptr::null(),
             flags: 0,
             image_type: IMAGE_TYPE_2D,
-            format: imp.fmt_conv.from_texture_format(options.format).0,
+            format: imp.fmt_conv.convert(options.format).0,
             extent: Extent3d {
                 width: options.width,
                 height: options.height,
