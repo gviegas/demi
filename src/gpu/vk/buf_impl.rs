@@ -3,7 +3,7 @@
 use std::ffi::c_void;
 use std::io;
 use std::mem;
-use std::ptr;
+use std::ptr::{self, NonNull};
 
 use vk_sys::{
     Buffer, BufferCreateInfo, DeviceMemory, BUFFER_USAGE_INDEX_BUFFER_BIT,
@@ -172,5 +172,26 @@ impl BufImpl {
     pub fn drop_with(self, imp: &Impl) {
         Self::destroy_buffer(imp, self.buf);
         imp.dealloc(self.mem);
+    }
+}
+
+impl From<BufId> for Box<BufImpl> {
+    /// Converts from a [`BufId`] into a boxed [`BufImpl`].
+    fn from(buf_id: BufId) -> Self {
+        let non_null = match buf_id.0 {
+            Id::Ptr(x) => x,
+            _ => unreachable!(),
+        };
+        let raw_ptr = non_null.as_ptr() as *mut BufImpl;
+        unsafe { Box::from_raw(raw_ptr) }
+    }
+}
+
+impl From<Box<BufImpl>> for BufId {
+    /// Converts from a boxed [`BufImpl`] into a [`BufId`].
+    fn from(buf_imp: Box<BufImpl>) -> Self {
+        let raw_ptr = Box::into_raw(buf_imp) as *mut ();
+        let non_null = unsafe { NonNull::new_unchecked(raw_ptr) };
+        BufId(Id::Ptr(non_null))
     }
 }
