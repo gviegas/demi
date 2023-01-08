@@ -9,14 +9,17 @@
 /// These values may differ between frames.
 #[repr(C, align(16))]
 pub struct FrameU {
-    pub view_proj: [f32; 16],
-    pub view: [f32; 16],
-    pub proj: [f32; 16],
+    pub view_proj: [[f32; 4]; 4],
+    pub view: [[f32; 4]; 4],
+    pub proj: [[f32; 4]; 4],
     pub time: f32,
     pub rand: f32,
-    pub origin: [f32; 2],
-    pub size: [f32; 2],
-    pub depth: [f32; 2],
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+    pub near: f32,
+    pub far: f32,
     // TODO
     pub _pad: [f32; 8],
 }
@@ -45,8 +48,8 @@ pub struct LightU {
 /// These values may differ between draw calls.
 #[repr(C, align(16))]
 pub struct DrawableU {
-    pub world: [f32; 16],
-    pub normal: [f32; 16],
+    pub world: [[f32; 4]; 4],
+    pub normal: [[f32; 4]; 4],
     pub id: u32,
     pub flags: u32,
     // TODO
@@ -78,8 +81,8 @@ pub struct MaterialU {
 /// These values may differ between draw calls.
 #[repr(C, align(16))]
 pub struct JointU {
-    pub joint: [f32; 16],
-    pub normal: [f32; 16],
+    pub joint: [[f32; 4]; 4],
+    pub normal: [[f32; 4]; 4],
 }
 
 #[cfg(test)]
