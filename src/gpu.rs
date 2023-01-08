@@ -13,7 +13,13 @@ use crate::texture::Format;
 #[cfg(test)]
 mod tests;
 
+pub mod layout;
+
+#[cfg(any(target_os = "linux", windows))]
 mod vk;
+
+#[cfg(all(not(target_os = "linux"), not(windows)))]
+compile_error!("platform not supported");
 
 static mut IMPL: Option<Box<dyn Gpu>> = None;
 
@@ -97,7 +103,6 @@ pub struct BufOptions {
 /// NOTE: Keeping this trait private allow us to change it
 /// without breaking non-`gpu` code.
 ///
-// TODO...
 trait Gpu: fmt::Display + fmt::Debug {
     /// Creates a 2D texture.
     ///
