@@ -1,6 +1,10 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
 use std::io;
+use std::sync::Arc;
+
+use crate::sampler::Sampler;
+use crate::texture::Texture;
 
 /// Material.
 pub struct Material {
@@ -8,8 +12,37 @@ pub struct Material {
 }
 
 /// Reference to a texture and sampler.
+#[derive(Clone, Debug)]
 pub struct TexRef {
-    // TODO
+    texture: Arc<Texture>,
+    layer: usize,
+    sampler: Arc<Sampler>,
+}
+
+impl TexRef {
+    /// Creates a new texture/sampler reference.
+    pub fn new(texture: &Arc<Texture>, layer: usize, sampler: &Arc<Sampler>) -> Self {
+        Self {
+            texture: Arc::clone(texture),
+            layer,
+            sampler: Arc::clone(sampler),
+        }
+    }
+
+    /// Returns a reference to the texture.
+    pub fn texture(&self) -> &Texture {
+        &self.texture
+    }
+
+    /// Returns the layer index.
+    pub fn layer(&self) -> usize {
+        self.layer
+    }
+
+    /// Returns a reference to the sampler.
+    pub fn sampler(&self) -> &Sampler {
+        &self.sampler
+    }
 }
 
 /// Alpha modes.
