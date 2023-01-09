@@ -71,7 +71,6 @@ pub struct Builder<'a> {
     double_sided: bool,
 }
 
-#[allow(unused_variables)] // TODO
 impl<'a> Builder<'a> {
     /// Creates a new material builder.
     pub fn new() -> Self {
@@ -180,7 +179,35 @@ impl<'a> Builder<'a> {
     }
 
     /// Creates an unlit material.
+    ///
+    /// The only properties that affect this material are
+    /// the base color (texture and factor), the alpha mode
+    /// and whether or not it is double-sided.
     pub fn create_unlit(&mut self) -> io::Result<Material> {
-        todo!();
+        // TODO: Consider letting the `Gpu` known about this.
+        let (alpha_cutoff, flags) = match self.alpha_mode {
+            AlphaMode::Opaque => (0.0, MaterialU::ALPHA_MODE_OPAQUE),
+            AlphaMode::Blend => (0.0, MaterialU::ALPHA_MODE_BLEND),
+            AlphaMode::Mask { cutoff } => (cutoff, MaterialU::ALPHA_MODE_MASK),
+        };
+        let flags = MaterialU::UNLIT | flags;
+        Ok(Material {
+            base_color_tex: self.base_color.0.cloned(),
+            metal_rough_tex: None,
+            normal_tex: None,
+            occlusion_tex: None,
+            emissive_tex: None,
+            unif: MaterialU {
+                base_color_factor: self.base_color.1,
+                metalness: 0.0,
+                roughness: 0.0,
+                normal_scale: 0.0,
+                occlusion_strength: 0.0,
+                emissive_factor: [0.0; 3],
+                alpha_cutoff,
+                flags,
+                _pad: Default::default(),
+            },
+        })
     }
 }
