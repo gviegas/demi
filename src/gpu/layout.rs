@@ -66,16 +66,37 @@ pub struct DrawableU {
 #[repr(C, align(16))]
 pub struct MaterialU {
     pub base_color_factor: [f32; 4],
-    pub alpha_cutoff: f32,
-    pub double_sided: u32,
+    pub metalness: f32,
+    pub roughness: f32,
     pub normal_scale: f32,
     pub occlusion_strength: f32,
     pub emissive_factor: [f32; 3],
-    pub metalness: f32,
-    pub roughness: f32,
+    pub alpha_cutoff: f32,
     pub flags: u32,
     // TODO
-    pub _pad: [f32; 2],
+    pub _pad: [f32; 3],
+}
+
+impl MaterialU {
+    /// [`MaterialU::flags`] bit identifying a
+    /// PBR metallic-roughness material.
+    pub const METALLIC_ROUGHNESS: u32 = 1 << 0;
+
+    /// [`MaterialU::flags`] bit identifying an
+    /// unlit material.
+    pub const UNLIT: u32 = 1 << 1;
+
+    /// [`MaterialU::flags`] bit identifying an
+    /// opaque material.
+    pub const ALPHA_MODE_OPAQUE: u32 = 1 << 2;
+
+    /// [`MaterialU::flags`] bit identifying an
+    /// alpha-blended material.
+    pub const ALPHA_MODE_BLEND: u32 = 1 << 3;
+
+    /// [`MaterialU::flags`] bit identifying an
+    /// alpha-masked material.
+    pub const ALPHA_MODE_MASK: u32 = 1 << 4;
 }
 
 /// Skin's joint uniforms.

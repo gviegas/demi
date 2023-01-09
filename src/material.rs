@@ -15,8 +15,6 @@ pub struct Material {
     normal_tex: Option<TexRef>,
     occlusion_tex: Option<TexRef>,
     emissive_tex: Option<TexRef>,
-    alpha_mode: AlphaMode,
-    double_sided: bool,
     unif: MaterialU,
 }
 
@@ -155,27 +153,27 @@ impl<'a> Builder<'a> {
     /// Creates a metallic-roughness material.
     pub fn create(&mut self) -> io::Result<Material> {
         // TODO: Consider letting the `Gpu` known about this.
+        let (alpha_cutoff, flags) = match self.alpha_mode {
+            AlphaMode::Opaque => (0.0, MaterialU::ALPHA_MODE_OPAQUE),
+            AlphaMode::Blend => (0.0, MaterialU::ALPHA_MODE_BLEND),
+            AlphaMode::Mask { cutoff } => (cutoff, MaterialU::ALPHA_MODE_MASK),
+        };
+        let flags = MaterialU::METALLIC_ROUGHNESS | flags;
         Ok(Material {
             base_color_tex: self.base_color.0.cloned(),
             metal_rough_tex: self.metallic_roughness.0.cloned(),
             normal_tex: self.normal.0.cloned(),
             occlusion_tex: self.occlusion.0.cloned(),
             emissive_tex: self.emissive.0.cloned(),
-            alpha_mode: self.alpha_mode,
-            double_sided: self.double_sided,
             unif: MaterialU {
                 base_color_factor: self.base_color.1,
-                alpha_cutoff: match self.alpha_mode {
-                    AlphaMode::Mask { cutoff } => cutoff,
-                    _ => 0.0,
-                },
-                double_sided: self.double_sided as _,
+                metalness: self.metallic_roughness.1,
+                roughness: self.metallic_roughness.2,
                 normal_scale: self.normal.1,
                 occlusion_strength: self.occlusion.1,
                 emissive_factor: self.emissive.1,
-                metalness: self.metallic_roughness.1,
-                roughness: self.metallic_roughness.2,
-                flags: 0, // TODO
+                alpha_cutoff,
+                flags,
                 _pad: Default::default(),
             },
         })
