@@ -7,6 +7,7 @@
 /// Frame-global uniforms.
 ///
 /// These values may differ between frames.
+#[derive(Copy, Clone, Debug)]
 #[repr(C, align(16))]
 pub struct FrameU {
     pub view_proj: [[f32; 4]; 4],
@@ -29,6 +30,7 @@ pub struct FrameU {
 /// The actual uniform is an array of [`LightU`].
 ///
 /// These values may differ between frames.
+#[derive(Copy, Clone, Debug)]
 #[repr(C, align(16))]
 pub struct LightU {
     pub is_set: u32,
@@ -46,6 +48,7 @@ pub struct LightU {
 /// Drawable uniforms.
 ///
 /// These values may differ between draw calls.
+#[derive(Copy, Clone, Debug)]
 #[repr(C, align(16))]
 pub struct DrawableU {
     pub world: [[f32; 4]; 4],
@@ -59,13 +62,14 @@ pub struct DrawableU {
 /// Material uniforms.
 ///
 /// These values may differ between draw calls.
+#[derive(Copy, Clone, Debug)]
 #[repr(C, align(16))]
 pub struct MaterialU {
-    pub color_factor: [f32; 4],
+    pub base_color_factor: [f32; 4],
     pub alpha_cutoff: f32,
     pub double_sided: u32,
-    pub normal_factor: f32,
-    pub occlusion_factor: f32,
+    pub normal_scale: f32,
+    pub occlusion_strength: f32,
     pub emissive_factor: [f32; 3],
     pub metalness: f32,
     pub roughness: f32,
@@ -79,6 +83,7 @@ pub struct MaterialU {
 /// The actual uniform is an array of [`JointU`].
 ///
 /// These values may differ between draw calls.
+#[derive(Copy, Clone, Debug)]
 #[repr(C, align(16))]
 pub struct JointU {
     pub joint: [[f32; 4]; 4],

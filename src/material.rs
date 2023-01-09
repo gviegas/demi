@@ -3,12 +3,21 @@
 use std::io;
 use std::sync::Arc;
 
+use crate::gpu::layout::MaterialU;
 use crate::sampler::Sampler;
 use crate::texture::Texture;
 
 /// Material.
+#[derive(Debug)]
 pub struct Material {
-    // TODO
+    base_color_tex: Option<TexRef>,
+    metal_rough_tex: Option<TexRef>,
+    normal_tex: Option<TexRef>,
+    occlusion_tex: Option<TexRef>,
+    emissive_tex: Option<TexRef>,
+    alpha_mode: AlphaMode,
+    double_sided: bool,
+    unif: MaterialU,
 }
 
 /// Reference to a texture and sampler.
@@ -46,6 +55,7 @@ impl TexRef {
 }
 
 /// Alpha modes.
+#[derive(Copy, Clone, Debug)]
 pub enum AlphaMode {
     Opaque,
     Blend,
@@ -53,53 +63,125 @@ pub enum AlphaMode {
 }
 
 /// Material builder.
-pub struct Builder {
-    // TODO
+pub struct Builder<'a> {
+    base_color: (Option<&'a TexRef>, [f32; 4]),
+    metallic_roughness: (Option<&'a TexRef>, f32, f32),
+    normal: (Option<&'a TexRef>, f32),
+    occlusion: (Option<&'a TexRef>, f32),
+    emissive: (Option<&'a TexRef>, [f32; 3]),
+    alpha_mode: AlphaMode,
+    double_sided: bool,
 }
 
 #[allow(unused_variables)] // TODO
-impl Builder {
+impl<'a> Builder<'a> {
+    /// Creates a new material builder.
     pub fn new() -> Self {
-        todo!();
+        Self {
+            base_color: (None, [1.0; 4]),
+            metallic_roughness: (None, 1.0, 1.0),
+            normal: (None, 1.0),
+            occlusion: (None, 1.0),
+            emissive: (None, [0.0; 3]),
+            alpha_mode: AlphaMode::Opaque,
+            double_sided: false,
+        }
     }
 
-    pub fn set_base_color(&mut self, texture: Option<&TexRef>, factor: [f32; 4]) -> &mut Self {
-        todo!();
+    /// Sets the base color.
+    ///
+    /// These values need not be set. It defaults to a pure white, opaque color.
+    pub fn set_base_color(&mut self, texture: Option<&'a TexRef>, factor: [f32; 4]) -> &mut Self {
+        self.base_color = (texture, factor);
+        self
     }
 
+    /// Sets the metallic-roughness.
+    ///
+    /// These values need not be set. It defaults to fully metallic/rough.
     pub fn set_metallic_roughness(
         &mut self,
-        texture: Option<&TexRef>,
+        texture: Option<&'a TexRef>,
         metalness: f32,
         roughness: f32,
     ) -> &mut Self {
-        todo!();
+        self.metallic_roughness = (texture, metalness, roughness);
+        self
     }
 
-    pub fn set_normal(&mut self, texture: Option<&TexRef>, scale: f32) -> &mut Self {
-        todo!();
+    /// Sets the normal map.
+    ///
+    /// These values need not be set. Setting `texture` to [`None`]
+    /// (the default) disables normal mapping.
+    pub fn set_normal(&mut self, texture: Option<&'a TexRef>, scale: f32) -> &mut Self {
+        self.normal = (texture, scale);
+        self
     }
 
-    pub fn set_occlusion(&mut self, texture: Option<&TexRef>, strength: f32) -> &mut Self {
-        todo!();
+    /// Sets the occlusion map.
+    ///
+    /// These values need not be set. Setting `texture` to [`None`]
+    /// (the default) disables occlusion mapping.
+    pub fn set_occlusion(&mut self, texture: Option<&'a TexRef>, strength: f32) -> &mut Self {
+        self.occlusion = (texture, strength);
+        self
     }
 
-    pub fn set_emissive(&mut self, texture: Option<&TexRef>, factor: [f32; 3]) -> &mut Self {
-        todo!();
+    /// Sets the emissive map.
+    ///
+    /// These values need not be set. Setting `texture` to [`None`]
+    /// (the default) disables emissive mapping.
+    pub fn set_emissive(&mut self, texture: Option<&'a TexRef>, factor: [f32; 3]) -> &mut Self {
+        self.emissive = (texture, factor);
+        self
     }
 
+    /// Sets the alpha mode.
+    ///
+    /// This value need not be set. It defaults to [`AlphaMode::Opaque`].
     pub fn set_alpha_mode(&mut self, mode: AlphaMode) -> &mut Self {
-        todo!();
+        self.alpha_mode = mode;
+        self
     }
 
+    /// Sets whether the material is double-sided.
+    ///
+    /// This value need not be set. It defaults to `false`.
     pub fn set_double_sided(&mut self, double_sided: bool) -> &mut Self {
-        todo!();
+        self.double_sided = double_sided;
+        self
     }
 
+    /// Creates a metallic-roughness material.
     pub fn create(&mut self) -> io::Result<Material> {
-        todo!();
+        // TODO: Consider letting the `Gpu` known about this.
+        Ok(Material {
+            base_color_tex: self.base_color.0.cloned(),
+            metal_rough_tex: self.metallic_roughness.0.cloned(),
+            normal_tex: self.normal.0.cloned(),
+            occlusion_tex: self.occlusion.0.cloned(),
+            emissive_tex: self.emissive.0.cloned(),
+            alpha_mode: self.alpha_mode,
+            double_sided: self.double_sided,
+            unif: MaterialU {
+                base_color_factor: self.base_color.1,
+                alpha_cutoff: match self.alpha_mode {
+                    AlphaMode::Mask { cutoff } => cutoff,
+                    _ => 0.0,
+                },
+                double_sided: self.double_sided as _,
+                normal_scale: self.normal.1,
+                occlusion_strength: self.occlusion.1,
+                emissive_factor: self.emissive.1,
+                metalness: self.metallic_roughness.1,
+                roughness: self.metallic_roughness.2,
+                flags: 0, // TODO
+                _pad: Default::default(),
+            },
+        })
     }
 
+    /// Creates an unlit material.
     pub fn create_unlit(&mut self) -> io::Result<Material> {
         todo!();
     }
