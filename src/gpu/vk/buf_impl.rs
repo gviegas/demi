@@ -17,7 +17,7 @@ use crate::gpu::{BufId, BufOptions, Id};
 
 /// Buffer implementation.
 ///
-/// This type represents a [`BufferId`].
+/// This type represents a [`BufId`].
 #[derive(Debug)]
 pub(super) struct BufImpl {
     buf: Buffer,
