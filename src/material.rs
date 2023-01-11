@@ -159,7 +159,12 @@ impl<'a> Builder<'a> {
             AlphaMode::Blend => (0.0, MaterialU::ALPHA_MODE_BLEND),
             AlphaMode::Mask { cutoff } => (cutoff, MaterialU::ALPHA_MODE_MASK),
         };
-        let flags = MaterialU::METALLIC_ROUGHNESS | flags;
+        let flags = MaterialU::METALLIC_ROUGHNESS
+            | if self.double_sided {
+                MaterialU::DOUBLE_SIDED | flags
+            } else {
+                flags
+            };
         Ok(Material {
             base_color_tex: self.base_color.0.cloned(),
             metal_rough_tex: self.metallic_roughness.0.cloned(),
@@ -192,7 +197,12 @@ impl<'a> Builder<'a> {
             AlphaMode::Blend => (0.0, MaterialU::ALPHA_MODE_BLEND),
             AlphaMode::Mask { cutoff } => (cutoff, MaterialU::ALPHA_MODE_MASK),
         };
-        let flags = MaterialU::UNLIT | flags;
+        let flags = MaterialU::UNLIT
+            | if self.double_sided {
+                MaterialU::DOUBLE_SIDED | flags
+            } else {
+                flags
+            };
         Ok(Material {
             base_color_tex: self.base_color.0.cloned(),
             metal_rough_tex: None,

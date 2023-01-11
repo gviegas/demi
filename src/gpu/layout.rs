@@ -97,6 +97,10 @@ impl MaterialU {
     /// [`MaterialU::flags`] bit identifying an
     /// alpha-masked material.
     pub const ALPHA_MODE_MASK: u32 = 1 << 4;
+
+    /// [`MaterialU::flags`] bit identifying a
+    /// double-sided material.
+    pub const DOUBLE_SIDED: u32 = 1 << 5;
 }
 
 /// Skin's joint uniforms.
