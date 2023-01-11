@@ -3,17 +3,20 @@
 use std::io::{self, Read};
 
 /// Animation.
+#[derive(Debug)]
 pub struct Animation {
     // TODO
 }
 
 /// Key-frame input types.
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum KfInput {
     SecondsF64,
     SecondsF32,
 }
 
 /// Key-frame output types.
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum KfOutput {
     TranslationF64x3,
     TranslationF32x3,
@@ -32,6 +35,7 @@ pub enum KfOutput {
 }
 
 /// Interpolation methods.
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Interpolation {
     Step,
     Linear,

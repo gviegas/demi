@@ -53,7 +53,7 @@ impl TexRef {
 }
 
 /// Alpha modes.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AlphaMode {
     Opaque,
     Blend,

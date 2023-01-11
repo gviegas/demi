@@ -18,7 +18,7 @@ impl Drop for Sampler {
 }
 
 /// Sampler wrapping modes.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Wrap {
     Repeat,
     MirroredRepeat,
@@ -26,14 +26,14 @@ pub enum Wrap {
 }
 
 /// Sampler filters.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Filter {
     Nearest,
     Linear,
 }
 
 /// Comparison functions.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Compare {
     Never,
     Less,

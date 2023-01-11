@@ -11,6 +11,7 @@ pub struct Skin {
 }
 
 /// Skin joint.
+#[derive(Debug)]
 pub struct Joint {
     // TODO
 }

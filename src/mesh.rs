@@ -11,12 +11,14 @@ pub struct Mesh {
     // TODO
 }
 
-/// Mesh primitive.
+/// Primitive.
+#[derive(Debug)]
 pub struct Primitive {
     // TODO
 }
 
-/// Mesh attribute semantics.
+/// Semantics.
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Semantic {
     Position,
     Normal,
@@ -28,7 +30,10 @@ pub enum Semantic {
     Weights0,
 }
 
-/// Mesh attribute data types.
+pub(crate) const SEMANTIC_N: usize = Semantic::Weights0 as usize + 1;
+
+/// Data types.
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum DataType {
     F32,
     F32x2,
@@ -49,6 +54,7 @@ pub enum DataType {
 }
 
 /// Primitive topology values.
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Topology {
     Point,
     Line,

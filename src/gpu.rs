@@ -63,7 +63,7 @@ pub enum Id {
 pub struct TexId(Id);
 
 /// Options for texture creation.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct TexOptions {
     pub format: Format,
     pub width: u32,
@@ -78,7 +78,7 @@ pub struct TexOptions {
 pub struct SplrId(Id);
 
 /// Options for sampler creation.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct SplrOptions {
     pub u_wrap: Wrap,
     pub v_wrap: Wrap,
@@ -93,7 +93,7 @@ pub struct SplrOptions {
 pub struct BufId(Id);
 
 /// Options for buffer creation.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct BufOptions {
     pub size: u64,
     pub cpu_visible: bool,

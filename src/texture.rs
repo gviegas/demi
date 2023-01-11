@@ -18,7 +18,7 @@ impl Drop for Texture {
 }
 
 /// Texture pixel formats.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Format {
     Xrgb8888,
     Argb8888,
