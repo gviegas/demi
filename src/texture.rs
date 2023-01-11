@@ -13,6 +13,44 @@ pub struct Texture {
     gid: TexId,
 }
 
+impl Texture {
+    /// Returns the pixel format.
+    pub fn format(&self) -> Format {
+        self.options.format
+    }
+
+    /// Returns the width in pixels.
+    pub fn width(&self) -> u32 {
+        self.options.width
+    }
+
+    /// Returns the height in pixels.
+    pub fn height(&self) -> u32 {
+        self.options.height
+    }
+
+    /// Returns either the number of array layers (non-3D textures),
+    /// or the depth in pixels.
+    pub fn depth(&self) -> u32 {
+        self.options.depth
+    }
+
+    /// Returns the number of mip levels.
+    pub fn levels(&self) -> u32 {
+        self.options.levels
+    }
+
+    /// Returns the sample count.
+    pub fn samples(&self) -> u32 {
+        self.options.samples
+    }
+
+    /// Returns a reference to the [`TexId`].
+    pub(crate) fn tex_id(&self) -> &TexId {
+        &self.gid
+    }
+}
+
 impl Drop for Texture {
     fn drop(&mut self) {
         gpu::drop_texture(&mut self.gid);
@@ -71,8 +109,8 @@ impl Builder {
 
     /// Sets the dimensions of the texture.
     ///
-    /// For 2D textures, the `depth` is interpreted as the number
-    /// of array layers that the texture will contain.
+    /// For non-3D textures, the `depth` value is interpreted as
+    /// the number of array layers.
     ///
     /// `width`, `height` and `depth` must be greater than zero.
     pub fn set_size(&mut self, width: u32, height: u32, depth: u32) -> &mut Self {
