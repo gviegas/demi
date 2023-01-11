@@ -20,6 +20,84 @@ pub struct Material {
     unif: MaterialU,
 }
 
+impl Material {
+    /// Returns the base color texture and factor.
+    ///
+    /// Notice that the factor is valid even if the texture is absent.
+    pub fn base_color(&self) -> (Option<&TexRef>, [f32; 4]) {
+        (self.base_color_tex.as_ref(), self.unif.base_color_factor)
+    }
+
+    /// Returns the metallic-roughness texture, metalness and roughness
+    /// (in that order).
+    ///
+    /// Notice that both the metalness and roughness are valid even if
+    /// the texture is absent.
+    pub fn metallic_roughness(&self) -> (Option<&TexRef>, f32, f32) {
+        (
+            self.metal_rough_tex.as_ref(),
+            self.unif.metalness,
+            self.unif.roughness,
+        )
+    }
+
+    /// Returns the normal texture and scale.
+    ///
+    /// If the result is [`None`], then normal mapping is disabled
+    /// for this material.
+    pub fn normal(&self) -> Option<(&TexRef, f32)> {
+        match self.normal_tex {
+            Some(ref x) => Some((x, self.unif.normal_scale)),
+            _ => None,
+        }
+    }
+
+    /// Returns the occlusion texture and strength.
+    ///
+    /// If the result is [`None`], then occlusion mapping is disabled
+    /// for this material.
+    pub fn occlusion(&self) -> Option<(&TexRef, f32)> {
+        match self.occlusion_tex {
+            Some(ref x) => Some((x, self.unif.occlusion_strength)),
+            _ => None,
+        }
+    }
+
+    /// Returns the emissive texture and factor.
+    ///
+    /// If the result is [`None`], then emissive mapping is disabled
+    /// for this material.
+    pub fn emissive(&self) -> Option<(&TexRef, [f32; 3])> {
+        match self.emissive_tex {
+            Some(ref x) => Some((x, self.unif.emissive_factor)),
+            _ => None,
+        }
+    }
+
+    /// Returns the alpha mode.
+    pub fn alpha_mode(&self) -> AlphaMode {
+        if self.unif.flags & MaterialU::ALPHA_MODE_OPAQUE != 0 {
+            AlphaMode::Opaque
+        } else if self.unif.flags & MaterialU::ALPHA_MODE_BLEND != 0 {
+            AlphaMode::Blend
+        } else {
+            AlphaMode::Mask {
+                cutoff: self.unif.alpha_cutoff,
+            }
+        }
+    }
+
+    /// Returns whether the material is double-sided.
+    pub fn is_double_sided(&self) -> bool {
+        self.unif.flags & MaterialU::DOUBLE_SIDED != 0
+    }
+
+    /// Returns the [`MaterialU::flags`].
+    pub(crate) fn u_flags(&self) -> u32 {
+        self.unif.flags
+    }
+}
+
 /// Reference to a texture and sampler.
 #[derive(Clone, Debug)]
 pub struct TexRef {
