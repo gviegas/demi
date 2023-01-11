@@ -1,5 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+//! Blend-weight skinning.
+
 use std::io;
 
 use crate::linear::Mat4;

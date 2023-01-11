@@ -1,5 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+//! Vulkan back-end.
+
 use std::ffi::{c_char, c_void, CStr};
 use std::fmt;
 use std::io;

@@ -1,5 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+//! demi.
+
 use std::hint;
 use std::sync::atomic::{AtomicUsize, Ordering};
 

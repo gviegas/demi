@@ -1,5 +1,7 @@
 // Copyright 2022 Gustavo C. Viegas. All rights reserved.
 
+//! Drawable entity.
+
 use std::rc::Rc;
 
 use crate::mesh::Mesh;
