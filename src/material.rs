@@ -98,21 +98,39 @@ impl Material {
     }
 }
 
-/// Reference to a texture and sampler.
+/// UV coordinate sets.
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+pub enum UvSet {
+    Set0,
+    Set1,
+}
+
+/// Reference to a texture and its sampler.
+///
+/// This type identifies a specific layer of a 2D [`Texture`]
+/// and its [`Sampler`], with sampling operations using a
+/// given [`UvSet`].
 #[derive(Clone, Debug)]
 pub struct TexRef {
     texture: Arc<Texture>,
     layer: usize,
     sampler: Arc<Sampler>,
+    uv_set: UvSet,
 }
 
 impl TexRef {
     /// Creates a new texture/sampler reference.
-    pub fn new(texture: &Arc<Texture>, layer: usize, sampler: &Arc<Sampler>) -> Self {
+    pub fn new(
+        texture: &Arc<Texture>,
+        layer: usize,
+        sampler: &Arc<Sampler>,
+        uv_set: UvSet,
+    ) -> Self {
         Self {
             texture: Arc::clone(texture),
             layer,
             sampler: Arc::clone(sampler),
+            uv_set,
         }
     }
 
@@ -129,6 +147,11 @@ impl TexRef {
     /// Returns a reference to the sampler.
     pub fn sampler(&self) -> &Sampler {
         &self.sampler
+    }
+
+    /// Returns the UV set.
+    pub fn uv_set(&self) -> UvSet {
+        self.uv_set
     }
 }
 
