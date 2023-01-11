@@ -55,6 +55,7 @@ pub fn shutdown() {
 pub enum Id {
     Ptr(NonNull<()>),
     Num(u64),
+    Invalid,
 }
 
 /// GPU texture.
@@ -102,7 +103,6 @@ pub struct BufOptions {
 ///
 /// NOTE: Keeping this trait private allow us to change it
 /// without breaking non-`gpu` code.
-///
 trait Gpu: fmt::Display + fmt::Debug {
     /// Creates a 2D texture.
     ///
@@ -201,7 +201,7 @@ pub fn create_rt(options: &TexOptions) -> io::Result<TexId> {
 
 /// Notifies that `tex_id` will no longer be used.
 pub fn drop_texture(tex_id: &mut TexId) {
-    let tex_id = mem::replace(tex_id, TexId(Id::Num(0)));
+    let tex_id = mem::replace(tex_id, TexId(Id::Invalid));
     get().drop_texture(tex_id);
 }
 
@@ -212,7 +212,7 @@ pub fn create_sampler(options: &SplrOptions) -> io::Result<SplrId> {
 
 /// Notifies that `splr_id` will no longer be used.
 pub fn drop_sampler(splr_id: &mut SplrId) {
-    let splr_id = mem::replace(splr_id, SplrId(Id::Num(0)));
+    let splr_id = mem::replace(splr_id, SplrId(Id::Invalid));
     get().drop_sampler(splr_id);
 }
 
@@ -228,6 +228,6 @@ pub fn create_ub(options: &BufOptions) -> io::Result<BufId> {
 
 /// Notifies that `buf_id` will no longer be used.
 pub fn drop_buffer(buf_id: &mut BufId) {
-    let buf_id = mem::replace(buf_id, BufId(Id::Num(0)));
+    let buf_id = mem::replace(buf_id, BufId(Id::Invalid));
     get().drop_buffer(buf_id);
 }
