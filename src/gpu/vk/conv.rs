@@ -4,18 +4,22 @@ use std::mem;
 
 use vk_sys::{
     CompareOp, ComponentMapping, FormatFeatureFlags, ImageAspectFlags, InstanceFp, PhysicalDevice,
-    SampleCountFlagBits, SamplerAddressMode, SamplerMipmapMode, COMPARE_OP_ALWAYS,
-    COMPARE_OP_EQUAL, COMPARE_OP_GREATER, COMPARE_OP_GREATER_OR_EQUAL, COMPARE_OP_LESS,
-    COMPARE_OP_LESS_OR_EQUAL, COMPARE_OP_NEVER, COMPARE_OP_NOT_EQUAL, COMPONENT_SWIZZLE_A,
-    COMPONENT_SWIZZLE_B, COMPONENT_SWIZZLE_G, COMPONENT_SWIZZLE_IDENTITY, COMPONENT_SWIZZLE_ONE,
-    COMPONENT_SWIZZLE_R, FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    PrimitiveTopology, SampleCountFlagBits, SamplerAddressMode, SamplerMipmapMode,
+    COMPARE_OP_ALWAYS, COMPARE_OP_EQUAL, COMPARE_OP_GREATER, COMPARE_OP_GREATER_OR_EQUAL,
+    COMPARE_OP_LESS, COMPARE_OP_LESS_OR_EQUAL, COMPARE_OP_NEVER, COMPARE_OP_NOT_EQUAL,
+    COMPONENT_SWIZZLE_A, COMPONENT_SWIZZLE_B, COMPONENT_SWIZZLE_G, COMPONENT_SWIZZLE_IDENTITY,
+    COMPONENT_SWIZZLE_ONE, COMPONENT_SWIZZLE_R, FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
     FORMAT_FEATURE_SAMPLED_IMAGE_BIT, IMAGE_ASPECT_COLOR_BIT, IMAGE_ASPECT_DEPTH_BIT,
-    IMAGE_ASPECT_STENCIL_BIT, LOD_CLAMP_NONE, SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-    SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT, SAMPLER_ADDRESS_MODE_REPEAT, SAMPLER_MIPMAP_MODE_LINEAR,
-    SAMPLER_MIPMAP_MODE_NEAREST, SAMPLE_COUNT_16_BIT, SAMPLE_COUNT_1_BIT, SAMPLE_COUNT_2_BIT,
-    SAMPLE_COUNT_32_BIT, SAMPLE_COUNT_4_BIT, SAMPLE_COUNT_64_BIT, SAMPLE_COUNT_8_BIT,
+    IMAGE_ASPECT_STENCIL_BIT, LOD_CLAMP_NONE, PRIMITIVE_TOPOLOGY_LINE_LIST,
+    PRIMITIVE_TOPOLOGY_LINE_STRIP, PRIMITIVE_TOPOLOGY_POINT_LIST, PRIMITIVE_TOPOLOGY_TRIANGLE_FAN,
+    PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+    SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+    SAMPLER_ADDRESS_MODE_REPEAT, SAMPLER_MIPMAP_MODE_LINEAR, SAMPLER_MIPMAP_MODE_NEAREST,
+    SAMPLE_COUNT_16_BIT, SAMPLE_COUNT_1_BIT, SAMPLE_COUNT_2_BIT, SAMPLE_COUNT_32_BIT,
+    SAMPLE_COUNT_4_BIT, SAMPLE_COUNT_64_BIT, SAMPLE_COUNT_8_BIT,
 };
 
+use crate::mesh::{DataType, Topology};
 use crate::sampler::{self, Compare, Wrap};
 use crate::texture;
 
@@ -147,7 +151,7 @@ pub(super) fn aspect_of(fmt: texture::Format) -> ImageAspectFlags {
     }
 }
 
-/// Converts from a [`sampler::Wrap`] into a [`vk_sys::SamplerAddressMode`].
+/// Converts from a [`Wrap`] into a [`vk_sys::SamplerAddressMode`].
 pub(super) fn from_wrap_mode(wrap: Wrap) -> SamplerAddressMode {
     match wrap {
         Wrap::Repeat => SAMPLER_ADDRESS_MODE_REPEAT,
@@ -187,7 +191,7 @@ pub(super) fn from_min_filter(
     (min, mip, 0.0, max_lod)
 }
 
-/// Converts from a [`sampler::Compare`] into a [`vk_sys::CompareOp`].
+/// Converts from a [`Compare`] into a [`vk_sys::CompareOp`].
 pub(super) fn from_compare_fn(compare: Compare) -> CompareOp {
     match compare {
         Compare::Never => COMPARE_OP_NEVER,
@@ -198,5 +202,45 @@ pub(super) fn from_compare_fn(compare: Compare) -> CompareOp {
         Compare::GreaterEqual => COMPARE_OP_GREATER_OR_EQUAL,
         Compare::Greater => COMPARE_OP_GREATER,
         Compare::Always => COMPARE_OP_ALWAYS,
+    }
+}
+
+/// Converts from a [`DataType`] into a [`vk_sys::Format`].
+///
+/// NOTE: The following conversions generate [`vk_sys::Format`]s that
+/// may not support vertex buffer usage:
+///
+/// - [`DataType::U16x3`]
+/// - [`DataType::U8x3`]
+pub(super) fn from_data_type(data_type: DataType) -> vk_sys::Format {
+    match data_type {
+        DataType::F32 => vk_sys::FORMAT_R32_SFLOAT,
+        DataType::F32x2 => vk_sys::FORMAT_R32G32_SFLOAT,
+        DataType::F32x3 => vk_sys::FORMAT_R32G32B32_SFLOAT,
+        DataType::F32x4 => vk_sys::FORMAT_R32G32B32A32_SFLOAT,
+        DataType::U32 => vk_sys::FORMAT_R32_UINT,
+        DataType::U32x2 => vk_sys::FORMAT_R32G32_UINT,
+        DataType::U32x3 => vk_sys::FORMAT_R32G32B32_UINT,
+        DataType::U32x4 => vk_sys::FORMAT_R32G32B32A32_UINT,
+        DataType::U16 => vk_sys::FORMAT_R16_UINT,
+        DataType::U16x2 => vk_sys::FORMAT_R16G16_UINT,
+        DataType::U16x3 => vk_sys::FORMAT_R16G16B16_UINT,
+        DataType::U16x4 => vk_sys::FORMAT_R16G16B16A16_UINT,
+        DataType::U8 => vk_sys::FORMAT_R8_UINT,
+        DataType::U8x2 => vk_sys::FORMAT_R8G8_UINT,
+        DataType::U8x3 => vk_sys::FORMAT_R8G8B8_UINT,
+        DataType::U8x4 => vk_sys::FORMAT_R8G8B8A8_UINT,
+    }
+}
+
+/// Converts from a [`Topology`] into a [`vk_sys::PrimitiveTopology`].
+pub(super) fn from_topology(topology: Topology) -> PrimitiveTopology {
+    match topology {
+        Topology::Point => PRIMITIVE_TOPOLOGY_POINT_LIST,
+        Topology::Line => PRIMITIVE_TOPOLOGY_LINE_LIST,
+        Topology::LineStrip => PRIMITIVE_TOPOLOGY_LINE_STRIP,
+        Topology::Triangle => PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+        Topology::TriangleStrip => PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+        Topology::TriangleFan => PRIMITIVE_TOPOLOGY_TRIANGLE_FAN,
     }
 }
