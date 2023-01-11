@@ -13,6 +13,46 @@ pub struct Sampler {
     gid: SplrId,
 }
 
+impl Sampler {
+    /// Returns the wrapping mode of the `u` coordinates.
+    pub fn u_wrap(&self) -> Wrap {
+        self.options.u_wrap
+    }
+
+    /// Returns the wrapping mode of the `v` coordinates.
+    pub fn v_wrap(&self) -> Wrap {
+        self.options.v_wrap
+    }
+
+    /// Returns the wrapping mode of the `w` coordinates.
+    pub fn w_wrap(&self) -> Wrap {
+        self.options.w_wrap
+    }
+
+    /// Returns the magnification filter.
+    pub fn mag_filter(&self) -> Filter {
+        self.options.mag_filter
+    }
+
+    /// Returns the minification filter.
+    pub fn min_filter(&self) -> (Filter, Option<Filter>) {
+        self.options.min_filter
+    }
+
+    /// Returns the comparison function.
+    ///
+    /// This will always return a `Some` variant for shadow samplers,
+    /// and `None` for non-shadow samplers.
+    pub fn compare(&self) -> Option<Compare> {
+        self.options.compare
+    }
+
+    /// Returns a reference to the [`SplrId`].
+    pub(crate) fn splr_id(&self) -> &SplrId {
+        &self.gid
+    }
+}
+
 impl Drop for Sampler {
     fn drop(&mut self) {
         gpu::drop_sampler(&mut self.gid)
