@@ -20,6 +20,7 @@ pub mod texture;
 pub mod transform;
 
 mod gpu;
+mod var_buf;
 
 // NOTE: The main purpose of making this reference-counted
 // is for parallel testing. Crate users are expected to
