@@ -15,7 +15,7 @@ pub trait VarAlloc {
     /// performed on multiples of this value.
     ///
     /// It must be a power of two.
-    const MIN_ALIGNMENT: usize = 4;
+    const MIN_ALIGN: usize = 4;
 
     /// Grows the allocation to a given size in bytes.
     ///
@@ -109,6 +109,41 @@ impl<T: VarAlloc> VarBuf<T> {
             alloc,
         }
     }
+
+    /// Allocates an entry.
+    pub fn alloc(&mut self, size: usize) -> io::Result<VarEntry> {
+        if size == 0 {
+            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+        }
+
+        // Enforce alignment at entries' boundaries.
+        let size = size + T::MIN_ALIGN - 1 & !(T::MIN_ALIGN - 1);
+
+        // TODO
+        if cfg!(test) {
+            eprintln!("[!] var_buf: using test alloc");
+            let offset = self.alloc.size();
+            self.ptr = self.alloc.grow(offset + size)?;
+            Ok(VarEntry { offset, size })
+        } else {
+            todo!();
+        }
+    }
+
+    /// Frees a given entry.
+    pub fn dealloc(&mut self, entry: VarEntry) {
+        // TODO
+        if cfg!(test) {
+            eprintln!("[!] var_buf: using test dealloc");
+            if let Ok(x) = self.alloc.shrink(self.alloc.size() - entry.size) {
+                self.ptr = x;
+            }
+        } else {
+            todo!();
+        }
+    }
+
+    // TODO: Data copy.
 }
 
 impl<T: VarAlloc> Drop for VarBuf<T> {
