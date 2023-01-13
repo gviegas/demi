@@ -2,7 +2,9 @@
 
 //! Storage of variable-size data.
 
+use std::cmp::Ordering;
 use std::io;
+use std::ops::Range;
 use std::ptr::NonNull;
 
 /// [`VarBuf`]'s allocation.
@@ -35,6 +37,60 @@ pub trait VarAlloc {
 
     /// Returns the size of the allocation, in bytes.
     fn size(&self) -> usize;
+}
+
+/// [`VarBuf`]'s data entry.
+#[derive(Eq, Debug)]
+pub struct VarEntry {
+    offset: usize,
+    size: usize,
+}
+
+impl VarEntry {
+    /// Returns its byte offset within the buffer.
+    pub fn offset(&self) -> usize {
+        self.offset
+    }
+
+    /// Returns the number of bytes it occupies.
+    pub fn size(&self) -> usize {
+        self.size
+    }
+
+    /// Returns `offset..offset + size`.
+    pub fn range(&self) -> Range<usize> {
+        self.offset..self.offset + self.size
+    }
+}
+
+impl PartialEq for VarEntry {
+    /// Compares the offsets.
+    ///
+    /// NOTE: This equality is only meaningful when
+    /// both entries belong to the same [`VarBuf`].
+    fn eq(&self, other: &Self) -> bool {
+        self.offset == other.offset
+    }
+}
+
+impl PartialOrd for VarEntry {
+    /// Compares the offsets.
+    ///
+    /// NOTE: This ordering is only meaningful when
+    /// both entries belong to the same [`VarBuf`].
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for VarEntry {
+    /// Compares the offsets.
+    ///
+    /// NOTE: This ordering is only meaningful when
+    /// both entries belong to the same [`VarBuf`].
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.offset.cmp(&other.offset)
+    }
 }
 
 /// Buffer for storing data of variable size.
