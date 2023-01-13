@@ -6,6 +6,7 @@ use std::io::{self, Read};
 use std::sync::Arc;
 
 use crate::material::Material;
+use crate::var_buf::VarEntry;
 
 /// Mesh.
 #[derive(Debug)]
@@ -16,7 +17,67 @@ pub struct Mesh {
 /// Primitive.
 #[derive(Debug)]
 pub struct Primitive {
-    // TODO
+    // TODO: Displacement.
+    semantics: [Option<(DataType, VarEntry)>; SEMANTIC_N],
+    indices: Option<(DataType, VarEntry)>,
+    material: Arc<Material>,
+    topology: Topology,
+}
+
+impl Primitive {
+    /// Returns a ([`DataType`], &[`VarEntry`]) pair representing
+    /// a given semantic in memory, or [`None`] if such semantic
+    /// is not present in this primitive.
+    pub(crate) fn semantic_data(&self, sem: Semantic) -> Option<(DataType, &VarEntry)> {
+        if let Some((d, ref v)) = self.semantics[sem as usize] {
+            Some((d, v))
+        } else {
+            None
+        }
+    }
+
+    /// Returns a ([`DataType`], &[`VarEntry`]) pair representing
+    /// the indices in memory, or [`None`] if this primitive
+    /// does not use an index buffer.
+    pub(crate) fn index_data(&self) -> Option<(DataType, &VarEntry)> {
+        if let Some((d, ref v)) = self.indices {
+            Some((d, v))
+        } else {
+            None
+        }
+    }
+
+    /// Returns the [`DataType`] used to store a given semantic,
+    /// or [`None`] if such semantic is not present in this
+    /// primitive.
+    pub fn semantic_data_type(&self, sem: Semantic) -> Option<DataType> {
+        if let Some((d, _)) = self.semantics[sem as usize] {
+            Some(d)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the [`DataType`] used to store vertex indices,
+    /// or [`None`] if this primitive does not use an
+    /// index buffer.
+    pub fn index_data_type(&self) -> Option<DataType> {
+        if let Some((d, _)) = self.indices {
+            Some(d)
+        } else {
+            None
+        }
+    }
+
+    /// Returns a reference to the reference-counted [`Material`].
+    pub fn material(&self) -> &Arc<Material> {
+        &self.material
+    }
+
+    /// Returns the [`Topology`] used to draw this primitive.
+    pub fn topology(&self) -> Topology {
+        self.topology
+    }
 }
 
 /// Semantics.
