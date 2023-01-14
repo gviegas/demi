@@ -159,6 +159,12 @@ trait Gpu: fmt::Display + fmt::Debug {
     /// for shader read access.
     fn create_ub(&self, options: &BufOptions) -> io::Result<BufId>;
 
+    /// Gets a pointer to buffer memory.
+    ///
+    /// This method will always fail if the buffer is not
+    /// CPU-visible.
+    fn buffer_ptr(&self, buf_id: &BufId) -> io::Result<NonNull<()>>;
+
     /// Notifies that `buf_id` will no longer be used.
     ///
     /// The implementation is free to discard or reuse its
@@ -224,6 +230,11 @@ pub fn create_vb(options: &BufOptions) -> io::Result<BufId> {
 /// Creates an uniform buffer.
 pub fn create_ub(options: &BufOptions) -> io::Result<BufId> {
     get().create_ub(options)
+}
+
+/// Gets a pointer to buffer memory.
+pub fn buffer_ptr(buf_id: &BufId) -> io::Result<NonNull<()>> {
+    get().buffer_ptr(buf_id)
 }
 
 /// Notifies that `buf_id` will no longer be used.

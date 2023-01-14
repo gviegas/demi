@@ -6,7 +6,7 @@ use std::ffi::{c_char, c_void, CStr};
 use std::fmt;
 use std::io;
 use std::mem;
-use std::ptr;
+use std::ptr::{self, NonNull};
 
 use vk_sys::{
     ApplicationInfo, Device, DeviceCreateInfo, DeviceFp, DeviceMemory, DeviceQueueCreateInfo,
@@ -232,6 +232,10 @@ impl Gpu for Impl {
     fn create_ub(&self, options: &BufOptions) -> io::Result<BufId> {
         let buf_imp = Box::new(BufImpl::new_ub(self, options)?);
         Ok(BufId::from(buf_imp))
+    }
+
+    fn buffer_ptr(&self, buf_id: &BufId) -> io::Result<NonNull<()>> {
+        todo!();
     }
 
     fn drop_buffer(&self, buf_id: BufId) {
