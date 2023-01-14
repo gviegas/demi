@@ -235,7 +235,11 @@ impl Gpu for Impl {
     }
 
     fn buffer_ptr(&self, buf_id: &BufId) -> io::Result<NonNull<()>> {
-        todo!();
+        let buf_imp: &BufImpl = From::from(buf_id);
+        match NonNull::new(buf_imp.data_ptr()) {
+            Some(x) => Ok(x.cast()),
+            _ => Err(io::Error::from(io::ErrorKind::InvalidInput)),
+        }
     }
 
     fn drop_buffer(&self, buf_id: BufId) {
