@@ -257,6 +257,17 @@ impl From<TexId> for Box<TexImpl> {
     }
 }
 
+impl From<&TexId> for &TexImpl {
+    /// Converts from a &[`TexId`] into a &[`TexImpl`].
+    fn from(tex_id: &TexId) -> Self {
+        let non_null = match tex_id.0 {
+            Id::Ptr(x) => x,
+            _ => unreachable!(),
+        };
+        unsafe { non_null.cast().as_ref() }
+    }
+}
+
 impl From<Box<TexImpl>> for TexId {
     /// Converts from a boxed [`TexImpl`] into a [`TexId`].
     fn from(tex_imp: Box<TexImpl>) -> Self {
