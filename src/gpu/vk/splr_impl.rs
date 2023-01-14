@@ -103,6 +103,17 @@ impl From<SplrId> for Box<SplrImpl> {
     }
 }
 
+impl From<&SplrId> for &SplrImpl {
+    /// Converts from a &[`SplrId`] into a &[`SplrImpl`].
+    fn from(splr_id: &SplrId) -> Self {
+        let non_null = match splr_id.0 {
+            Id::Ptr(x) => x,
+            _ => unreachable!(),
+        };
+        unsafe { non_null.cast().as_ref() }
+    }
+}
+
 impl From<Box<SplrImpl>> for SplrId {
     /// Converts from a boxed [`SplrImpl`] into a [`SplrId`].
     fn from(splr_imp: Box<SplrImpl>) -> Self {
