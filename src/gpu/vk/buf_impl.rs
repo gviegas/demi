@@ -168,6 +168,14 @@ impl BufImpl {
         }
     }
 
+    /// Gets a pointer to the underlying memory.
+    ///
+    /// If the buffer was created as GPU-private, the returned
+    /// pointer will be null.
+    pub fn data_ptr(&self) -> *mut c_void {
+        self.data
+    }
+
     /// Drops the [`BufImpl`].
     pub fn drop_with(self, imp: &Impl) {
         Self::destroy_buffer(imp, self.buf);
