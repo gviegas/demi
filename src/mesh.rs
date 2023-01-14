@@ -3,10 +3,80 @@
 //! Geometry for drawing.
 
 use std::io::{self, Read};
+use std::ptr::NonNull;
 use std::sync::Arc;
 
+use crate::gpu::{self, BufId, BufOptions};
 use crate::material::Material;
-use crate::var_buf::VarEntry;
+use crate::var_buf::{VarAlloc, VarEntry};
+
+/// Vertex buffer's allocation.
+#[derive(Debug)]
+pub(crate) struct VertAlloc {
+    ptr: NonNull<()>,
+    size: usize,
+    gid: Option<BufId>,
+}
+
+impl VarAlloc for VertAlloc {
+    fn grow(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
+        if self.size >= new_size {
+            Ok(self.ptr)
+        } else {
+            // TODO: Provide a `gpu` function that
+            // explicitly resizes a buffer, so it
+            // can try to realloc/unmap memory.
+            let gid = gpu::create_vb(&BufOptions {
+                size: new_size as u64,
+                cpu_visible: true,
+            })?;
+            match gpu::buffer_ptr(&gid) {
+                Ok(ptr) => {
+                    if let Some(ref mut x) = self.gid {
+                        gpu::drop_buffer(x);
+                    }
+                    self.ptr = ptr;
+                    self.size = new_size;
+                    self.gid = Some(gid);
+                    Ok(ptr)
+                }
+                Err(e) => Err(e),
+            }
+        }
+    }
+
+    fn shrink(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
+        if self.size <= new_size {
+            Ok(self.ptr)
+        } else if new_size == 0 {
+            gpu::drop_buffer(self.gid.as_mut().unwrap());
+            self.ptr = NonNull::dangling();
+            self.size = 0;
+            self.gid = None;
+            Ok(self.ptr)
+        } else {
+            // TODO: See `grow` above.
+            let gid = gpu::create_vb(&BufOptions {
+                size: new_size as u64,
+                cpu_visible: true,
+            })?;
+            match gpu::buffer_ptr(&gid) {
+                Ok(ptr) => {
+                    gpu::drop_buffer(self.gid.as_mut().unwrap());
+                    self.ptr = ptr;
+                    self.size = new_size;
+                    self.gid = Some(gid);
+                    Ok(ptr)
+                }
+                Err(e) => Err(e),
+            }
+        }
+    }
+
+    fn size(&self) -> usize {
+        self.size
+    }
+}
 
 /// Mesh.
 #[derive(Debug)]
