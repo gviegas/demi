@@ -187,6 +187,17 @@ impl From<BufId> for Box<BufImpl> {
     }
 }
 
+impl From<&BufId> for &BufImpl {
+    /// Converts from a &[`BufId`] into a &[`BufImpl`].
+    fn from(buf_id: &BufId) -> Self {
+        let non_null = match buf_id.0 {
+            Id::Ptr(x) => x,
+            _ => unreachable!(),
+        };
+        unsafe { non_null.cast().as_ref() }
+    }
+}
+
 impl From<Box<BufImpl>> for BufId {
     /// Converts from a boxed [`BufImpl`] into a [`BufId`].
     fn from(buf_imp: Box<BufImpl>) -> Self {
