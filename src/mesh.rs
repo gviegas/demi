@@ -18,6 +18,45 @@ pub(crate) struct VertAlloc {
     gid: Option<BufId>,
 }
 
+impl VertAlloc {
+    /// Creates a new vertex buffer allocation.
+    ///
+    /// This functions will attempt to create an allocation of
+    /// `size_hint` (plus alignment padding) bytes.
+    /// It will halve this size until creation succeeds.
+    ///
+    /// Creating a zero-sized [`VertAlloc`] does not allocate
+    /// [`gpu`] resources.
+    pub fn new(size_hint: usize) -> Self {
+        debug_assert_eq!(0, Self::MIN_ALIGN & Self::MIN_ALIGN - 1);
+        let mut size = size_hint + VertAlloc::MIN_ALIGN - 1 & !(VertAlloc::MIN_ALIGN - 1);
+        loop {
+            if size > 0 {
+                if let Ok(mut gid) = gpu::create_vb(&BufOptions {
+                    size: size as u64,
+                    cpu_visible: true,
+                }) {
+                    if let Ok(ptr) = gpu::buffer_ptr(&gid) {
+                        break Self {
+                            ptr,
+                            size,
+                            gid: Some(gid),
+                        };
+                    }
+                    gpu::drop_buffer(&mut gid);
+                }
+                size /= 2;
+            } else {
+                break Self {
+                    ptr: NonNull::dangling(),
+                    size: 0,
+                    gid: None,
+                };
+            }
+        }
+    }
+}
+
 impl VarAlloc for VertAlloc {
     fn grow(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
         if self.size >= new_size {
