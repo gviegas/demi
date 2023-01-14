@@ -4,11 +4,11 @@
 
 use std::io::{self, Read};
 use std::ptr::NonNull;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use crate::gpu::{self, BufId, BufOptions};
 use crate::material::Material;
-use crate::var_buf::{VarAlloc, VarEntry};
+use crate::var_buf::{VarAlloc, VarBuf, VarEntry};
 
 /// Vertex buffer's allocation.
 #[derive(Debug)]
@@ -78,10 +78,27 @@ impl VarAlloc for VertAlloc {
     }
 }
 
+/// Vertex buffer.
+pub(crate) type VertBuf = VarBuf<VertAlloc>;
+
 /// Mesh.
 #[derive(Debug)]
 pub struct Mesh {
-    // TODO
+    vert_buf: Arc<RwLock<VertBuf>>,
+    primitives: Vec<Primitive>,
+}
+
+impl Mesh {
+    /// Returns a reference to the reference-counted,
+    /// r/w-locked vertex buffer.
+    pub(crate) fn vertex_buffer(&self) -> &Arc<RwLock<VertBuf>> {
+        &self.vert_buf
+    }
+
+    /// Returns a reference to the mesh's [`Primitive`]s.
+    pub fn primitives(&self) -> &[Primitive] {
+        &self.primitives
+    }
 }
 
 /// Primitive.
