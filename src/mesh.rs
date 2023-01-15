@@ -117,6 +117,17 @@ impl VarAlloc for VertAlloc {
     }
 }
 
+impl Drop for VertAlloc {
+    fn drop(&mut self) {
+        // NOTE: Currently, `VarBuf` has a `drop`
+        // implementation that calls `shrink(0)`,
+        // so this will always be skipped.
+        if let Some(ref mut gid) = self.gid {
+            gpu::drop_buffer(gid);
+        }
+    }
+}
+
 /// Vertex buffer.
 pub(crate) type VertBuf = VarBuf<VertAlloc>;
 
