@@ -161,10 +161,17 @@ impl Mesh {
 /// Primitive.
 #[derive(Debug)]
 pub struct Primitive {
-    // TODO: Displacement.
     semantics: [Option<(DataType, VarEntry)>; SEMANTIC_N],
     indices: Option<(DataType, VarEntry)>,
+    // Number of vertices to draw.
+    // How to interpret them depends on whether
+    // the primitive has `indices`.
+    count: usize,
     material: Arc<Material>,
+    // TODO: Do we really need `DataType` here?
+    // Can we limit this to a subset of `Semantic`s?
+    displacements: Vec<[Option<(DataType, VarEntry)>; SEMANTIC_N]>,
+    weights: Vec<f32>,
     topology: Topology,
 }
 
