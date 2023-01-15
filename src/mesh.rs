@@ -3,6 +3,7 @@
 //! Geometry for drawing.
 
 use std::io::{self, Read};
+use std::mem::{self, MaybeUninit};
 use std::ptr::NonNull;
 use std::sync::{Arc, RwLock};
 
@@ -272,14 +273,46 @@ pub enum Topology {
 
 /// Mesh builder.
 pub struct Builder {
-    // TODO
+    // Data of the primitive being built,
+    // which will be consumed by the next
+    // `push_primitive` call.
+    semantics: [Option<(DataType, VarEntry)>; SEMANTIC_N],
+    indices: Option<(DataType, VarEntry)>,
+    vert_count: usize,
+    idx_count: usize,
+    material: Option<Arc<Material>>,
+    displacements: Vec<[Option<(DataType, VarEntry)>; SEMANTIC_N]>,
+    weights: Vec<f32>,
+    // Pushed primitives.
+    // Each new element pushed here consumes
+    // the above fields.
+    primitives: Vec<Primitive>,
 }
 
 #[allow(unused_variables)] // TODO
 #[allow(unused_mut)] // TODO
 impl Builder {
+    /// Creates a new mesh builder.
     pub fn new() -> Self {
-        todo!();
+        Self {
+            semantics: unsafe {
+                // We really don't want `VarEntry` to be `Copy`.
+                type Sem = Option<(DataType, VarEntry)>;
+                let mut sems: [MaybeUninit<Sem>; SEMANTIC_N] = MaybeUninit::uninit().assume_init();
+                for i in &mut sems {
+                    i.write(None);
+                }
+                mem::transmute::<_, [Sem; SEMANTIC_N]>(sems)
+            },
+            indices: None,
+            vert_count: 0,
+            idx_count: 0,
+            material: None,
+            displacements: vec![],
+            weights: vec![],
+            // The (expected) common case.
+            primitives: Vec::with_capacity(1),
+        }
     }
 
     pub fn set_weights(&mut self, weights: &[f64]) -> &mut Self {
