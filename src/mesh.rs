@@ -58,6 +58,12 @@ impl VertAlloc {
 }
 
 impl VarAlloc for VertAlloc {
+    // NOTE: This alignment value should suffice for all
+    // `gpu` back-ends (the widest `DataType` variants
+    // currently defined have 32 bits per component).
+    // It can be increased if necessary.
+    const MIN_ALIGN: usize = 4;
+
     fn grow(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
         if self.size >= new_size {
             Ok(self.ptr)
