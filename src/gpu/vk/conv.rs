@@ -210,7 +210,9 @@ pub(super) fn from_compare_fn(compare: Compare) -> CompareOp {
 /// NOTE: The following conversions generate [`vk_sys::Format`]s that
 /// may not support vertex buffer usage:
 ///
+/// - [`DataType::I16x3`]
 /// - [`DataType::U16x3`]
+/// - [`DataType::I8x3`]
 /// - [`DataType::U8x3`]
 pub(super) fn from_data_type(data_type: DataType) -> vk_sys::Format {
     match data_type {
@@ -218,14 +220,26 @@ pub(super) fn from_data_type(data_type: DataType) -> vk_sys::Format {
         DataType::F32x2 => vk_sys::FORMAT_R32G32_SFLOAT,
         DataType::F32x3 => vk_sys::FORMAT_R32G32B32_SFLOAT,
         DataType::F32x4 => vk_sys::FORMAT_R32G32B32A32_SFLOAT,
+        DataType::I32 => vk_sys::FORMAT_R32_SINT,
+        DataType::I32x2 => vk_sys::FORMAT_R32G32_SINT,
+        DataType::I32x3 => vk_sys::FORMAT_R32G32B32_SINT,
+        DataType::I32x4 => vk_sys::FORMAT_R32G32B32A32_SINT,
         DataType::U32 => vk_sys::FORMAT_R32_UINT,
         DataType::U32x2 => vk_sys::FORMAT_R32G32_UINT,
         DataType::U32x3 => vk_sys::FORMAT_R32G32B32_UINT,
         DataType::U32x4 => vk_sys::FORMAT_R32G32B32A32_UINT,
+        DataType::I16 => vk_sys::FORMAT_R16_SINT,
+        DataType::I16x2 => vk_sys::FORMAT_R16G16_SINT,
+        DataType::I16x3 => vk_sys::FORMAT_R16G16B16_SINT,
+        DataType::I16x4 => vk_sys::FORMAT_R16G16B16A16_SINT,
         DataType::U16 => vk_sys::FORMAT_R16_UINT,
         DataType::U16x2 => vk_sys::FORMAT_R16G16_UINT,
         DataType::U16x3 => vk_sys::FORMAT_R16G16B16_UINT,
         DataType::U16x4 => vk_sys::FORMAT_R16G16B16A16_UINT,
+        DataType::I8 => vk_sys::FORMAT_R8_SINT,
+        DataType::I8x2 => vk_sys::FORMAT_R8G8_SINT,
+        DataType::I8x3 => vk_sys::FORMAT_R8G8B8_SINT,
+        DataType::I8x4 => vk_sys::FORMAT_R8G8B8A8_SINT,
         DataType::U8 => vk_sys::FORMAT_R8_UINT,
         DataType::U8x2 => vk_sys::FORMAT_R8G8_UINT,
         DataType::U8x3 => vk_sys::FORMAT_R8G8B8_UINT,
