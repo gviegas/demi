@@ -198,6 +198,23 @@ impl Primitive {
         }
     }
 
+    /// Returns a vector containing [`DataType`]s and &[`VarEntry`]s
+    /// representing the displacements of `sem`, alongside the
+    /// displacement slots which they refer.
+    pub(crate) fn displacement_data(&self, sem: Semantic) -> Vec<(DataType, &VarEntry, usize)> {
+        self.displacements
+            .iter()
+            .enumerate()
+            .filter_map(|(i, x)| {
+                if let Some((d, ref v)) = x[sem as usize] {
+                    Some((d, v, i))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
     /// Returns the [`DataType`] used to store a given semantic,
     /// or [`None`] if such semantic is not present in this
     /// primitive.
@@ -220,9 +237,46 @@ impl Primitive {
         }
     }
 
+    /// Returns the number of vertices that are draw when drawing
+    /// this primitive.
+    ///
+    /// NOTE: This value is to be interpreted as the number of indices
+    /// to fetch from the index buffer, if one is present.
+    pub fn vertex_count(&self) -> usize {
+        self.count
+    }
+
     /// Returns a reference to the reference-counted [`Material`].
     pub fn material(&self) -> &Arc<Material> {
         &self.material
+    }
+
+    /// Returns the number of displacement slots in this primitive.
+    pub fn displacement_slots(&self) -> usize {
+        self.displacements.len()
+    }
+
+    /// Returns a vector containing the [`DataType`]s used to
+    /// store displacements for `sem`, alongside the displacement
+    /// slots which they refer.
+    pub fn displacement_data_type(&self, sem: Semantic) -> Vec<(DataType, usize)> {
+        self.displacements
+            .iter()
+            .enumerate()
+            .filter_map(|(i, x)| {
+                if let Some((d, _)) = x[sem as usize] {
+                    Some((d, i))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Returns a reference to a slice containing the default weight
+    /// of each displacement slot.
+    pub fn weights(&self) -> &[f32] {
+        &self.weights
     }
 
     /// Returns the [`Topology`] used to draw this primitive.
