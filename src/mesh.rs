@@ -362,8 +362,6 @@ pub struct Builder {
     primitives: Vec<Primitive>,
 }
 
-#[allow(unused_variables)] // TODO
-#[allow(unused_mut)] // TODO
 impl Builder {
     /// Creates a new mesh builder.
     pub fn new() -> Self {
@@ -388,72 +386,95 @@ impl Builder {
         }
     }
 
-    pub fn set_weights(&mut self, weights: &[f64]) -> &mut Self {
-        todo!();
-    }
-
+    /// Sets the vertex count.
+    ///
+    /// This value indicates the number of data elements
+    /// to fetch when reading semantic input.
+    /// All semantics (including displacements) must have
+    /// the same vertex count.
+    ///
+    /// Panics if `count` is zero.
     pub fn set_vertex_count(&mut self, count: usize) -> &mut Self {
-        todo!();
+        assert_ne!(count, 0);
+        self.vert_count = count;
+        self
     }
 
-    pub fn set_semantic(
+    /// Sets semantic data.
+    ///
+    /// This method updates the given semantic to contain
+    /// `data_type` elements, each of which is fetched
+    /// `stride` bytes apart from `reader`.
+    /// The number of [`DataType`] elements to read is
+    /// defined by [`set_vertex_count`].
+    #[allow(unused_variables, unused_mut)] // TODO
+    pub fn set_semantic<T: Read>(
         &mut self,
         semantic: Semantic,
         data_type: DataType,
-        offset: usize,
         stride: usize,
-    ) -> &mut Self {
-        todo!();
-    }
-
-    pub fn read_semantic<T: Read>(
-        &mut self,
-        semantic: Semantic,
         mut reader: T,
     ) -> io::Result<&mut Self> {
         todo!();
     }
 
-    pub fn read_vertices<T: Read>(&mut self, mut reader: T) -> io::Result<&mut Self> {
-        todo!();
-    }
-
-    pub fn set_indexed(&mut self, count: usize, data_type: DataType) -> &mut Self {
-        todo!();
-    }
-
-    pub fn read_indices<T: Read>(&mut self, mut reader: T) -> io::Result<&mut Self> {
-        todo!();
-    }
-
-    pub fn set_displacement_semantic(
+    /// Sets vertex indices.
+    ///
+    /// This method updates the index buffer to contain
+    /// `count` `data_type` elements fetched from `reader`.
+    /// The data is assumed to be tightly packed.
+    #[allow(unused_variables, unused_mut)] // TODO
+    pub fn set_indexed<T: Read>(
         &mut self,
-        slot: usize,
-        semantic: Semantic,
+        count: usize,
         data_type: DataType,
-        offset: usize,
-        stride: usize,
-    ) -> &mut Self {
-        todo!();
-    }
-
-    pub fn read_displacement_semantic<T: Read>(
-        &mut self,
-        slot: usize,
-        semantic: Semantic,
         mut reader: T,
     ) -> io::Result<&mut Self> {
         todo!();
     }
 
+    /// Sets the material.
     pub fn set_material(&mut self, material: &Arc<Material>) -> &mut Self {
+        self.material = Some(Arc::clone(material));
+        self
+    }
+
+    /// Sets displacement data.
+    ///
+    /// This method updates the given semantic of the
+    /// given displacement slot to contain `data_type`
+    /// elements, each of which is fetched `stride`
+    /// bytes apart from `reader`.
+    /// The number of [`DataType`] elements to read is
+    /// defined by [`set_vertex_count`].
+    #[allow(unused_variables, unused_mut)] // TODO
+    pub fn set_displacement_semantic<T: Read>(
+        &mut self,
+        slot: usize,
+        semantic: Semantic,
+        data_type: DataType,
+        stride: usize,
+        mut reader: T,
+    ) -> io::Result<&mut Self> {
         todo!();
     }
 
+    /// Sets the default displacement weights.
+    ///
+    /// NOTE: The length of this vector must match the
+    /// number of displacement slots used.
+    pub fn set_weights(&mut self, weights: Vec<f32>) -> &mut Self {
+        self.weights = weights;
+        self
+    }
+
+    /// Consumes the current state to create a primitive.
+    #[allow(unused_variables)] // TODO
     pub fn push_primitive(&mut self, topology: Topology) -> io::Result<&mut Self> {
         todo!();
     }
 
+    /// Creates the mesh.
     pub fn create(&mut self) -> io::Result<Mesh> {
         todo!();
     }
