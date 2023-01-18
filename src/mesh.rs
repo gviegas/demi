@@ -2,6 +2,7 @@
 
 //! Geometry for drawing.
 
+use std::alloc::Layout;
 use std::io::{self, Read};
 use std::mem::{self, MaybeUninit};
 use std::ptr::NonNull;
@@ -331,6 +332,26 @@ pub enum DataType {
     U8x2,
     U8x3,
     U8x4,
+}
+
+impl DataType {
+    /// Returns the `[Layout]` of the [`DataType`].
+    pub const fn layout(&self) -> Layout {
+        match *self {
+            DataType::F32 | DataType::I32 | DataType::U32 => Layout::new::<f32>(),
+            DataType::F32x2 | DataType::I32x2 | DataType::U32x2 => Layout::new::<[f32; 2]>(),
+            DataType::F32x3 | DataType::I32x3 | DataType::U32x3 => Layout::new::<[f32; 3]>(),
+            DataType::F32x4 | DataType::I32x4 | DataType::U32x4 => Layout::new::<[f32; 4]>(),
+            DataType::I16 | DataType::U16 => Layout::new::<i16>(),
+            DataType::I16x2 | DataType::U16x2 => Layout::new::<[i16; 2]>(),
+            DataType::I16x3 | DataType::U16x3 => Layout::new::<[i16; 3]>(),
+            DataType::I16x4 | DataType::U16x4 => Layout::new::<[i16; 4]>(),
+            DataType::I8 | DataType::U8 => Layout::new::<i8>(),
+            DataType::I8x2 | DataType::U8x2 => Layout::new::<[i8; 2]>(),
+            DataType::I8x3 | DataType::U8x3 => Layout::new::<[i8; 3]>(),
+            DataType::I8x4 | DataType::U8x4 => Layout::new::<[i8; 4]>(),
+        }
+    }
 }
 
 /// Primitive topology values.
