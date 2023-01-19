@@ -483,6 +483,9 @@ impl Builder {
     ) -> io::Result<&mut Self> {
         let layout = data_type.layout();
         debug_assert!(VertAlloc::MIN_ALIGN >= layout.align());
+        if self.vert_count == 0 {
+            return Err(io::Error::from(io::ErrorKind::Other));
+        }
         // This is likely an user mistake.
         if let Some(x) = self.semantics[semantic as usize].take() {
             eprintln!(
@@ -516,7 +519,6 @@ impl Builder {
     /// This method updates the index buffer to contain
     /// `count` `data_type` elements fetched from `reader`.
     /// The data is assumed to be tightly packed.
-    #[allow(unused_variables, unused_mut)] // TODO
     pub fn set_indexed<T: Read>(
         &mut self,
         mut reader: T,
@@ -574,7 +576,6 @@ impl Builder {
     /// bytes apart from `reader`.
     /// The number of [`DataType`] elements to read is
     /// defined by `set_vertex_count`.
-    #[allow(unused_variables, unused_mut)] // TODO
     pub fn set_displacement_semantic<T: Read>(
         &mut self,
         mut reader: T,
@@ -585,6 +586,9 @@ impl Builder {
     ) -> io::Result<&mut Self> {
         let layout = data_type.layout();
         debug_assert!(VertAlloc::MIN_ALIGN >= layout.align());
+        if self.vert_count == 0 {
+            return Err(io::Error::from(io::ErrorKind::Other));
+        }
         if slot >= self.displacements.len() {
             // NOTE: This generates empty slots in the range
             // `self.displacements.len()..slot`.
