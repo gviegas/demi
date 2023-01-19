@@ -5,14 +5,11 @@
 use std::cmp::Ordering;
 use std::io;
 use std::ops::Range;
-use std::ptr::NonNull;
+use std::ptr::{self, NonNull};
 
 /// [`VarBuf`]'s allocation.
 pub trait VarAlloc {
     /// The minimum alignment supported by the allocation.
-    ///
-    /// Writes through the allocation's pointer will always be
-    /// performed on multiples of this value.
     ///
     /// It must be a power of two.
     const MIN_ALIGN: usize = 4;
@@ -143,7 +140,38 @@ impl<T: VarAlloc> VarBuf<T> {
         }
     }
 
-    // TODO: Data copy.
+    /// Copies data to a given entry.
+    pub fn copy(&mut self, data: &[u8], entry: &VarEntry) {
+        debug_assert_ne!(self.alloc.size(), 0);
+        debug_assert!(self.alloc.size() >= entry.offset + entry.size);
+        let size = usize::min(entry.size(), data.len());
+        unsafe {
+            ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                self.ptr.as_ptr().cast::<u8>().add(entry.offset),
+                size,
+            );
+        }
+    }
+
+    /// Copies data to a given entry at a given offset.
+    ///
+    /// Call `copy` instead when offsetting into `entry`
+    /// is not necessary.
+    pub fn copy_at(&mut self, data: &[u8], entry: &VarEntry, offset: usize) {
+        debug_assert_ne!(self.alloc.size(), 0);
+        debug_assert!(self.alloc.size() >= entry.offset + entry.size);
+        let offset = usize::min(offset, entry.size);
+        let size = usize::min(entry.size - offset, data.len());
+        let offset = offset + entry.offset;
+        unsafe {
+            ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                self.ptr.as_ptr().cast::<u8>().add(offset),
+                size,
+            );
+        }
+    }
 }
 
 impl<T: VarAlloc> Drop for VarBuf<T> {
