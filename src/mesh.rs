@@ -519,11 +519,45 @@ impl Builder {
     #[allow(unused_variables, unused_mut)] // TODO
     pub fn set_indexed<T: Read>(
         &mut self,
+        mut reader: T,
         count: usize,
         data_type: DataType,
-        mut reader: T,
     ) -> io::Result<&mut Self> {
-        todo!();
+        debug_assert!(VertAlloc::MIN_ALIGN >= 4);
+        if count == 0 {
+            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+        }
+        let (data_size, stride) = match data_type {
+            DataType::U32 => (4, 4),
+            DataType::U16 => (2, 2),
+            // We will extend `DataType::U8` to 16-bit,
+            // since it is not universally supported.
+            DataType::U8 => (1, 2),
+            _ => return Err(io::Error::from(io::ErrorKind::InvalidInput)),
+        };
+        if let Some(x) = self.indices.take() {
+            eprintln!("[!] mesh::Builder: set_indexed called twice");
+            self.vert_buf.write().unwrap().dealloc(x.1);
+            self.idx_count = 0;
+        }
+        let size = stride * count;
+        let entry = self.vert_buf.write().unwrap().alloc(size)?;
+        let mut buf = vec![0u8; size];
+        if data_size == stride {
+            match reader.read_exact(&mut buf) {
+                Ok(_) => (),
+                Err(e) => {
+                    self.vert_buf.write().unwrap().dealloc(entry);
+                    return Err(e);
+                }
+            }
+        } else {
+            todo!();
+        }
+        self.vert_buf.write().unwrap().copy(&buf, &entry);
+        self.indices = Some((data_type, entry));
+        self.idx_count = count;
+        Ok(self)
     }
 
     /// Sets the material.
