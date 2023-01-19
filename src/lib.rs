@@ -38,6 +38,7 @@ pub fn init() {
             // NOTE: Initialization of global data must
             // be done here.
             gpu::init();
+            mesh::init();
             RC.store(1, Ordering::Release);
         }
         usize::MAX => {
@@ -64,6 +65,7 @@ pub fn shutdown() {
         1 => {
             // NOTE: Finalization of global data must
             // be done here.
+            mesh::shutdown();
             gpu::shutdown();
             RC.store(0, Ordering::Release);
         }
