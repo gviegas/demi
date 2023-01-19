@@ -168,6 +168,18 @@ impl Drop for VertAlloc {
 /// Vertex buffer.
 pub(crate) type VertBuf = VarBuf<VertAlloc>;
 
+/// Gets a reference-counted, r/w-locked `VertBuf`.
+///
+/// It is only safe to call this function after `init`
+/// and prior to `shutdown` (notice that neither is
+/// thread-safe).
+///
+/// NOTE: This value (and its clones) must be dropped
+/// before `shutdown` is called.
+fn vertex_buffer() -> Arc<RwLock<VertBuf>> {
+    unsafe { Arc::clone(VERT_BUF.as_ref().unwrap()) }
+}
+
 /// Mesh.
 #[derive(Debug)]
 pub struct Mesh {
