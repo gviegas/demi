@@ -473,16 +473,42 @@ impl Builder {
     /// `data_type` elements, each of which is fetched
     /// `stride` bytes apart from `reader`.
     /// The number of [`DataType`] elements to read is
-    /// defined by [`set_vertex_count`].
-    #[allow(unused_variables, unused_mut)] // TODO
+    /// defined by `set_vertex_count`.
     pub fn set_semantic<T: Read>(
         &mut self,
+        mut reader: T,
         semantic: Semantic,
         data_type: DataType,
         stride: usize,
-        mut reader: T,
     ) -> io::Result<&mut Self> {
-        todo!();
+        let layout = data_type.layout();
+        debug_assert!(VertAlloc::MIN_ALIGN >= layout.align());
+        // This is likely an user mistake.
+        if let Some(x) = self.semantics[semantic as usize].take() {
+            eprintln!(
+                "[!] mesh::Builder: set_semantic called twice for {:?}",
+                semantic
+            );
+            self.vert_buf.write().unwrap().dealloc(x.1);
+        }
+        // No padding between `data_type` elements.
+        let size = layout.size() * self.vert_count;
+        let entry = self.vert_buf.write().unwrap().alloc(size)?;
+        let mut buf = vec![0u8; size];
+        if stride == 0 || stride == layout.size() {
+            match reader.read_exact(&mut buf) {
+                Ok(_) => (),
+                Err(e) => {
+                    self.vert_buf.write().unwrap().dealloc(entry);
+                    return Err(e);
+                }
+            }
+        } else {
+            todo!();
+        }
+        self.vert_buf.write().unwrap().copy(&buf, &entry);
+        self.semantics[semantic as usize] = Some((data_type, entry));
+        Ok(self)
     }
 
     /// Sets vertex indices.
@@ -513,7 +539,7 @@ impl Builder {
     /// elements, each of which is fetched `stride`
     /// bytes apart from `reader`.
     /// The number of [`DataType`] elements to read is
-    /// defined by [`set_vertex_count`].
+    /// defined by `set_vertex_count`.
     #[allow(unused_variables, unused_mut)] // TODO
     pub fn set_displacement_semantic<T: Read>(
         &mut self,
