@@ -183,6 +183,8 @@ fn vertex_buffer() -> Arc<RwLock<VertBuf>> {
 /// Mesh.
 #[derive(Debug)]
 pub struct Mesh {
+    // NOTE: In case we decide (or need) to use
+    // multiple vertex buffers.
     vert_buf: Arc<RwLock<VertBuf>>,
     primitives: Vec<Primitive>,
 }
@@ -408,6 +410,7 @@ pub enum Topology {
 
 /// Mesh builder.
 pub struct Builder {
+    vert_buf: Arc<RwLock<VertBuf>>,
     // Data of the primitive being built,
     // which will be consumed by the next
     // `push_primitive` call.
@@ -420,14 +423,16 @@ pub struct Builder {
     weights: Vec<f32>,
     // Pushed primitives.
     // Each new element pushed here consumes
-    // the above fields.
+    // the per-primitive fields above.
     primitives: Vec<Primitive>,
 }
 
 impl Builder {
     /// Creates a new mesh builder.
     pub fn new() -> Self {
+        debug_assert!(unsafe { VERT_BUF.is_some() });
         Self {
+            vert_buf: vertex_buffer(),
             semantics: unsafe {
                 // We really don't want `VarEntry` to be `Copy`.
                 type Sem = Option<(DataType, VarEntry)>;
