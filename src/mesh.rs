@@ -425,9 +425,13 @@ pub struct Builder {
     // Each new element pushed here consumes
     // the per-primitive fields above.
     primitives: Vec<Primitive>,
+    mask: u32,
 }
 
 impl Builder {
+    const FROZEN_VERT_COUNT: u32 = 1 << 0;
+    const POSITION: u32 = 1 << 1;
+
     /// Creates a new mesh builder.
     pub fn new() -> Self {
         debug_assert!(unsafe { VERT_BUF.is_some() });
@@ -450,6 +454,7 @@ impl Builder {
             weights: vec![],
             // The (expected) common case.
             primitives: Vec::with_capacity(1),
+            mask: 0,
         }
     }
 
@@ -460,10 +465,14 @@ impl Builder {
     /// All semantics (including displacements) must have
     /// the same vertex count.
     ///
-    /// Panics if `count` is zero.
+    /// Panics if `count` is zero or if setting it would
+    /// invalidate the ongoing primitive.
     pub fn set_vertex_count(&mut self, count: usize) -> &mut Self {
         assert_ne!(count, 0);
-        self.vert_count = count;
+        if count != self.vert_count {
+            assert_eq!(self.mask & Self::FROZEN_VERT_COUNT, 0);
+            self.vert_count = count;
+        }
         self
     }
 
@@ -486,13 +495,18 @@ impl Builder {
         if self.vert_count == 0 {
             return Err(io::Error::from(io::ErrorKind::Other));
         }
-        // This is likely an user mistake.
+        // This should not happen in practice, but we guard
+        // against it anyway. We will not try anything
+        // fancy like reusing the entry though.
         if let Some(x) = self.semantics[semantic as usize].take() {
             eprintln!(
                 "[!] mesh::Builder: set_semantic called twice for {:?}",
                 semantic
             );
             self.vert_buf.write().unwrap().dealloc(x.1);
+            if semantic == Semantic::Position {
+                self.mask &= !Self::POSITION;
+            }
         }
         // No padding between `data_type` elements.
         let size = layout.size() * self.vert_count;
@@ -511,6 +525,13 @@ impl Builder {
         }
         self.vert_buf.write().unwrap().copy(&buf, &entry);
         self.semantics[semantic as usize] = Some((data_type, entry));
+        // Do not allow the vertex count to change
+        // for this primitive anymore.
+        self.mask |= Self::FROZEN_VERT_COUNT;
+        if semantic == Semantic::Position {
+            // Position is mandatory.
+            self.mask |= Self::POSITION;
+        }
         Ok(self)
     }
 
@@ -623,6 +644,9 @@ impl Builder {
         }
         self.vert_buf.write().unwrap().copy(&buf, &entry);
         self.displacements[slot][semantic as usize] = Some((data_type, entry));
+        // Currently, we do not support mismatch between
+        // displacement and vertex counts.
+        self.mask |= Self::FROZEN_VERT_COUNT;
         Ok(self)
     }
 
