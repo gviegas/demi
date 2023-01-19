@@ -577,13 +577,49 @@ impl Builder {
     #[allow(unused_variables, unused_mut)] // TODO
     pub fn set_displacement_semantic<T: Read>(
         &mut self,
+        mut reader: T,
         slot: usize,
         semantic: Semantic,
         data_type: DataType,
         stride: usize,
-        mut reader: T,
     ) -> io::Result<&mut Self> {
-        todo!();
+        let layout = data_type.layout();
+        debug_assert!(VertAlloc::MIN_ALIGN >= layout.align());
+        if slot >= self.displacements.len() {
+            // NOTE: This generates empty slots in the range
+            // `self.displacements.len()..slot`.
+            self.displacements.resize_with(slot + 1, || unsafe {
+                type Sem = Option<(DataType, VarEntry)>;
+                let mut sems: [MaybeUninit<Sem>; SEMANTIC_N] = MaybeUninit::uninit().assume_init();
+                for i in &mut sems {
+                    i.write(None);
+                }
+                mem::transmute::<_, [Sem; SEMANTIC_N]>(sems)
+            });
+        } else if let Some(x) = self.displacements[slot][semantic as usize].take() {
+            eprintln!(
+                "[!] mesh::Builder: set_displacement_semantic called twice for [{}] {:?}",
+                slot, semantic
+            );
+            self.vert_buf.write().unwrap().dealloc(x.1);
+        }
+        let size = layout.size() * self.vert_count;
+        let entry = self.vert_buf.write().unwrap().alloc(size)?;
+        let mut buf = vec![0u8; size];
+        if stride == 0 || stride == layout.size() {
+            match reader.read_exact(&mut buf) {
+                Ok(_) => (),
+                Err(e) => {
+                    self.vert_buf.write().unwrap().dealloc(entry);
+                    return Err(e);
+                }
+            }
+        } else {
+            todo!();
+        }
+        self.vert_buf.write().unwrap().copy(&buf, &entry);
+        self.displacements[slot][semantic as usize] = Some((data_type, entry));
+        Ok(self)
     }
 
     /// Sets the default displacement weights.
