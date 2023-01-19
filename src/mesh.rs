@@ -12,6 +12,35 @@ use crate::gpu::{self, BufId, BufOptions};
 use crate::material::Material;
 use crate::var_buf::{VarAlloc, VarBuf, VarEntry};
 
+static mut VERT_BUF: Option<Arc<RwLock<VertBuf>>> = None;
+
+/// Initializes the vertex buffer.
+///
+/// NOTE: One must ensure this function is called exactly once,
+/// before any `mesh` functionality is used and after
+/// initializing the `gpu`. It is not safe to call it from
+/// multiple threads.
+pub(crate) fn init() {
+    unsafe {
+        debug_assert!(VERT_BUF.is_none());
+        // TODO: Consider making the initial allocation size
+        // configurable.
+        VERT_BUF = Some(Arc::new(RwLock::new(VertBuf::new(VertAlloc::new(0)))));
+    }
+}
+
+/// Drops the vertex buffer.
+///
+/// NOTE: One must ensure this function is called exactly once,
+/// after all uses of `mesh` and before finalizing the `gpu`.
+/// It is not safe to call it from multiple threads.
+pub(crate) fn shutdown() {
+    unsafe {
+        debug_assert!(Arc::get_mut(VERT_BUF.as_mut().unwrap()).is_some());
+        VERT_BUF.take();
+    }
+}
+
 /// Vertex buffer's allocation.
 #[derive(Debug)]
 pub(crate) struct VertAlloc {
