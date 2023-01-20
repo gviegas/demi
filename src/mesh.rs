@@ -660,9 +660,35 @@ impl Builder {
     }
 
     /// Consumes the current state to create a primitive.
-    #[allow(unused_variables)] // TODO
     pub fn push_primitive(&mut self, topology: Topology) -> io::Result<&mut Self> {
         todo!();
+    }
+
+    /// Clears the current primitive state.
+    pub fn clear_primitive(&mut self) -> &mut Self {
+        let mut vb = self.vert_buf.write().unwrap();
+        for i in &mut self.semantics {
+            if let Some((_, x)) = i.take() {
+                vb.dealloc(x);
+            }
+        }
+        if let Some((_, x)) = self.indices.take() {
+            vb.dealloc(x);
+        }
+        self.vert_count = 0;
+        self.idx_count = 0;
+        self.material = None;
+        while let Some(x) = self.displacements.pop() {
+            for i in x {
+                if let Some((_, x)) = i {
+                    vb.dealloc(x);
+                }
+            }
+        }
+        self.weights = vec![];
+        self.mask = 0;
+        drop(vb);
+        self
     }
 
     /// Creates the mesh.
