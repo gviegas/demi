@@ -205,8 +205,8 @@ impl Mesh {
 /// Primitive.
 #[derive(Debug)]
 pub struct Primitive {
-    semantics: [Option<(DataType, VarEntry)>; SEMANTIC_N],
-    indices: Option<(DataType, VarEntry)>,
+    semantics: [Option<SemData>; SEMANTIC_N],
+    indices: Option<SemData>,
     // Number of vertices to draw.
     // How to interpret them depends on whether
     // the primitive has `indices`.
@@ -214,44 +214,44 @@ pub struct Primitive {
     material: Arc<Material>,
     // TODO: Do we really need `DataType` here?
     // Can we limit this to a subset of `Semantic`s?
-    displacements: Vec<[Option<(DataType, VarEntry)>; SEMANTIC_N]>,
+    displacements: Vec<[Option<SemData>; SEMANTIC_N]>,
     weights: Vec<f32>,
     topology: Topology,
 }
 
 impl Primitive {
-    /// Returns a ([`DataType`], &[`VarEntry`]) pair representing
-    /// a given semantic in memory, or [`None`] if such semantic
-    /// is not present in this primitive.
-    pub(crate) fn semantic_data(&self, sem: Semantic) -> Option<(DataType, &VarEntry)> {
-        if let Some((d, ref v)) = self.semantics[sem as usize] {
-            Some((d, v))
+    /// Returns a reference to [`SemData`] representing a given
+    /// semantic in memory, or [`None`] if such semantic is not
+    /// present in this primitive.
+    pub(crate) fn semantic_data(&self, sem: Semantic) -> Option<&SemData> {
+        if let Some(ref x) = self.semantics[sem as usize] {
+            Some(x)
         } else {
             None
         }
     }
 
-    /// Returns a ([`DataType`], &[`VarEntry`]) pair representing
-    /// the indices in memory, or [`None`] if this primitive
+    /// Returns a reference to [`SemData`] representing the
+    /// indices in memory, or [`None`] if this primitive
     /// does not use an index buffer.
-    pub(crate) fn index_data(&self) -> Option<(DataType, &VarEntry)> {
-        if let Some((d, ref v)) = self.indices {
-            Some((d, v))
+    pub(crate) fn index_data(&self) -> Option<&SemData> {
+        if let Some(ref x) = self.indices {
+            Some(x)
         } else {
             None
         }
     }
 
-    /// Returns a vector containing [`DataType`]s and &[`VarEntry`]s
-    /// representing the displacements of `sem`, alongside the
-    /// displacement slots which they refer.
-    pub(crate) fn displacement_data(&self, sem: Semantic) -> Vec<(DataType, &VarEntry, usize)> {
+    /// Returns a vector containing references to [`SemData`]
+    /// that represent the displacements of `sem`, alongside
+    /// the displacement slots which they refer.
+    pub(crate) fn displacement_data(&self, sem: Semantic) -> Vec<(&SemData, usize)> {
         self.displacements
             .iter()
             .enumerate()
             .filter_map(|(i, x)| {
-                if let Some((d, ref v)) = x[sem as usize] {
-                    Some((d, v, i))
+                if let Some(ref x) = x[sem as usize] {
+                    Some((x, i))
                 } else {
                     None
                 }
@@ -263,8 +263,8 @@ impl Primitive {
     /// or [`None`] if such semantic is not present in this
     /// primitive.
     pub fn semantic_data_type(&self, sem: Semantic) -> Option<DataType> {
-        if let Some((d, _)) = self.semantics[sem as usize] {
-            Some(d)
+        if let Some(SemData { data_type, .. }) = self.semantics[sem as usize] {
+            Some(data_type)
         } else {
             None
         }
@@ -274,8 +274,8 @@ impl Primitive {
     /// or [`None`] if this primitive does not use an
     /// index buffer.
     pub fn index_data_type(&self) -> Option<DataType> {
-        if let Some((d, _)) = self.indices {
-            Some(d)
+        if let Some(SemData { data_type, .. }) = self.indices {
+            Some(data_type)
         } else {
             None
         }
@@ -308,8 +308,8 @@ impl Primitive {
             .iter()
             .enumerate()
             .filter_map(|(i, x)| {
-                if let Some((d, _)) = x[sem as usize] {
-                    Some((d, i))
+                if let Some(SemData { data_type, .. }) = x[sem as usize] {
+                    Some((data_type, i))
                 } else {
                     None
                 }
@@ -326,6 +326,25 @@ impl Primitive {
     /// Returns the [`Topology`] used to draw this primitive.
     pub fn topology(&self) -> Topology {
         self.topology
+    }
+}
+
+/// Semantic data description.
+#[derive(Debug)]
+pub(crate) struct SemData {
+    data_type: DataType,
+    entry: VarEntry,
+}
+
+impl SemData {
+    /// Returns the semantic's [`DataType`].
+    pub fn data_type(&self) -> DataType {
+        self.data_type
+    }
+
+    /// Returns a reference to the semantic's [`VarEntry`].
+    pub fn entry(&self) -> &VarEntry {
+        &self.entry
     }
 }
 
@@ -414,12 +433,12 @@ pub struct Builder {
     // Data of the primitive being built,
     // which will be consumed by the next
     // `push_primitive` call.
-    semantics: [Option<(DataType, VarEntry)>; SEMANTIC_N],
-    indices: Option<(DataType, VarEntry)>,
+    semantics: [Option<SemData>; SEMANTIC_N],
+    indices: Option<SemData>,
     vert_count: usize,
     idx_count: usize,
     material: Option<Arc<Material>>,
-    displacements: Vec<[Option<(DataType, VarEntry)>; SEMANTIC_N]>,
+    displacements: Vec<[Option<SemData>; SEMANTIC_N]>,
     weights: Vec<f32>,
     // Pushed primitives.
     // Each new element pushed here consumes
@@ -439,12 +458,12 @@ impl Builder {
             vert_buf: vertex_buffer(),
             semantics: unsafe {
                 // We really don't want `VarEntry` to be `Copy`.
-                type Sem = Option<(DataType, VarEntry)>;
-                let mut sems: [MaybeUninit<Sem>; SEMANTIC_N] = MaybeUninit::uninit().assume_init();
+                let mut sems: [MaybeUninit<Option<SemData>>; SEMANTIC_N] =
+                    MaybeUninit::uninit().assume_init();
                 for i in &mut sems {
                     i.write(None);
                 }
-                mem::transmute::<_, [Sem; SEMANTIC_N]>(sems)
+                mem::transmute::<_, [Option<SemData>; SEMANTIC_N]>(sems)
             },
             indices: None,
             vert_count: 0,
@@ -498,12 +517,12 @@ impl Builder {
         // This should not happen in practice, but we guard
         // against it anyway. We will not try anything
         // fancy like reusing the entry though.
-        if let Some(x) = self.semantics[semantic as usize].take() {
+        if let Some(SemData { entry, .. }) = self.semantics[semantic as usize].take() {
             eprintln!(
                 "[!] mesh::Builder: set_semantic called twice for {:?}",
                 semantic
             );
-            self.vert_buf.write().unwrap().dealloc(x.1);
+            self.vert_buf.write().unwrap().dealloc(entry);
             if semantic == Semantic::Position {
                 self.mask &= !Self::POSITION;
             }
@@ -524,7 +543,7 @@ impl Builder {
             todo!();
         }
         self.vert_buf.write().unwrap().copy(&buf, &entry);
-        self.semantics[semantic as usize] = Some((data_type, entry));
+        self.semantics[semantic as usize] = Some(SemData { data_type, entry });
         // Do not allow the vertex count to change
         // for this primitive anymore.
         self.mask |= Self::FROZEN_VERT_COUNT;
@@ -558,9 +577,9 @@ impl Builder {
             DataType::U8 => (1, 2),
             _ => return Err(io::Error::from(io::ErrorKind::InvalidInput)),
         };
-        if let Some(x) = self.indices.take() {
+        if let Some(SemData { entry, .. }) = self.indices.take() {
             eprintln!("[!] mesh::Builder: set_indexed called twice");
-            self.vert_buf.write().unwrap().dealloc(x.1);
+            self.vert_buf.write().unwrap().dealloc(entry);
             self.idx_count = 0;
         }
         let size = stride * count;
@@ -578,7 +597,7 @@ impl Builder {
             todo!();
         }
         self.vert_buf.write().unwrap().copy(&buf, &entry);
-        self.indices = Some((data_type, entry));
+        self.indices = Some(SemData { data_type, entry });
         self.idx_count = count;
         Ok(self)
     }
@@ -614,19 +633,21 @@ impl Builder {
             // NOTE: This generates empty slots in the range
             // `self.displacements.len()..slot`.
             self.displacements.resize_with(slot + 1, || unsafe {
-                type Sem = Option<(DataType, VarEntry)>;
-                let mut sems: [MaybeUninit<Sem>; SEMANTIC_N] = MaybeUninit::uninit().assume_init();
+                let mut sems: [MaybeUninit<Option<SemData>>; SEMANTIC_N] =
+                    MaybeUninit::uninit().assume_init();
                 for i in &mut sems {
                     i.write(None);
                 }
-                mem::transmute::<_, [Sem; SEMANTIC_N]>(sems)
+                mem::transmute::<_, [Option<SemData>; SEMANTIC_N]>(sems)
             });
-        } else if let Some(x) = self.displacements[slot][semantic as usize].take() {
+        } else if let Some(SemData { entry, .. }) =
+            self.displacements[slot][semantic as usize].take()
+        {
             eprintln!(
                 "[!] mesh::Builder: set_displacement_semantic called twice for [{}] {:?}",
                 slot, semantic
             );
-            self.vert_buf.write().unwrap().dealloc(x.1);
+            self.vert_buf.write().unwrap().dealloc(entry);
         }
         let size = layout.size() * self.vert_count;
         let entry = self.vert_buf.write().unwrap().alloc(size)?;
@@ -643,7 +664,7 @@ impl Builder {
             todo!();
         }
         self.vert_buf.write().unwrap().copy(&buf, &entry);
-        self.displacements[slot][semantic as usize] = Some((data_type, entry));
+        self.displacements[slot][semantic as usize] = Some(SemData { data_type, entry });
         // Currently, we do not support mismatch between
         // displacement and vertex counts.
         self.mask |= Self::FROZEN_VERT_COUNT;
@@ -718,12 +739,12 @@ impl Builder {
 
         // Now we can consume the state.
         let mut semantics = unsafe {
-            type Sem = Option<(DataType, VarEntry)>;
-            let mut sems: [MaybeUninit<Sem>; SEMANTIC_N] = MaybeUninit::uninit().assume_init();
+            let mut sems: [MaybeUninit<Option<SemData>>; SEMANTIC_N] =
+                MaybeUninit::uninit().assume_init();
             for i in &mut sems {
                 i.write(None);
             }
-            mem::transmute::<_, [Sem; SEMANTIC_N]>(sems)
+            mem::transmute::<_, [Option<SemData>; SEMANTIC_N]>(sems)
         };
         mem::swap(&mut semantics, &mut self.semantics);
         let indices = mem::take(&mut self.indices);
@@ -751,20 +772,20 @@ impl Builder {
     pub fn clear_primitive(&mut self) -> &mut Self {
         let mut vb = self.vert_buf.write().unwrap();
         for i in &mut self.semantics {
-            if let Some((_, x)) = i.take() {
-                vb.dealloc(x);
+            if let Some(SemData { entry, .. }) = i.take() {
+                vb.dealloc(entry);
             }
         }
-        if let Some((_, x)) = self.indices.take() {
-            vb.dealloc(x);
+        if let Some(SemData { entry, .. }) = self.indices.take() {
+            vb.dealloc(entry);
         }
         self.vert_count = 0;
         self.idx_count = 0;
         self.material = None;
         while let Some(x) = self.displacements.pop() {
             for i in x {
-                if let Some((_, x)) = i {
-                    vb.dealloc(x);
+                if let Some(SemData { entry, .. }) = i {
+                    vb.dealloc(entry);
                 }
             }
         }
