@@ -660,8 +660,91 @@ impl Builder {
     }
 
     /// Consumes the current state to create a primitive.
+    ///
+    /// If this method fails, the state is left untouched.
+    /// One may call `clear_primitive` to start over.
     pub fn push_primitive(&mut self, topology: Topology) -> io::Result<&mut Self> {
-        todo!();
+        // Check correctness before consuming any state.
+        let err = io::Error::from(io::ErrorKind::InvalidInput);
+        if self.mask & Self::POSITION == 0 {
+            eprintln!("[!] mesh::Builder: primitives must have position semantic");
+            return Err(err);
+        }
+        if self.displacements.len() != self.weights.len() {
+            eprintln!(
+                "[!] mesh::Builder: primitives must have a weight for each displacement slot"
+            );
+            return Err(err);
+        }
+        let count = if self.idx_count > 0 {
+            self.idx_count
+        } else {
+            self.vert_count
+        };
+        let print_top_err = || {
+            eprintln!(
+                "[!] mesh::Builder: `{}` is not a valid number of vertices for {:?}",
+                count, topology
+            )
+        };
+        match topology {
+            Topology::Point => (),
+            Topology::Line => {
+                if count & 1 != 0 {
+                    print_top_err();
+                    return Err(err);
+                }
+            }
+            Topology::LineStrip => {
+                if count < 2 {
+                    print_top_err();
+                    return Err(err);
+                }
+            }
+            Topology::Triangle => {
+                if count % 3 != 0 {
+                    print_top_err();
+                    return Err(err);
+                }
+            }
+            Topology::TriangleStrip | Topology::TriangleFan => {
+                if count < 3 {
+                    print_top_err();
+                    return Err(err);
+                }
+            }
+        }
+        // TODO: More checks.
+
+        // Now we can consume the state.
+        let mut semantics = unsafe {
+            type Sem = Option<(DataType, VarEntry)>;
+            let mut sems: [MaybeUninit<Sem>; SEMANTIC_N] = MaybeUninit::uninit().assume_init();
+            for i in &mut sems {
+                i.write(None);
+            }
+            mem::transmute::<_, [Sem; SEMANTIC_N]>(sems)
+        };
+        mem::swap(&mut semantics, &mut self.semantics);
+        let indices = mem::take(&mut self.indices);
+        self.vert_count = 0;
+        self.idx_count = 0;
+        // TODO: Default material.
+        let material = self.material.take().expect("no default material yet");
+        let displacements = mem::take(&mut self.displacements);
+        let weights = mem::take(&mut self.weights);
+
+        self.primitives.push(Primitive {
+            semantics,
+            indices,
+            count,
+            material,
+            displacements,
+            weights,
+            topology,
+        });
+        self.mask = 0;
+        Ok(self)
     }
 
     /// Clears the current primitive state.
