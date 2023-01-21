@@ -181,29 +181,21 @@ fn vertex_buffer() -> Arc<RwLock<VertBuf>> {
 
 /// Mesh.
 #[derive(Debug)]
-pub struct Mesh {
-    // NOTE: In case we decide (or need) to use
-    // multiple vertex buffers.
-    vert_buf: Arc<RwLock<VertBuf>>,
-    primitives: Vec<Primitive>,
-}
+pub struct Mesh(Vec<Primitive>);
 
 impl Mesh {
-    /// Returns a reference to the reference-counted,
-    /// r/w-locked vertex buffer.
-    pub(crate) fn vertex_buffer(&self) -> &Arc<RwLock<VertBuf>> {
-        &self.vert_buf
-    }
-
     /// Returns a reference to the mesh's [`Primitive`]s.
     pub fn primitives(&self) -> &[Primitive] {
-        &self.primitives
+        &self.0
     }
 }
 
 /// Primitive.
 #[derive(Debug)]
 pub struct Primitive {
+    // NOTE: In case we decide (or need) to use
+    // multiple vertex buffers.
+    vert_buf: Arc<RwLock<VertBuf>>,
     semantics: [Option<DataEntry>; SEMANTIC_N],
     indices: Option<DataEntry>,
     // Number of vertices to draw.
@@ -219,6 +211,12 @@ pub struct Primitive {
 }
 
 impl Primitive {
+    /// Returns a reference to the reference-counted,
+    /// r/w-locked vertex buffer.
+    pub(crate) fn vertex_buffer(&self) -> &Arc<RwLock<VertBuf>> {
+        &self.vert_buf
+    }
+
     /// Returns a reference to [`DataEntry`] representing a given
     /// semantic in memory, or [`None`] if such semantic is not
     /// present in this primitive.
@@ -748,8 +746,8 @@ impl Builder {
         let material = self.material.take().expect("no default material yet");
         let displacements = mem::take(&mut self.displacements);
         let weights = mem::take(&mut self.weights);
-
         self.primitives.push(Primitive {
+            vert_buf: Arc::clone(&self.vert_buf),
             semantics,
             indices,
             count,
