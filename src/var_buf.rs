@@ -114,7 +114,7 @@ impl<T: VarAlloc> VarBuf<T> {
         }
 
         // Enforce alignment at entries' boundaries.
-        let size = size + T::MIN_ALIGN - 1 & !(T::MIN_ALIGN - 1);
+        let size = (size + T::MIN_ALIGN - 1) & !(T::MIN_ALIGN - 1);
 
         // TODO
         if cfg!(test) {

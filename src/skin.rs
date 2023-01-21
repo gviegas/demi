@@ -56,3 +56,9 @@ impl Builder {
         todo!();
     }
 }
+
+impl Default for Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}

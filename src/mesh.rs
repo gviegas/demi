@@ -59,8 +59,8 @@ impl VertAlloc {
     /// Creating a zero-sized [`VertAlloc`] does not allocate
     /// [`gpu`] resources.
     pub fn new(size_hint: usize) -> Self {
-        debug_assert_eq!(0, Self::MIN_ALIGN & Self::MIN_ALIGN - 1);
-        let mut size = size_hint + VertAlloc::MIN_ALIGN - 1 & !(VertAlloc::MIN_ALIGN - 1);
+        debug_assert_eq!(Self::MIN_ALIGN & (Self::MIN_ALIGN - 1), 0);
+        let mut size = (size_hint + VertAlloc::MIN_ALIGN - 1) & !(VertAlloc::MIN_ALIGN - 1);
         loop {
             if size > 0 {
                 if let Ok(mut gid) = gpu::create_vb(&BufOptions {
@@ -265,13 +265,7 @@ impl Primitive {
         self.displacements
             .iter()
             .enumerate()
-            .filter_map(|(i, x)| {
-                if let Some(ref x) = x[sem as usize] {
-                    Some((x, i))
-                } else {
-                    None
-                }
-            })
+            .filter_map(|(i, x)| x[sem as usize].as_ref().map(|x| (x, i)))
             .collect()
     }
 
@@ -356,11 +350,9 @@ impl Drop for Primitive {
             self.vert_buf.write().unwrap().dealloc(entry);
         }
         while let Some(x) = self.displacements.pop() {
-            for i in x {
-                if let Some(DataEntry { entry, .. }) = i {
-                    self.vert_buf.write().unwrap().dealloc(entry);
-                }
-            }
+            x.into_iter()
+                .flatten()
+                .for_each(|DataEntry { entry, .. }| self.vert_buf.write().unwrap().dealloc(entry));
         }
     }
 }
@@ -611,7 +603,6 @@ impl Builder {
         count: usize,
         data_type: DataType,
     ) -> io::Result<&mut Self> {
-        debug_assert!(VertAlloc::MIN_ALIGN >= 4);
         if count == 0 {
             return Err(io::Error::from(io::ErrorKind::InvalidInput));
         }
@@ -623,6 +614,7 @@ impl Builder {
             DataType::U8 => (1, 2),
             _ => return Err(io::Error::from(io::ErrorKind::InvalidInput)),
         };
+        debug_assert!(stride <= VertAlloc::MIN_ALIGN);
         if let Some(DataEntry { entry, .. }) = self.indices.take() {
             eprintln!("[!] mesh::Builder: set_indexed called twice");
             self.vert_buf.write().unwrap().dealloc(entry);
@@ -816,11 +808,9 @@ impl Builder {
         self.idx_count = 0;
         self.material = None;
         while let Some(x) = self.displacements.pop() {
-            for i in x {
-                if let Some(DataEntry { entry, .. }) = i {
-                    vb.dealloc(entry);
-                }
-            }
+            x.into_iter()
+                .flatten()
+                .for_each(|DataEntry { entry, .. }| vb.dealloc(entry));
         }
         self.weights = vec![];
         self.mask = 0;
@@ -836,11 +826,17 @@ impl Builder {
     ///
     /// Fails if no primitive has been pushed yet.
     pub fn create(&mut self) -> io::Result<Mesh> {
-        if self.primitives.len() > 0 {
+        if !self.primitives.is_empty() {
             Ok(Mesh(mem::take(&mut self.primitives)))
         } else {
             Err(io::Error::from(io::ErrorKind::InvalidInput))
         }
+    }
+}
+
+impl Default for Builder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

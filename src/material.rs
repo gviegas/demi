@@ -46,10 +46,9 @@ impl Material {
     /// If the result is [`None`], then normal mapping is disabled
     /// for this material.
     pub fn normal(&self) -> Option<(&TexRef, f32)> {
-        match self.normal_tex {
-            Some(ref x) => Some((x, self.unif.normal_scale)),
-            _ => None,
-        }
+        self.normal_tex
+            .as_ref()
+            .map(|x| (x, self.unif.normal_scale))
     }
 
     /// Returns the occlusion texture and strength.
@@ -57,10 +56,9 @@ impl Material {
     /// If the result is [`None`], then occlusion mapping is disabled
     /// for this material.
     pub fn occlusion(&self) -> Option<(&TexRef, f32)> {
-        match self.occlusion_tex {
-            Some(ref x) => Some((x, self.unif.occlusion_strength)),
-            _ => None,
-        }
+        self.occlusion_tex
+            .as_ref()
+            .map(|x| (x, self.unif.occlusion_strength))
     }
 
     /// Returns the emissive texture and factor.
@@ -68,10 +66,9 @@ impl Material {
     /// If the result is [`None`], then emissive mapping is disabled
     /// for this material.
     pub fn emissive(&self) -> Option<(&TexRef, [f32; 3])> {
-        match self.emissive_tex {
-            Some(ref x) => Some((x, self.unif.emissive_factor)),
-            _ => None,
-        }
+        self.emissive_tex
+            .as_ref()
+            .map(|x| (x, self.unif.emissive_factor))
     }
 
     /// Returns the alpha mode.
@@ -322,5 +319,11 @@ impl<'a> Builder<'a> {
                 _pad: Default::default(),
             },
         })
+    }
+}
+
+impl Default for Builder<'_> {
+    fn default() -> Self {
+        Self::new()
     }
 }

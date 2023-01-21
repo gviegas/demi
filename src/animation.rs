@@ -53,6 +53,8 @@ pub struct Builder {
     // TODO
 }
 
+// TODO: Update the builder interface (e.g., merge
+// `set_*` and `read_*` methods).
 #[allow(unused_variables)] // TODO
 #[allow(unused_mut)] // TODO
 impl Builder {
@@ -110,5 +112,11 @@ impl Builder {
 
     pub fn create(&mut self) -> io::Result<Animation> {
         todo!();
+    }
+}
+
+impl Default for Builder {
+    fn default() -> Self {
+        Self::new()
     }
 }

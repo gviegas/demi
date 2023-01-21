@@ -42,13 +42,6 @@ pub struct Transform {
     data: Vec<XformData>,
 }
 
-impl Default for Transform {
-    /// Creates an identity transform.
-    fn default() -> Self {
-        Self::new(Mat4::from(1.0))
-    }
-}
-
 impl Transform {
     /// Creates a new root transform.
     pub fn new(xform: Mat4<f32>) -> Self {
@@ -78,6 +71,14 @@ impl Transform {
     /// Returns the length of the transform graph.
     pub fn len(&self) -> usize {
         self.data.len()
+    }
+
+    /// Checks whether `len() == 0`.
+    ///
+    /// This always returns `false` since the root transform
+    /// cannot be removed.
+    pub const fn is_empty(&self) -> bool {
+        false
     }
 
     /// Inserts a new transform.
@@ -294,5 +295,12 @@ impl Transform {
             }
             break false;
         }
+    }
+}
+
+impl Default for Transform {
+    /// Creates an identity transform.
+    fn default() -> Self {
+        Self::new(Mat4::from(1.0))
     }
 }

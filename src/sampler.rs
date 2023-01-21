@@ -165,3 +165,9 @@ impl Builder {
         })
     }
 }
+
+impl Default for Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
