@@ -5,7 +5,7 @@
 use std::alloc::Layout;
 use std::io::{self, Read};
 use std::mem::{self, MaybeUninit};
-use std::ptr::NonNull;
+use std::ptr::{self, NonNull};
 use std::sync::{Arc, RwLock};
 
 use crate::gpu::{self, BufId, BufOptions};
@@ -96,7 +96,7 @@ impl VarAlloc for VertAlloc {
     const MIN_ALIGN: usize = 4;
 
     fn grow(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
-        if self.size >= new_size {
+        if new_size <= self.size {
             Ok(self.ptr)
         } else {
             // TODO: Provide a `gpu` function that
@@ -109,6 +109,17 @@ impl VarAlloc for VertAlloc {
             match gpu::buffer_ptr(&gid) {
                 Ok(ptr) => {
                     if let Some(ref mut x) = self.gid {
+                        // TODO: This copy should be done by
+                        // the GPU rather than the CPU.
+                        // An explicit `gpu` resize function
+                        // could handle this.
+                        unsafe {
+                            ptr::copy_nonoverlapping::<u8>(
+                                self.ptr.as_ptr().cast(),
+                                ptr.as_ptr().cast(),
+                                self.size,
+                            );
+                        }
                         gpu::drop_buffer(x);
                     }
                     self.ptr = ptr;
@@ -122,7 +133,7 @@ impl VarAlloc for VertAlloc {
     }
 
     fn shrink(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
-        if self.size <= new_size {
+        if new_size >= self.size {
             Ok(self.ptr)
         } else if new_size == 0 {
             gpu::drop_buffer(self.gid.as_mut().unwrap());
@@ -138,6 +149,14 @@ impl VarAlloc for VertAlloc {
             })?;
             match gpu::buffer_ptr(&gid) {
                 Ok(ptr) => {
+                    // TODO: See `grow` above.
+                    unsafe {
+                        ptr::copy_nonoverlapping::<u8>(
+                            self.ptr.as_ptr().cast(),
+                            ptr.as_ptr().cast(),
+                            new_size,
+                        );
+                    }
                     gpu::drop_buffer(self.gid.as_mut().unwrap());
                     self.ptr = ptr;
                     self.size = new_size;
