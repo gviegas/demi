@@ -326,6 +326,26 @@ impl Primitive {
     }
 }
 
+impl Drop for Primitive {
+    fn drop(&mut self) {
+        for i in &mut self.semantics {
+            if let Some(DataEntry { entry, .. }) = i.take() {
+                self.vert_buf.write().unwrap().dealloc(entry);
+            }
+        }
+        if let Some(DataEntry { entry, .. }) = self.indices.take() {
+            self.vert_buf.write().unwrap().dealloc(entry);
+        }
+        while let Some(x) = self.displacements.pop() {
+            for i in x {
+                if let Some(DataEntry { entry, .. }) = i {
+                    self.vert_buf.write().unwrap().dealloc(entry);
+                }
+            }
+        }
+    }
+}
+
 /// Description of mesh data in memory.
 ///
 /// Data is stored tightly packed as defined by `DataType::layout`.
@@ -808,5 +828,7 @@ impl Builder {
 impl Drop for Builder {
     fn drop(&mut self) {
         self.clear_primitive();
+        // The `Primitive`'s `drop` implementation
+        // will handle any unconsumed primitives.
     }
 }
