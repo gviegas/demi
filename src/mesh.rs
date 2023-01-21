@@ -804,3 +804,9 @@ impl Builder {
         }
     }
 }
+
+impl Drop for Builder {
+    fn drop(&mut self) {
+        self.clear_primitive();
+    }
+}
