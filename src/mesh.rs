@@ -679,7 +679,7 @@ impl Builder {
         self
     }
 
-    /// Consumes the current state to create a primitive.
+    /// Consumes the current state to create a [`Primitive`].
     ///
     /// If this method fails, the state is left untouched.
     /// One may call `clear_primitive` to start over.
@@ -762,6 +762,8 @@ impl Builder {
 
     /// Clears the current primitive state.
     pub fn clear_primitive(&mut self) -> &mut Self {
+        // TODO: It may be better locking at `dealloc`
+        // call sites.
         let mut vb = self.vert_buf.write().unwrap();
         for i in &mut self.semantics {
             if let Some(DataEntry { entry, .. }) = i.take() {
@@ -788,7 +790,17 @@ impl Builder {
     }
 
     /// Creates the mesh.
+    ///
+    /// This method consumes every [`Primitive`] that has been
+    /// pushed up to this point.
+    /// The current primitive state is unaffected.
+    ///
+    /// Fails if no primitive has been pushed yet.
     pub fn create(&mut self) -> io::Result<Mesh> {
-        todo!();
+        if self.primitives.len() > 0 {
+            Ok(Mesh(mem::take(&mut self.primitives)))
+        } else {
+            Err(io::Error::from(io::ErrorKind::InvalidInput))
+        }
     }
 }
