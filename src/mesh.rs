@@ -420,6 +420,19 @@ pub enum Semantic {
 
 pub(crate) const SEMANTIC_N: usize = Semantic::Weights0 as usize + 1;
 
+/// Constructs an array of `SEMANTIC_N` `Option<DataEntry>`s
+/// where each element is `None`.
+fn none_semantics() -> [Option<DataEntry>; SEMANTIC_N] {
+    unsafe {
+        let mut sems: [MaybeUninit<Option<DataEntry>>; SEMANTIC_N] =
+            MaybeUninit::uninit().assume_init();
+        for i in &mut sems {
+            i.write(None);
+        }
+        mem::transmute::<_, [Option<DataEntry>; SEMANTIC_N]>(sems)
+    }
+}
+
 /// Primitive topology values.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Topology {
@@ -460,15 +473,7 @@ impl Builder {
         debug_assert!(unsafe { VERT_BUF.is_some() });
         Self {
             vert_buf: vertex_buffer(),
-            semantics: unsafe {
-                // We really don't want `VarEntry` to be `Copy`.
-                let mut sems: [MaybeUninit<Option<DataEntry>>; SEMANTIC_N] =
-                    MaybeUninit::uninit().assume_init();
-                for i in &mut sems {
-                    i.write(None);
-                }
-                mem::transmute::<_, [Option<DataEntry>; SEMANTIC_N]>(sems)
-            },
+            semantics: none_semantics(),
             indices: None,
             vert_count: 0,
             idx_count: 0,
@@ -635,14 +640,7 @@ impl Builder {
         if slot >= self.displacements.len() {
             // NOTE: This generates empty slots in the range
             // `self.displacements.len()..slot`.
-            self.displacements.resize_with(slot + 1, || unsafe {
-                let mut sems: [MaybeUninit<Option<DataEntry>>; SEMANTIC_N] =
-                    MaybeUninit::uninit().assume_init();
-                for i in &mut sems {
-                    i.write(None);
-                }
-                mem::transmute::<_, [Option<DataEntry>; SEMANTIC_N]>(sems)
-            });
+            self.displacements.resize_with(slot + 1, none_semantics);
         } else if let Some(DataEntry { entry, .. }) =
             self.displacements[slot][semantic as usize].take()
         {
@@ -741,14 +739,7 @@ impl Builder {
         // TODO: More checks.
 
         // Now we can consume the state.
-        let mut semantics = unsafe {
-            let mut sems: [MaybeUninit<Option<DataEntry>>; SEMANTIC_N] =
-                MaybeUninit::uninit().assume_init();
-            for i in &mut sems {
-                i.write(None);
-            }
-            mem::transmute::<_, [Option<DataEntry>; SEMANTIC_N]>(sems)
-        };
+        let mut semantics = none_semantics();
         mem::swap(&mut semantics, &mut self.semantics);
         let indices = mem::take(&mut self.indices);
         self.vert_count = 0;
