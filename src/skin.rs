@@ -2,7 +2,10 @@
 
 //! Blend-weight skinning.
 
+// TODO: Skin instancing; joint hierarchy construction.
+
 use std::io;
+use std::mem;
 
 use crate::linear::Mat4;
 
@@ -32,7 +35,7 @@ impl Joint {
     ///
     /// NOTE: This only pertains to direct connections between
     /// skin joints. Skins sourced from external node graphs
-    /// may contain joint nodes that are indirectly connected
+    /// may contain joint nodes that are connected indirectly
     /// through other nodes. Such relations are not preserved.
     pub fn prev_slot(&self) -> Option<u16> {
         self.prev_slot
@@ -56,15 +59,13 @@ impl Joint {
 }
 
 /// Skin builder.
-pub struct Builder {
-    // TODO
-}
+pub struct Builder(Vec<Joint>);
 
 #[allow(unused_variables)] // TODO
 impl Builder {
     /// Creates a new skin builder.
     pub fn new() -> Self {
-        todo!();
+        Self(vec![])
     }
 
     /// Pushes a number of joints.
@@ -73,7 +74,7 @@ impl Builder {
     /// slice parameters, in order.
     /// All slices must have the same length.
     ///
-    /// This method fails if the total number of joints
+    /// This method will fail if the total number of joints
     /// exceeds [`u16::MAX`] across all `push_joints`
     /// calls for a single skin.
     pub fn push_joints(
@@ -81,9 +82,23 @@ impl Builder {
         prev_slot: &[Option<u16>],
         jm: &[Mat4<f32>],
         ibm: &[Option<Mat4<f32>>],
-        name: &[String],
+        name: &[&str],
     ) -> io::Result<&mut Self> {
-        todo!();
+        if prev_slot.len() != jm.len() || jm.len() != ibm.len() || ibm.len() != name.len() {
+            Err(io::Error::from(io::ErrorKind::InvalidInput))
+        } else if prev_slot.len() + self.0.len() > u16::MAX.into() {
+            Err(io::Error::from(io::ErrorKind::Other))
+        } else {
+            for i in 0..prev_slot.len() {
+                self.0.push(Joint {
+                    prev_slot: prev_slot[i],
+                    jm: jm[i],
+                    ibm: ibm[i],
+                    name: name[i].to_string(),
+                });
+            }
+            Ok(self)
+        }
     }
 
     /// Creates the skin.
@@ -94,7 +109,11 @@ impl Builder {
     ///
     /// Fails if no joint has been pushed yet.
     pub fn create(&mut self) -> io::Result<Skin> {
-        todo!();
+        if !self.0.is_empty() {
+            Ok(Skin(mem::take(&mut self.0)))
+        } else {
+            Err(io::Error::from(io::ErrorKind::InvalidInput))
+        }
     }
 }
 
