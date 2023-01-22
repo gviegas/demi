@@ -54,33 +54,37 @@ pub struct Builder {
 
 #[allow(unused_variables)] // TODO
 impl Builder {
+    /// Creates a new skin builder.
     pub fn new() -> Self {
         todo!();
     }
 
-    pub fn set_joint_count(&mut self, count: u16) -> &mut Self {
-        todo!();
-    }
-
-    pub fn set_joint(
-        &mut self,
-        slot: usize,
-        jm: &Mat4<f32>,
-        ibm: Option<&Mat4<f32>>,
-        name: &str,
-    ) -> &mut Self {
-        todo!()
-    }
-
+    /// Pushes a number of joints.
+    ///
+    /// A new joint is created for every element of the
+    /// slice parameters, in order.
+    /// All slices must have the same length.
+    ///
+    /// This method fails if the total number of joints
+    /// exceeds [`u16::MAX`] across all `push_joints`
+    /// calls for a single skin.
     pub fn push_joints(
         &mut self,
+        prev_slot: &[Option<u16>],
         jm: &[Mat4<f32>],
-        ibm: Option<&[Mat4<f32>]>,
-        name: &[&str],
-    ) -> &mut Self {
+        ibm: &[Option<Mat4<f32>>],
+        name: &[String],
+    ) -> io::Result<&mut Self> {
         todo!();
     }
 
+    /// Creates the skin.
+    ///
+    /// This method consumes every pushed joint to create
+    /// the skin. The order which the joints were pushed
+    /// will be used to identify its slot in the [`Skin`].
+    ///
+    /// Fails if no joint has been pushed yet.
     pub fn create(&mut self) -> io::Result<Skin> {
         todo!();
     }
