@@ -8,8 +8,13 @@ use crate::linear::Mat4;
 
 /// Skin.
 #[derive(Debug)]
-pub struct Skin {
-    // TODO
+pub struct Skin(Vec<Joint>);
+
+impl Skin {
+    /// Returns a reference to the skin's [`Joint`]s.
+    pub fn joints(&self) -> &[Joint] {
+        &self.0
+    }
 }
 
 /// Skin joint.
@@ -25,7 +30,10 @@ impl Joint {
     /// Returns the slot containing the parent of this joint,
     /// or `None` if there is no previous joint.
     ///
-    /// NOTE: This does not mean that this is a root joint.
+    /// NOTE: This only pertains to direct connections between
+    /// skin joints. Skins sourced from external node graphs
+    /// may contain joint nodes that are indirectly connected
+    /// through other nodes. Such relations are not preserved.
     pub fn prev_slot(&self) -> Option<u16> {
         self.prev_slot
     }
