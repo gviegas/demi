@@ -53,53 +53,48 @@ pub struct Builder {
     // TODO
 }
 
-// TODO: Update the builder interface (e.g., merge
-// `set_*` and `read_*` methods).
 #[allow(unused_variables)] // TODO
 #[allow(unused_mut)] // TODO
 impl Builder {
+    /// Creates a new animation builder.
     pub fn new() -> Self {
         todo!();
     }
 
-    pub fn set_input_count(&mut self, count: usize) -> &mut Self {
-        todo!();
-    }
-
-    pub fn set_input(
+    /// Pushes an input source.
+    ///
+    /// The order which this method is called defines the slot
+    /// occupied by the pushed input source.
+    /// The first pushed input occupies the slot `0`.
+    pub fn push_input<T: Read>(
         &mut self,
-        slot: usize,
+        mut reader: T,
         input_type: KfInput,
         sample_count: usize,
-        offset: usize,
         stride: usize,
-    ) -> &mut Self {
+    ) -> io::Result<&mut Self> {
         todo!();
     }
 
-    pub fn read_input<T: Read>(&mut self, slot: usize, mut reader: T) -> io::Result<&mut Self> {
-        todo!();
-    }
-
-    pub fn set_output_count(&mut self, count: usize) -> &mut Self {
-        todo!();
-    }
-
-    pub fn set_output(
+    /// Pushes an output source.
+    ///
+    /// The order which this method is called defines the slot
+    /// occupied by the pushed output source.
+    /// The first pushed output occupies the slot `0`.
+    pub fn push_output<T: Read>(
         &mut self,
-        slot: usize,
+        mut reader: T,
         output_type: KfOutput,
         sample_count: usize,
-        offset: usize,
         stride: usize,
-    ) -> &mut Self {
+    ) -> io::Result<&mut Self> {
         todo!();
     }
 
-    pub fn read_output<T: Read>(&mut self, slot: usize, mut reader: T) -> io::Result<&mut Self> {
-        todo!();
-    }
-
+    /// Pushes an action.
+    ///
+    /// It is not necessary to fill the referred i/o slots before
+    /// calling this method.
     pub fn push_action(
         &mut self,
         method: Interpolation,
@@ -110,6 +105,9 @@ impl Builder {
         todo!();
     }
 
+    /// Creates the animation.
+    ///
+    /// This method consumes all i/o slots and actions.
     pub fn create(&mut self) -> io::Result<Animation> {
         todo!();
     }
