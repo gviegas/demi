@@ -15,7 +15,36 @@ pub struct Skin {
 /// Skin joint.
 #[derive(Debug)]
 pub struct Joint {
-    // TODO
+    prev_slot: Option<u16>,
+    jm: Mat4<f32>,
+    ibm: Option<Mat4<f32>>,
+    name: String,
+}
+
+impl Joint {
+    /// Returns the slot containing the parent of this joint,
+    /// or `None` if there is no previous joint.
+    ///
+    /// NOTE: This does not mean that this is a root joint.
+    pub fn prev_slot(&self) -> Option<u16> {
+        self.prev_slot
+    }
+
+    /// Returns a reference to the joint's matrix.
+    pub fn joint_matrix(&self) -> &Mat4<f32> {
+        &self.jm
+    }
+
+    /// Returns a reference to the inverse bind matrix,
+    /// or `None` if it is the identity.
+    pub fn inverse_bind_matrix(&self) -> Option<&Mat4<f32>> {
+        self.ibm.as_ref()
+    }
+
+    /// Returns the name of this joint.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 /// Skin builder.
