@@ -108,7 +108,9 @@ pub struct Action {
 
 /// Animation builder.
 pub struct Builder {
-    // TODO
+    actions: Vec<Action>,
+    inputs: Vec<KfData>,
+    outputs: Vec<KfData>,
 }
 
 #[allow(unused_variables)] // TODO
@@ -116,7 +118,11 @@ pub struct Builder {
 impl Builder {
     /// Creates a new animation builder.
     pub fn new() -> Self {
-        todo!();
+        Self {
+            actions: vec![],
+            inputs: vec![],
+            outputs: vec![],
+        }
     }
 
     /// Pushes an input source.
