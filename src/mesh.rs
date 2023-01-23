@@ -417,7 +417,7 @@ pub enum DataType {
 impl DataType {
     /// Returns the `[Layout]` of the [`DataType`].
     pub const fn layout(&self) -> Layout {
-        match *self {
+        match self {
             DataType::F32 | DataType::I32 | DataType::U32 => Layout::new::<f32>(),
             DataType::F32x2 | DataType::I32x2 | DataType::U32x2 => Layout::new::<[f32; 2]>(),
             DataType::F32x3 | DataType::I32x3 | DataType::U32x3 => Layout::new::<[f32; 3]>(),
