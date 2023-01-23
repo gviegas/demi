@@ -93,9 +93,18 @@ pub enum Interpolation {
     CubicSpline,
 }
 
-//pub struct Action {
-//    // TODO
-//}
+/// Animation's action.
+///
+/// This type describes the key-frame animation of a single
+/// property by means of an i/o pair and a specific
+/// [`Interpolation`] method.
+#[derive(Debug)]
+pub struct Action {
+    method: Interpolation,
+    input_slot: usize,
+    output_slot: usize,
+    name: String,
+}
 
 /// Animation builder.
 pub struct Builder {
