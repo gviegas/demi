@@ -2,8 +2,9 @@
 
 //! Key-frame animation.
 
-use std::alloc::Layout;
+use std::alloc::{self, Layout};
 use std::io::{self, Read};
+use std::slice;
 
 /// Animation.
 #[derive(Debug)]
@@ -137,7 +138,40 @@ impl Builder {
         sample_count: usize,
         stride: usize,
     ) -> io::Result<&mut Self> {
-        todo!();
+        if sample_count == 0 {
+            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+        }
+        let lay_one = input_type.layout();
+        let lay_n =
+            Layout::from_size_align(lay_one.size() * sample_count, lay_one.align()).unwrap();
+        let ptr = unsafe { alloc::alloc(lay_n) };
+        // Panic if oom.
+        assert!(!ptr.is_null());
+        // Ensure that the mutable slice's lifetime ends here.
+        let res = if stride == 0 || stride == lay_one.size() {
+            unsafe { reader.read_exact(slice::from_raw_parts_mut(ptr, lay_n.size())) }
+        } else {
+            // TODO: Consider removing `stride` altogether.
+            todo!();
+        };
+        match res {
+            Ok(_) => {
+                let data = match input_type {
+                    KfInput::SecondsF64 => KfData::SecondsF64(unsafe {
+                        Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                    }),
+                    KfInput::SecondsF32 => KfData::SecondsF32(unsafe {
+                        Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                    }),
+                };
+                self.inputs.push(data);
+                Ok(self)
+            }
+            Err(e) => {
+                unsafe { alloc::dealloc(ptr, lay_n) };
+                Err(e)
+            }
+        }
     }
 
     /// Pushes an output source.
