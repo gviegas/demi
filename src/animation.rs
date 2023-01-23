@@ -2,6 +2,7 @@
 
 //! Key-frame animation.
 
+use std::alloc::Layout;
 use std::io::{self, Read};
 
 /// Animation.
@@ -15,6 +16,16 @@ pub struct Animation {
 pub enum KfInput {
     SecondsF64,
     SecondsF32,
+}
+
+impl KfInput {
+    /// Returns the [`Layout`] of the [`KfInput`].
+    pub const fn layout(&self) -> Layout {
+        match self {
+            KfInput::SecondsF64 => Layout::new::<f64>(),
+            KfInput::SecondsF32 => Layout::new::<f32>(),
+        }
+    }
 }
 
 /// Key-frame output types.
@@ -34,6 +45,23 @@ pub enum KfOutput {
     WeightsU16,
     WeightsI8,
     WeightsU8,
+}
+
+impl KfOutput {
+    /// Returns the [`Layout`] of the [`KfOutput`].
+    pub const fn layout(&self) -> Layout {
+        match self {
+            KfOutput::TranslationF64x3 => Layout::new::<[f64; 3]>(),
+            KfOutput::TranslationF32x3 => Layout::new::<[f32; 3]>(),
+            KfOutput::RotationF32x4 | KfOutput::ScaleF32x4 => Layout::new::<[f32; 4]>(),
+            KfOutput::RotationI16x4 | KfOutput::RotationU16x4 => Layout::new::<[i16; 4]>(),
+            KfOutput::RotationI8x4 | KfOutput::RotationU8x4 => Layout::new::<[i8; 4]>(),
+            KfOutput::WeightsF64 => Layout::new::<f64>(),
+            KfOutput::WeightsF32 => Layout::new::<f32>(),
+            KfOutput::WeightsI16 | KfOutput::WeightsU16 => Layout::new::<i16>(),
+            KfOutput::WeightsI8 | KfOutput::WeightsU8 => Layout::new::<i8>(),
+        }
+    }
 }
 
 /// Interpolation methods.
