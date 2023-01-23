@@ -11,6 +11,27 @@ pub struct Animation {
     // TODO
 }
 
+/// Key-frame i/o data.
+#[derive(Debug)]
+enum KfData {
+    SecondsF64(Box<[f64]>),
+    SecondsF32(Box<[f32]>),
+    TranslationF64x3(Box<[[f64; 3]]>),
+    TranslationF32x3(Box<[[f32; 3]]>),
+    RotationF32x4(Box<[[f32; 4]]>),
+    RotationI16x4(Box<[[i16; 4]]>),
+    RotationU16x4(Box<[[u16; 4]]>),
+    RotationI8x4(Box<[[i8; 4]]>),
+    RotationU8x4(Box<[[u8; 4]]>),
+    ScaleF32x4(Box<[[f32; 4]]>),
+    WeightsF64(Box<[f64]>),
+    WeightsF32(Box<[f32]>),
+    WeightsI16(Box<[i16]>),
+    WeightsU16(Box<[u16]>),
+    WeightsI8(Box<[i8]>),
+    WeightsU8(Box<[u8]>),
+}
+
 /// Key-frame input types.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum KfInput {
