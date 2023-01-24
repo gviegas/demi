@@ -147,8 +147,7 @@ impl Builder {
         let lay_n =
             Layout::from_size_align(lay_one.size() * sample_count, lay_one.align()).unwrap();
         let ptr = unsafe { alloc::alloc(lay_n) };
-        // Panic if oom.
-        assert!(!ptr.is_null());
+        ptr.is_null().then(|| alloc::handle_alloc_error(lay_n));
         // Ensure that the mutable slice's lifetime ends here.
         let res = if stride == 0 || stride == lay_one.size() {
             unsafe { reader.read_exact(slice::from_raw_parts_mut(ptr, lay_n.size())) }
@@ -156,23 +155,22 @@ impl Builder {
             // TODO: Consider removing `stride` altogether.
             todo!();
         };
-        match res {
-            Ok(_) => {
-                let data = match input_type {
-                    KfInput::SecondsF64 => KfData::SecondsF64(unsafe {
-                        Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
-                    }),
-                    KfInput::SecondsF32 => KfData::SecondsF32(unsafe {
-                        Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
-                    }),
-                };
-                self.inputs.push(data);
-                Ok(self)
+        if let Err(e) = res {
+            unsafe {
+                alloc::dealloc(ptr, lay_n);
             }
-            Err(e) => {
-                unsafe { alloc::dealloc(ptr, lay_n) };
-                Err(e)
-            }
+            Err(e)
+        } else {
+            let data = match input_type {
+                KfInput::SecondsF64 => KfData::SecondsF64(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfInput::SecondsF32 => KfData::SecondsF32(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+            };
+            self.inputs.push(data);
+            Ok(self)
         }
     }
 
@@ -195,7 +193,7 @@ impl Builder {
         let lay_n =
             Layout::from_size_align(lay_one.size() * sample_count, lay_one.align()).unwrap();
         let ptr = unsafe { alloc::alloc(lay_n) };
-        assert!(!ptr.is_null());
+        ptr.is_null().then(|| alloc::handle_alloc_error(lay_n));
         let res = if stride == 0 || stride == lay_one.size() {
             unsafe { reader.read_exact(slice::from_raw_parts_mut(ptr, lay_n.size())) }
         } else {
