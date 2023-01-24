@@ -130,6 +130,9 @@ impl Builder {
 
     /// Pushes an input source.
     ///
+    /// Data is assumed to be tightly packed as defined by
+    /// `input_type.layout()`.
+    ///
     /// The order which this method is called defines the slot
     /// occupied by the pushed input source.
     /// The first pushed input occupies the slot `0`.
@@ -138,26 +141,24 @@ impl Builder {
         mut reader: T,
         input_type: KfInput,
         sample_count: usize,
-        stride: usize,
     ) -> io::Result<&mut Self> {
         if sample_count == 0 {
             return Err(io::Error::from(io::ErrorKind::InvalidInput));
         }
-        let lay_one = input_type.layout();
-        let lay_n =
-            Layout::from_size_align(lay_one.size() * sample_count, lay_one.align()).unwrap();
-        let ptr = unsafe { alloc::alloc(lay_n) };
-        ptr.is_null().then(|| alloc::handle_alloc_error(lay_n));
-        // Ensure that the mutable slice's lifetime ends here.
-        let res = if stride == 0 || stride == lay_one.size() {
-            unsafe { reader.read_exact(slice::from_raw_parts_mut(ptr, lay_n.size())) }
-        } else {
-            // TODO: Consider removing `stride` altogether.
-            todo!();
+        let layout = {
+            let layout = input_type.layout();
+            let (size, align) = (layout.size(), layout.align());
+            Layout::from_size_align(size * sample_count, align).unwrap()
         };
+        // TODO: Do we really need to clear this memory?
+        // (notice the `slice::from_raw_parts_mut` call below).
+        let ptr = unsafe { alloc::alloc_zeroed(layout) };
+        ptr.is_null().then(|| alloc::handle_alloc_error(layout));
+        // Ensure that the mutable slice's lifetime ends here.
+        let res = unsafe { reader.read_exact(slice::from_raw_parts_mut(ptr, layout.size())) };
         if let Err(e) = res {
             unsafe {
-                alloc::dealloc(ptr, lay_n);
+                alloc::dealloc(ptr, layout);
             }
             Err(e)
         } else {
@@ -176,6 +177,9 @@ impl Builder {
 
     /// Pushes an output source.
     ///
+    /// Data is assumed to be tightly packed as defined by
+    /// `output_type.layout()`.
+    ///
     /// The order which this method is called defines the slot
     /// occupied by the pushed output source.
     /// The first pushed output occupies the slot `0`.
@@ -184,24 +188,24 @@ impl Builder {
         mut reader: T,
         output_type: KfOutput,
         sample_count: usize,
-        stride: usize,
     ) -> io::Result<&mut Self> {
         if sample_count == 0 {
             return Err(io::Error::from(io::ErrorKind::InvalidInput));
         }
-        let lay_one = output_type.layout();
-        let lay_n =
-            Layout::from_size_align(lay_one.size() * sample_count, lay_one.align()).unwrap();
-        let ptr = unsafe { alloc::alloc(lay_n) };
-        ptr.is_null().then(|| alloc::handle_alloc_error(lay_n));
-        let res = if stride == 0 || stride == lay_one.size() {
-            unsafe { reader.read_exact(slice::from_raw_parts_mut(ptr, lay_n.size())) }
-        } else {
-            todo!();
+        let layout = {
+            let layout = output_type.layout();
+            let (size, align) = (layout.size(), layout.align());
+            Layout::from_size_align(size * sample_count, align).unwrap()
         };
+        // TODO: Do we really need to clear this memory?
+        // (notice the `slice::from_raw_parts_mut` call below).
+        let ptr = unsafe { alloc::alloc_zeroed(layout) };
+        ptr.is_null().then(|| alloc::handle_alloc_error(layout));
+        // Ensure that the mutable slice's lifetime ends here.
+        let res = unsafe { reader.read_exact(slice::from_raw_parts_mut(ptr, layout.size())) };
         if let Err(e) = res {
             unsafe {
-                alloc::dealloc(ptr, lay_n);
+                alloc::dealloc(ptr, layout);
             }
             Err(e)
         } else {
