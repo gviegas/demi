@@ -56,9 +56,9 @@ pub struct Scene {
     // TODO...
 }
 
-impl Default for Scene {
+impl Scene {
     /// Creates an empty scene.
-    fn default() -> Self {
+    pub fn new() -> Self {
         Self {
             graph: Transform::default(),
             nodes: vec![],
@@ -69,9 +69,7 @@ impl Default for Scene {
             xforms: vec![],
         }
     }
-}
 
-impl Scene {
     /// Inserts a new node.
     ///
     /// NOTE: The `NodeId` returned by this method must not be used
@@ -291,4 +289,11 @@ impl Scene {
     }
 
     // TODO: Graph update, camera, sky box, ibl...
+}
+
+impl Default for Scene {
+    /// Creates an empty scene.
+    fn default() -> Self {
+        Self::new()
+    }
 }
