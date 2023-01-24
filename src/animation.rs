@@ -9,7 +9,33 @@ use std::slice;
 /// Animation.
 #[derive(Debug)]
 pub struct Animation {
-    // TODO
+    actions: Vec<Action>,
+    inputs: Vec<KfData>,
+    outputs: Vec<KfData>,
+}
+
+impl Animation {
+    /// Returns a reference to the animation's [`Action`]s.
+    pub fn actions(&self) -> &[Action] {
+        &self.actions
+    }
+
+    /// Searches for an action matching a given name.
+    ///
+    /// It returns a tuple containing a reference to the
+    /// [`Action`] itself and its index in the animation,
+    /// or [`None`] if no action has the given `name`.
+    ///
+    /// NOTE: Action names need not be unique. This method
+    /// iterates over `actions()` in order and returns the
+    /// first match.
+    pub fn action(&self, name: &str) -> Option<(&Action, usize)> {
+        self.actions
+            .iter()
+            .enumerate()
+            .find(|(_, x)| x.name == name)
+            .map(|(i, x)| (x, i))
+    }
 }
 
 /// Key-frame i/o data.
