@@ -2,8 +2,11 @@
 
 //! Key-frame animation.
 
+// TODO: Animation instancing/playing.
+
 use std::alloc::{self, Layout};
 use std::io::{self, Read};
+use std::mem;
 use std::slice;
 
 /// Animation.
@@ -318,8 +321,29 @@ impl Builder {
     /// Creates the animation.
     ///
     /// This method consumes all i/o slots and actions.
+    ///
+    /// Fails if no action has been pushed yet or if any i/o slot
+    /// is out of bounds.
     pub fn create(&mut self) -> io::Result<Animation> {
-        todo!();
+        if self.actions.is_empty() {
+            eprintln!("[!] animation::Builder: no actions pushed");
+            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+        }
+        for i in &self.actions {
+            if i.input_slot >= self.inputs.len() {
+                eprintln!("[!] animation::Builder: input slot out of bounds");
+                return Err(io::Error::from(io::ErrorKind::InvalidInput));
+            }
+            if i.output_slot >= self.outputs.len() {
+                eprintln!("[!] animation::Builder: output slot out of bounds");
+                return Err(io::Error::from(io::ErrorKind::InvalidInput));
+            }
+        }
+        Ok(Animation {
+            actions: mem::take(&mut self.actions),
+            inputs: mem::take(&mut self.inputs),
+            outputs: mem::take(&mut self.outputs),
+        })
     }
 }
 
