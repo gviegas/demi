@@ -135,6 +135,19 @@ pub struct Action {
     name: String,
 }
 
+impl Action {
+    /// Returns the action's name.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Sets the action's name.
+    pub fn set_name(&mut self, name: &str) {
+        self.name.clear();
+        self.name.push_str(name);
+    }
+}
+
 /// Animation builder.
 pub struct Builder {
     actions: Vec<Action>,
