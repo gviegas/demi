@@ -186,7 +186,72 @@ impl Builder {
         sample_count: usize,
         stride: usize,
     ) -> io::Result<&mut Self> {
-        todo!();
+        if sample_count == 0 {
+            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+        }
+        let lay_one = output_type.layout();
+        let lay_n =
+            Layout::from_size_align(lay_one.size() * sample_count, lay_one.align()).unwrap();
+        let ptr = unsafe { alloc::alloc(lay_n) };
+        assert!(!ptr.is_null());
+        let res = if stride == 0 || stride == lay_one.size() {
+            unsafe { reader.read_exact(slice::from_raw_parts_mut(ptr, lay_n.size())) }
+        } else {
+            todo!();
+        };
+        if let Err(e) = res {
+            unsafe {
+                alloc::dealloc(ptr, lay_n);
+            }
+            Err(e)
+        } else {
+            let data = match output_type {
+                KfOutput::TranslationF64x3 => KfData::TranslationF64x3(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::TranslationF32x3 => KfData::TranslationF32x3(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::RotationF32x4 => KfData::RotationF32x4(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::RotationI16x4 => KfData::RotationI16x4(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::RotationU16x4 => KfData::RotationU16x4(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::RotationI8x4 => KfData::RotationI8x4(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::RotationU8x4 => KfData::RotationU8x4(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::ScaleF32x4 => KfData::ScaleF32x4(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::WeightsF64 => KfData::WeightsF64(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::WeightsF32 => KfData::WeightsF32(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::WeightsI16 => KfData::WeightsI16(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::WeightsU16 => KfData::WeightsU16(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::WeightsI8 => KfData::WeightsI8(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+                KfOutput::WeightsU8 => KfData::WeightsU8(unsafe {
+                    Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
+                }),
+            };
+            self.outputs.push(data);
+            Ok(self)
+        }
     }
 
     /// Pushes an action.
