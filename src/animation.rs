@@ -13,6 +13,8 @@ pub struct Animation {
 }
 
 /// Key-frame i/o data.
+// TODO: Decode normalized integers at build time
+// and only keep the floating-point variants.
 #[derive(Debug)]
 enum KfData {
     SecondsF64(Box<[f64]>),
@@ -24,7 +26,7 @@ enum KfData {
     RotationU16x4(Box<[[u16; 4]]>),
     RotationI8x4(Box<[[i8; 4]]>),
     RotationU8x4(Box<[[u8; 4]]>),
-    ScaleF32x4(Box<[[f32; 4]]>),
+    ScaleF32x3(Box<[[f32; 3]]>),
     WeightsF64(Box<[f64]>),
     WeightsF32(Box<[f32]>),
     WeightsI16(Box<[i16]>),
@@ -60,7 +62,7 @@ pub enum KfOutput {
     RotationU16x4,
     RotationI8x4,
     RotationU8x4,
-    ScaleF32x4,
+    ScaleF32x3,
     WeightsF64,
     WeightsF32,
     WeightsI16,
@@ -74,8 +76,8 @@ impl KfOutput {
     pub const fn layout(&self) -> Layout {
         match self {
             KfOutput::TranslationF64x3 => Layout::new::<[f64; 3]>(),
-            KfOutput::TranslationF32x3 => Layout::new::<[f32; 3]>(),
-            KfOutput::RotationF32x4 | KfOutput::ScaleF32x4 => Layout::new::<[f32; 4]>(),
+            KfOutput::TranslationF32x3 | KfOutput::ScaleF32x3 => Layout::new::<[f32; 3]>(),
+            KfOutput::RotationF32x4 => Layout::new::<[f32; 4]>(),
             KfOutput::RotationI16x4 | KfOutput::RotationU16x4 => Layout::new::<[i16; 4]>(),
             KfOutput::RotationI8x4 | KfOutput::RotationU8x4 => Layout::new::<[i8; 4]>(),
             KfOutput::WeightsF64 => Layout::new::<f64>(),
@@ -227,7 +229,7 @@ impl Builder {
                 KfOutput::RotationU8x4 => KfData::RotationU8x4(unsafe {
                     Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
                 }),
-                KfOutput::ScaleF32x4 => KfData::ScaleF32x4(unsafe {
+                KfOutput::ScaleF32x3 => KfData::ScaleF32x3(unsafe {
                     Box::from_raw(slice::from_raw_parts_mut(ptr.cast(), sample_count))
                 }),
                 KfOutput::WeightsF64 => KfData::WeightsF64(unsafe {
