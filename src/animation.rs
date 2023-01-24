@@ -116,8 +116,6 @@ pub struct Builder {
     outputs: Vec<KfData>,
 }
 
-#[allow(unused_variables)] // TODO
-#[allow(unused_mut)] // TODO
 impl Builder {
     /// Creates a new animation builder.
     pub fn new() -> Self {
@@ -269,7 +267,13 @@ impl Builder {
         output_slot: usize,
         name: &str,
     ) -> &mut Self {
-        todo!();
+        self.actions.push(Action {
+            method,
+            input_slot,
+            output_slot,
+            name: name.to_string(),
+        });
+        self
     }
 
     /// Creates the animation.
