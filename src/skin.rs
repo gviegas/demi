@@ -104,8 +104,8 @@ impl Builder {
     /// Creates the skin.
     ///
     /// This method consumes every pushed joint to create
-    /// the skin. The order which the joints were pushed
-    /// will be used to identify its slot in the [`Skin`].
+    /// the skin. The order which a given joint was pushed
+    /// identifies its slot in the [`Skin`].
     ///
     /// Fails if no joint has been pushed yet.
     pub fn create(&mut self) -> io::Result<Skin> {
