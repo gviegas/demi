@@ -2,6 +2,8 @@
 
 //! demi.
 
+#![allow(dead_code)] // TODO
+
 use std::hint;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
