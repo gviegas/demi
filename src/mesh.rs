@@ -224,7 +224,7 @@ pub struct Primitive {
     material: Arc<Material>,
     // TODO: Do we really need `DataType` here?
     // Can we limit this to a subset of `Semantic`s?
-    displacements: Vec<[Option<DataEntry>; SEMANTIC_N]>,
+    displacements: Vec<[Option<DisplaceData>; SEMANTIC_N]>,
     weights: Vec<f32>,
     topology: Topology,
 }
@@ -258,10 +258,10 @@ impl Primitive {
         }
     }
 
-    /// Returns a vector containing references to [`DataEntry`]
+    /// Returns a vector containing references to [`DisplaceData`]
     /// that represent the displacements of `sem`, alongside
     /// the displacement slots which they refer.
-    pub(crate) fn displacement_data(&self, sem: Semantic) -> Vec<(&DataEntry, usize)> {
+    pub(crate) fn displacement_data(&self, sem: Semantic) -> Vec<(&DisplaceData, usize)> {
         self.displacements
             .iter()
             .enumerate()
@@ -318,7 +318,7 @@ impl Primitive {
             .iter()
             .enumerate()
             .filter_map(|(i, x)| {
-                if let Some(DataEntry { data_type, .. }) = x[sem as usize] {
+                if let Some(DisplaceData { data_type, .. }) = x[sem as usize] {
                     Some((data_type, i))
                 } else {
                     None
@@ -348,11 +348,6 @@ impl Drop for Primitive {
         }
         if let Some(DataEntry { entry, .. }) = self.indices.take() {
             self.vert_buf.write().unwrap().dealloc(entry);
-        }
-        while let Some(x) = self.displacements.pop() {
-            x.into_iter()
-                .flatten()
-                .for_each(|DataEntry { entry, .. }| self.vert_buf.write().unwrap().dealloc(entry));
         }
     }
 }
@@ -516,7 +511,7 @@ pub struct Builder {
     vert_count: usize,
     idx_count: usize,
     material: Option<Arc<Material>>,
-    displacements: Vec<[Option<DataEntry>; SEMANTIC_N]>,
+    displacements: Vec<[Option<DisplaceData>; SEMANTIC_N]>,
     weights: Vec<f32>,
     // Pushed primitives.
     // Each new element pushed here consumes
@@ -678,14 +673,34 @@ impl Builder {
         self
     }
 
+    /// Sets displacement indices.
+    ///
+    /// This method sets the given semantic of the given displacement
+    /// slot to contain `count` `data_type` vertex indices fetched
+    /// from `reader`.
+    /// The data is assumed to be tightly packed.
+    /// It must not be called after the given slot/semantic has been
+    /// filled by `set_displacement`.
+    pub fn set_displacement_sparse<T: Read>(
+        &mut self,
+        mut reader: T,
+        slot: usize,
+        semantic: Semantic,
+        count: usize,
+        data_type: DataType,
+    ) -> io::Result<&mut Self> {
+        todo!();
+    }
+
     /// Sets displacement data.
     ///
     /// This method sets the given semantic of the given displacement
     /// slot to contain `data_type` elements, each of which is
     /// fetched `stride` bytes apart from `reader`.
     /// The number of [`DataType`] elements to read is defined by
-    /// `set_vertex_count`.
-    pub fn set_displacement_semantic<T: Read>(
+    /// either a previous call to `set_displacement_sparse` with the
+    /// same slot/semantic, or `set_vertex_count`.
+    pub fn set_displacement<T: Read>(
         &mut self,
         mut reader: T,
         slot: usize,
@@ -693,44 +708,7 @@ impl Builder {
         data_type: DataType,
         stride: usize,
     ) -> io::Result<&mut Self> {
-        let layout = data_type.layout();
-        debug_assert!(VertAlloc::MIN_ALIGN >= layout.align());
-        if self.vert_count == 0 {
-            return Err(io::Error::from(io::ErrorKind::Other));
-        }
-        if slot >= self.displacements.len() {
-            // NOTE: This generates empty slots in the range
-            // `self.displacements.len()..slot`.
-            self.displacements.resize_with(slot + 1, none_semantics);
-        } else if let Some(DataEntry { entry, .. }) =
-            self.displacements[slot][semantic as usize].take()
-        {
-            eprintln!(
-                "[!] mesh::Builder: set_displacement_semantic called twice for [{}] {:?}",
-                slot, semantic
-            );
-            self.vert_buf.write().unwrap().dealloc(entry);
-        }
-        let size = layout.size() * self.vert_count;
-        let entry = self.vert_buf.write().unwrap().alloc(size)?;
-        let mut buf = vec![0u8; size];
-        if stride == 0 || stride == layout.size() {
-            match reader.read_exact(&mut buf) {
-                Ok(_) => (),
-                Err(e) => {
-                    self.vert_buf.write().unwrap().dealloc(entry);
-                    return Err(e);
-                }
-            }
-        } else {
-            todo!();
-        }
-        self.vert_buf.write().unwrap().copy(&buf, &entry);
-        self.displacements[slot][semantic as usize] = Some(DataEntry { data_type, entry });
-        // Currently, we do not support mismatch between
-        // displacement and vertex counts.
-        self.mask |= Self::FROZEN_VERT_COUNT;
-        Ok(self)
+        todo!();
     }
 
     /// Sets the default displacement weights.
@@ -839,11 +817,7 @@ impl Builder {
         self.vert_count = 0;
         self.idx_count = 0;
         self.material = None;
-        while let Some(x) = self.displacements.pop() {
-            x.into_iter()
-                .flatten()
-                .for_each(|DataEntry { entry, .. }| vb.dealloc(entry));
-        }
+        self.displacements = vec![];
         self.weights = vec![];
         self.mask = 0;
         drop(vb);
