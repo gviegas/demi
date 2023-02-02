@@ -381,6 +381,38 @@ impl DataEntry {
     }
 }
 
+/// Displacement data.
+#[derive(Debug)]
+pub(crate) struct DisplaceData {
+    data_type: DataType,
+    // This data uses `f32` for alignment.
+    // Its actual type depends on `data_type`.
+    displacements: Vec<f32>,
+    // This data is always `u32`.
+    indices: Option<Vec<u32>>,
+}
+
+impl DisplaceData {
+    /// Returns the [`DataType`].
+    pub fn data_type(&self) -> DataType {
+        self.data_type
+    }
+
+    /// Returns a reference to a slice containing the
+    /// displacement values.
+    // TODO: Cast based on data type.
+    pub fn displacements(&self) -> &[f32] {
+        &self.displacements
+    }
+
+    /// Returns a reference to a slice containing the
+    /// indices of displaced vertices, or `None` if
+    /// `displacements` matches the vertex count.
+    pub fn indices(&self) -> Option<&[u32]> {
+        self.indices.as_ref().map(|x| x.as_slice())
+    }
+}
+
 /// Data types.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum DataType {
