@@ -82,12 +82,12 @@ impl Scene {
         let prev = if let Some(x) = prev {
             let prev_idx = self.nodes[x.node_idx].unwrap();
             match x.node_type {
-                NodeType::Drawable => &self.drawables[prev_idx].xform_id,
-                NodeType::Light => &self.lights[prev_idx].xform_id,
-                NodeType::Xform => &self.xforms[prev_idx].xform_id,
+                NodeType::Drawable => self.drawables[prev_idx].xform_id,
+                NodeType::Light => self.lights[prev_idx].xform_id,
+                NodeType::Xform => self.xforms[prev_idx].xform_id,
             }
         } else {
-            &root
+            self.graph.id()
         };
         let node_idx = if self.none_cnt > 0 {
             // There is a vacant node that we can use.
@@ -258,9 +258,9 @@ impl Scene {
     pub fn local_mut(&mut self, node_id: &NodeId) -> &mut Mat4<f32> {
         let data_idx = self.nodes[node_id.node_idx].unwrap();
         let xform_id = match node_id.node_type {
-            NodeType::Drawable => &self.drawables[data_idx].xform_id,
-            NodeType::Light => &self.lights[data_idx].xform_id,
-            NodeType::Xform => &self.xforms[data_idx].xform_id,
+            NodeType::Drawable => self.drawables[data_idx].xform_id,
+            NodeType::Light => self.lights[data_idx].xform_id,
+            NodeType::Xform => self.xforms[data_idx].xform_id,
         };
         self.graph.local_mut(xform_id)
     }
@@ -278,13 +278,13 @@ impl Scene {
         &self.graph
     }
 
-    /// Returns a reference to a node's `XformId`.
-    pub fn xform_id(&self, node_id: &NodeId) -> &XformId {
+    /// Returns a node's `XformId`.
+    pub fn xform_id(&self, node_id: &NodeId) -> XformId {
         let data_idx = self.nodes[node_id.node_idx].unwrap();
         match node_id.node_type {
-            NodeType::Drawable => &self.drawables[data_idx].xform_id,
-            NodeType::Light => &self.lights[data_idx].xform_id,
-            NodeType::Xform => &self.xforms[data_idx].xform_id,
+            NodeType::Drawable => self.drawables[data_idx].xform_id,
+            NodeType::Light => self.lights[data_idx].xform_id,
+            NodeType::Xform => self.xforms[data_idx].xform_id,
         }
     }
 

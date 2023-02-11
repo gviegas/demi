@@ -10,7 +10,7 @@ fn scene_graph() {
     let graph = scene.graph();
     // The root transform is not accessible as a scene node
     // and should be the identity.
-    let local = graph.local(&graph.id());
+    let local = graph.local(graph.id());
     for i in 0..4 {
         assert_eq!(1.0, local[i][i]);
         for j in i + 1..4 {

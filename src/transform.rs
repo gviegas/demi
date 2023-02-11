@@ -8,7 +8,7 @@ use crate::linear::Mat4;
 mod tests;
 
 /// Identifier of a transform.
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct XformId(usize);
 
 /// Node in a transform graph.
@@ -85,7 +85,7 @@ impl Transform {
     ///
     /// NOTE: The `XformId` returned by this method must not be used
     /// with `Transform`s other than the one that produced it.
-    pub fn insert(&mut self, prev: &XformId, xform: Mat4<f32>) -> XformId {
+    pub fn insert(&mut self, prev: XformId, xform: Mat4<f32>) -> XformId {
         let new_idx = if self.none_cnt > 0 {
             // There is a vacant node that we can use.
             let n = self.nodes.len();
@@ -167,7 +167,7 @@ impl Transform {
     }
 
     /// Returns a reference to a given local transform.
-    pub fn local(&self, id: &XformId) -> &Mat4<f32> {
+    pub fn local(&self, id: XformId) -> &Mat4<f32> {
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
         &self.data[data_idx].local
     }
@@ -177,13 +177,13 @@ impl Transform {
     /// NOTE: Calling this method will mark `id` as being stale and thus its
     /// world transform (and those of its descendants) will be recomputed
     /// when the graph is updated.
-    pub fn local_mut(&mut self, id: &XformId) -> &mut Mat4<f32> {
+    pub fn local_mut(&mut self, id: XformId) -> &mut Mat4<f32> {
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
 
         // NOTE: Code such as the following can potentially invalidate
         // a whole sub-graph needlessly:
         //
-        //  let m = graph.local_mut(&xid);
+        //  let m = graph.local_mut(xid);
         //  if <something> { <mutate *m> } else { <don't mutate *m> }
         //
         // It may be better to define a `set_local` method rather than
@@ -195,7 +195,7 @@ impl Transform {
     }
 
     /// Returns a reference to a given world transform.
-    pub fn world(&self, id: &XformId) -> &Mat4<f32> {
+    pub fn world(&self, id: XformId) -> &Mat4<f32> {
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
         &self.data[data_idx].world
     }
@@ -265,7 +265,7 @@ impl Transform {
     /// NOTE: This method does not check if any previous transforms
     /// have changed, so a `false` result here does not necessarily
     /// means that the world transform is valid.
-    pub fn changed(&self, id: &XformId) -> bool {
+    pub fn changed(&self, id: XformId) -> bool {
         let data_idx = self.nodes[id.0].as_ref().unwrap().data;
         self.data[data_idx].changed
     }
@@ -275,7 +275,7 @@ impl Transform {
     ///
     /// NOTE: This method needs to traverse the graph backwards and as
     /// such is not fast to compute.
-    pub fn changed_upward(&self, id: &XformId) -> bool {
+    pub fn changed_upward(&self, id: XformId) -> bool {
         let mut prev_idx = id.0;
         let mut data_idx = self.nodes[id.0].as_ref().unwrap().data;
         'outer: loop {
