@@ -85,7 +85,7 @@ impl Transform {
     ///
     /// NOTE: The `XformId` returned by this method must not be used
     /// with `Transform`s other than the one that produced it.
-    pub fn insert(&mut self, prev: XformId, xform: Mat4<f32>) -> XformId {
+    pub fn insert(&mut self, xform: Mat4<f32>, prev: XformId) -> XformId {
         let new_idx = if self.none_cnt > 0 {
             // There is a vacant node that we can use.
             let n = self.nodes.len();

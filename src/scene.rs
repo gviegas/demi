@@ -110,7 +110,7 @@ impl Scene {
                 self.nodes[node_idx] = Some(self.drawables.len());
                 self.drawables.push(NodeData {
                     data: d,
-                    xform_id: self.graph.insert(prev, x),
+                    xform_id: self.graph.insert(x, prev),
                     node_idx,
                 });
                 NodeType::Drawable
@@ -119,7 +119,7 @@ impl Scene {
                 self.nodes[node_idx] = Some(self.lights.len());
                 self.lights.push(NodeData {
                     data: l,
-                    xform_id: self.graph.insert(prev, x),
+                    xform_id: self.graph.insert(x, prev),
                     node_idx,
                 });
                 NodeType::Light
@@ -128,7 +128,7 @@ impl Scene {
                 self.nodes[node_idx] = Some(self.xforms.len());
                 self.xforms.push(NodeData {
                     data: (),
-                    xform_id: self.graph.insert(prev, x),
+                    xform_id: self.graph.insert(x, prev),
                     node_idx,
                 });
                 NodeType::Xform
