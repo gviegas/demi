@@ -33,7 +33,7 @@ fn insert() {
     let light = Light::new_white(LightType::Directional, 1e6);
     let xform = Mat4::translation(2.0, 1.0, -5.0);
 
-    let nd0 = scene.insert(None, Node::Light(light, Mat4::rotation_x(0.7854)));
+    let nd0 = scene.insert(Node::Light(light, Mat4::rotation_x(0.7854)), None);
     assert_eq!(NodeType::Light, nd0.node_type);
     assert_eq!(0, nd0.node_idx);
     assert_eq!(2, scene.graph.len());
@@ -42,7 +42,7 @@ fn insert() {
     assert_eq!(1, scene.lights.len());
     assert!(scene.xforms.is_empty());
 
-    let nd1 = scene.insert(None, Node::Xform(xform));
+    let nd1 = scene.insert(Node::Xform(xform), None);
     assert_eq!(NodeType::Xform, nd1.node_type);
     assert_eq!(1, nd1.node_idx);
     assert_eq!(3, scene.graph.len());
@@ -52,8 +52,8 @@ fn insert() {
     assert_eq!(1, scene.xforms.len());
 
     let nd2 = scene.insert(
-        Some(nd0),
         Node::Xform(xform * Mat4::scale(-1.0, -1.0, -1.0)),
+        Some(nd0),
     );
     assert_eq!(NodeType::Xform, nd2.node_type);
     assert_eq!(2, nd2.node_idx);
@@ -64,11 +64,11 @@ fn insert() {
     assert_eq!(2, scene.xforms.len());
 
     let nd3 = scene.insert(
-        Some(nd2),
         Node::Light(
             Light::new_white(LightType::Point { range: 6.5 }, 500.0),
             Mat4::translation(0.0, 15.0, 0.0),
         ),
+        Some(nd2),
     );
     assert_eq!(NodeType::Light, nd3.node_type);
     assert_eq!(3, nd3.node_idx);
@@ -92,7 +92,7 @@ fn remove() {
     let light = Light::new_white(LightType::Directional, 1e6);
     let xform = Mat4::translation(2.0, 1.0, -5.0);
 
-    let nd0 = scene.insert(None, Node::Light(light, Mat4::rotation_x(0.7854)));
+    let nd0 = scene.insert(Node::Light(light, Mat4::rotation_x(0.7854)), None);
     assert_eq!(2, scene.graph.len());
     assert_eq!(1, scene.nodes.len());
     assert!(scene.drawables.is_empty());
@@ -112,22 +112,22 @@ fn remove() {
         x => panic!("unexpected Node: {:#?}", x),
     };
 
-    let nd0 = scene.insert(None, Node::Light(light, Mat4::rotation_x(0.7854)));
+    let nd0 = scene.insert(Node::Light(light, Mat4::rotation_x(0.7854)), None);
     assert_eq!(2, scene.graph.len());
     // Should insert in the vacant node.
     assert_eq!(1, scene.nodes.len());
     assert_eq!(1, scene.lights.len());
-    let nd1 = scene.insert(None, Node::Xform(xform));
+    let nd1 = scene.insert(Node::Xform(xform), None);
     let nd2 = scene.insert(
-        Some(nd0),
         Node::Xform(xform * Mat4::scale(-1.0, -1.0, -1.0)),
+        Some(nd0),
     );
     let nd3 = scene.insert(
-        Some(nd2),
         Node::Light(
             Light::new_white(LightType::Point { range: 6.5 }, 500.0),
             Mat4::translation(0.0, 15.0, 0.0),
         ),
+        Some(nd2),
     );
     assert_eq!(5, scene.graph.len());
     assert_eq!(4, scene.nodes.len());
@@ -197,7 +197,7 @@ fn remove() {
         scene.nodes.len() - scene.drawables.len() - scene.lights.len() - scene.xforms.len()
     );
 
-    let nd4 = scene.insert(Some(nd0), Node::Xform(xform));
+    let nd4 = scene.insert(Node::Xform(xform), Some(nd0));
     // Should insert into `scene.nodes[node_idx]` (latest vacancy).
     assert_eq!(node_idx, nd4.node_idx);
     assert_eq!(none_cnt - 1, scene.none_cnt);
@@ -213,13 +213,13 @@ fn remove() {
 #[should_panic = "Not a Drawable node: NodeId { node_type: Light, node_idx: 1 }"]
 fn not_drawable_node() {
     let mut scene = Scene::default();
-    let nd0 = scene.insert(None, Node::Xform(Mat4::from(1.0)));
+    let nd0 = scene.insert(Node::Xform(Mat4::from(1.0)), None);
     let nd1 = scene.insert(
-        Some(nd0),
         Node::Light(
             Light::new_white(LightType::Point { range: 4.5 }, 300.0),
             Mat4::translation(0.5, 3.0, -2.0),
         ),
+        Some(nd0),
     );
     let _ = scene.drawable(nd1);
 }
@@ -228,13 +228,13 @@ fn not_drawable_node() {
 #[should_panic = "Not a Light node: NodeId { node_type: Xform, node_idx: 0 }"]
 fn not_light_node() {
     let mut scene = Scene::default();
-    let nd0 = scene.insert(None, Node::Xform(Mat4::from(1.0)));
+    let nd0 = scene.insert(Node::Xform(Mat4::from(1.0)), None);
     let nd1 = scene.insert(
-        None,
         Node::Light(
             Light::new_white(LightType::Point { range: 4.5 }, 300.0),
             Mat4::translation(0.5, 3.0, -2.0),
         ),
+        None,
     );
     let _ = scene.light(nd1); // OK.
     let _ = scene.light(nd0);
@@ -249,8 +249,8 @@ fn node_access() {
     let m1 = Mat4::translation(0.0, 16.0, 0.0);
 
     let mut scene = Scene::default();
-    let nd0 = scene.insert(None, Node::Light(light0, m0));
-    let nd1 = scene.insert(None, Node::Light(light1, m1));
+    let nd0 = scene.insert(Node::Light(light0, m0), None);
+    let nd1 = scene.insert(Node::Light(light1, m1), None);
 
     let ref0 = (scene.light(nd0), scene.local(nd0));
     let ref1 = (scene.light(nd1), scene.local(nd1));

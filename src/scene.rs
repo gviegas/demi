@@ -74,7 +74,7 @@ impl Scene {
     ///
     /// NOTE: The `NodeId` returned by this method must not be used
     /// with `Scene`s other than the one that produced it.
-    pub fn insert(&mut self, prev: Option<NodeId>, node: Node) -> NodeId {
+    pub fn insert(&mut self, node: Node, prev: Option<NodeId>) -> NodeId {
         // If `prev` is not provided, we insert the new node into the
         // graph's root transform. Each of these nodes can then be
         // treated as a separate graph.
