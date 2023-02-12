@@ -47,6 +47,14 @@ pub struct BitVec<T: Unsigned> {
 }
 
 impl<T: Unsigned> BitVec<T> {
+    /// Creates an empty bit vector.
+    pub fn new() -> Self {
+        Self {
+            vec: vec![],
+            rem: 0,
+        }
+    }
+
     /// Increment the vector by `inc` units.
     /// The unit of the increment is `T`. The number of bits
     /// pushed will be equal to `inc * T::BITS`.
