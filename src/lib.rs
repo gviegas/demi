@@ -21,6 +21,7 @@ pub mod skin;
 pub mod texture;
 pub mod transform;
 
+mod bit_vec;
 mod gpu;
 mod var_buf;
 
