@@ -40,6 +40,7 @@ macro_rules! def_unsigned {
 def_unsigned!(u8 u16 u32 u64 u128 usize);
 
 /// Bit vector type.
+#[derive(Debug)]
 pub struct BitVec<T: Unsigned> {
     vec: Vec<T>,
     rem: usize,
@@ -76,6 +77,16 @@ impl<T: Unsigned> BitVec<T> {
             self.vec[idx] &= !bit;
             self.rem += 1;
         }
+    }
+
+    /// Returns the vector's length in number of bits.
+    pub fn len(&self) -> usize {
+        self.vec.len() * T::BITS
+    }
+
+    /// Returns the number of unset bits.
+    pub fn rem(&self) -> usize {
+        self.rem
     }
 
     // TODO...
