@@ -138,6 +138,12 @@ impl<T: Unsigned> BitVec<T> {
     // TODO...
 }
 
+impl<T: Unsigned> Default for BitVec<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -420,7 +426,7 @@ mod tests {
 
     #[test]
     fn set_unset() {
-        let mut v = <BitVec<u16>>::new();
+        let mut v = BitVec::<u16>::default();
         v.grow(1);
         v.assert(16, 16, &[(0, 0)]);
 
