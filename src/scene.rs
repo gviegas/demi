@@ -78,7 +78,6 @@ impl Scene {
         // If `prev` is not provided, we insert the new node into the
         // graph's root transform. Each of these nodes can then be
         // treated as a separate graph.
-        let root = self.graph.id();
         let prev = if let Some(x) = prev {
             let prev_idx = self.nodes[x.node_idx].unwrap();
             match x.node_type {
