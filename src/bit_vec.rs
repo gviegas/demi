@@ -87,6 +87,13 @@ impl<T: Unsigned> BitVec<T> {
         }
     }
 
+    // Checks whether a given bit is set.
+    pub fn is_set(&self, bit_idx: usize) -> bool {
+        let idx = bit_idx / T::BITS;
+        let bit = T::ONE << (bit_idx & (T::BITS - 1));
+        self.vec[idx] & bit == bit
+    }
+
     /// Returns the vector's length in number of bits.
     pub fn len(&self) -> usize {
         self.vec.len() * T::BITS
