@@ -78,7 +78,7 @@ impl<T: Unsigned> BitVec<T> {
                 self.rem = 0;
             }
             _ => {
-                for i in 0..dec {
+                for _ in 0..dec {
                     let mut u = self.vec.pop().unwrap();
                     let mut minus = if u == !T::ZERO {
                         u = T::ZERO;
