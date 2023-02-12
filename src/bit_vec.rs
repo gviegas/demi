@@ -67,6 +67,37 @@ impl<T: Unsigned> BitVec<T> {
         self.rem += inc * T::BITS;
     }
 
+    /// Decrements the vector by `dec` units.
+    /// The unit of decrement is `T`. The number of bits
+    /// popped will be equal to `dec * T::BITS`.
+    pub fn shrink(&mut self, dec: usize) {
+        match dec {
+            0 => (),
+            x if x >= self.vec.len() => {
+                self.vec.clear();
+                self.rem = 0;
+            }
+            _ => {
+                for i in 0..dec {
+                    let mut u = self.vec.pop().unwrap();
+                    let mut minus = if u == !T::ZERO {
+                        u = T::ZERO;
+                        0
+                    } else {
+                        T::BITS
+                    };
+                    while u != T::ZERO {
+                        if u & T::ONE == T::ONE {
+                            minus -= 1;
+                        }
+                        u >>= 1;
+                    }
+                    self.rem -= minus;
+                }
+            }
+        }
+    }
+
     /// Sets a given bit.
     pub fn set(&mut self, bit_idx: usize) {
         let idx = bit_idx / T::BITS;
@@ -158,6 +189,233 @@ mod tests {
             usize::BITS as usize * 3,
             &[(0, 0), (1, 0)],
         );
+    }
+
+    #[test]
+    fn shrink() {
+        let mut v = BitVec::<u32>::new();
+        v.grow(1);
+        v.assert(32, 32, &[(0, 0)]);
+        v.shrink(1);
+        v.assert(0, 0, &[]);
+        v.shrink(1);
+        v.assert(0, 0, &[]);
+        v.grow(1);
+        v.assert(32, 32, &[(0, 0)]);
+        v.shrink(0);
+        v.assert(32, 32, &[(0, 0)]);
+        v.grow(3);
+        v.assert(128, 128, &[(0, 0), (1, 0), (2, 0), (3, 0)]);
+        v.shrink(0);
+        v.assert(128, 128, &[(0, 0), (1, 0), (2, 0), (3, 0)]);
+        v.shrink(3);
+        v.assert(32, 32, &[(0, 0)]);
+        v.grow(2);
+        v.assert(96, 96, &[(0, 0), (1, 0), (2, 0)]);
+        v.shrink(3);
+        v.assert(0, 0, &[]);
+        v.grow(3);
+        v.assert(96, 96, &[(0, 0), (1, 0), (2, 0)]);
+        v.shrink(4);
+        v.assert(0, 0, &[]);
+
+        v.grow(1);
+        v.assert(32, 32, &[(0, 0)]);
+        v.set(6);
+        v.assert(32, 31, &[(0, 0b100_0000)]);
+        v.shrink(1);
+        v.assert(0, 0, &[]);
+        v.grow(1);
+        v.assert(32, 32, &[(0, 0)]);
+        v.set(6);
+        v.set(0);
+        v.set(31);
+        v.assert(32, 29, &[(0, 0x80_00_00_41)]);
+        v.shrink(10);
+        v.assert(0, 0, &[]);
+
+        v.grow(4);
+        v.assert(128, 128, &[(0, 0), (1, 0), (2, 0), (3, 0)]);
+        v.set(0);
+        v.set(17);
+        v.set(31);
+        v.assert(128, 125, &[(0, 0x80_02_00_01), (1, 0), (2, 0), (3, 0)]);
+        v.shrink(3);
+        v.assert(32, 29, &[(0, 0x80_02_00_01)]);
+        v.grow(3);
+        v.assert(128, 125, &[(0, 0x80_02_00_01), (1, 0), (2, 0), (3, 0)]);
+        v.set(32);
+        v.assert(128, 124, &[(0, 0x80_02_00_01), (1, 0b1), (2, 0), (3, 0)]);
+        v.shrink(2);
+        v.assert(64, 60, &[(0, 0x80_02_00_01), (1, 0b1)]);
+        v.shrink(1);
+        v.assert(32, 29, &[(0, 0x80_02_00_01)]);
+        v.grow(3);
+        v.unset(31);
+        v.set(33);
+        v.set(34);
+        v.set(96);
+        v.set(105);
+        v.assert(
+            128,
+            122,
+            &[(0, 0x00_02_00_01), (1, 0b110), (2, 0), (3, 0b10_0000_0001)],
+        );
+        v.shrink(1);
+        v.assert(96, 92, &[(0, 0x00_02_00_01), (1, 0b110), (2, 0)]);
+        v.grow(1);
+        v.set(97);
+        v.set(100);
+        v.set(127);
+        v.assert(
+            128,
+            121,
+            &[(0, 0x00_02_00_01), (1, 0b110), (2, 0), (3, 0x80_00_00_12)],
+        );
+        v.shrink(2);
+        v.assert(64, 60, &[(0, 0x00_02_00_01), (1, 0b110)]);
+        v.grow(2);
+        v.set(96);
+        v.set(99);
+        v.assert(
+            128,
+            122,
+            &[(0, 0x00_02_00_01), (1, 0b110), (2, 0), (3, 0b1001)],
+        );
+        v.shrink(3);
+        v.assert(32, 30, &[(0, 0x00_02_00_01)]);
+        v.grow(2);
+        v.set(64);
+        v.set(65);
+        v.set(66);
+        v.set(67);
+        v.set(70);
+        v.assert(96, 89, &[(0, 0x00_02_00_01), (1, 0), (2, 0b1001111)]);
+        v.shrink(0);
+        v.assert(96, 89, &[(0, 0x00_02_00_01), (1, 0), (2, 0b1001111)]);
+        v.shrink(3);
+        v.assert(0, 0, &[]);
+
+        v.grow(3);
+        v.set(32);
+        v.set(35);
+        v.assert(96, 94, &[(0, 0), (1, 0b1001), (2, 0)]);
+        v.shrink(1);
+        v.assert(64, 62, &[(0, 0), (1, 0b1001)]);
+        v.grow(1);
+        v.set(65);
+        v.set(67);
+        v.assert(96, 92, &[(0, 0), (1, 0b1001), (2, 0b1010)]);
+        v.shrink(2);
+        v.assert(32, 32, &[(0, 0)]);
+        v.grow(5);
+        v.set(190);
+        v.set(160);
+        v.assert(
+            192,
+            190,
+            &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0x40_00_00_01)],
+        );
+        v.shrink(5);
+        v.assert(32, 32, &[(0, 0)]);
+        v.shrink(123);
+        v.assert(0, 0, &[]);
+
+        v.grow(1);
+        for i in 0..32 {
+            v.set(i);
+        }
+        v.assert(32, 0, &[(0, u32::MAX)]);
+        v.shrink(1);
+        v.assert(0, 0, &[]);
+
+        v.grow(5);
+        for i in 0..160 {
+            v.set(i);
+        }
+        v.assert(
+            160,
+            0,
+            &[
+                (0, u32::MAX),
+                (1, u32::MAX),
+                (2, u32::MAX),
+                (3, u32::MAX),
+                (4, u32::MAX),
+            ],
+        );
+        v.shrink(1);
+        v.assert(
+            128,
+            0,
+            &[(0, u32::MAX), (1, u32::MAX), (2, u32::MAX), (3, u32::MAX)],
+        );
+        v.shrink(2);
+        v.assert(64, 0, &[(0, u32::MAX), (1, u32::MAX)]);
+        v.shrink(2);
+        v.assert(0, 0, &[]);
+
+        v.grow(5);
+        for i in 32..160 {
+            v.set(i);
+        }
+        v.assert(
+            160,
+            32,
+            &[
+                (0, 0),
+                (1, u32::MAX),
+                (2, u32::MAX),
+                (3, u32::MAX),
+                (4, u32::MAX),
+            ],
+        );
+        v.shrink(1);
+        v.assert(
+            128,
+            32,
+            &[(0, 0), (1, u32::MAX), (2, u32::MAX), (3, u32::MAX)],
+        );
+        v.shrink(1);
+        v.assert(96, 32, &[(0, 0), (1, u32::MAX)]);
+        v.shrink(2);
+        v.assert(32, 32, &[(0, 0)]);
+        v.shrink(1);
+        v.assert(0, 0, &[]);
+
+        v.grow(5);
+        for i in 32..96 {
+            v.set(i);
+        }
+        for i in 128..160 {
+            v.set(i);
+        }
+        v.set(1);
+        v.assert(
+            160,
+            63,
+            &[
+                (0, 0b10),
+                (1, u32::MAX),
+                (2, u32::MAX),
+                (3, 0),
+                (4, u32::MAX),
+            ],
+        );
+        v.shrink(1);
+        v.assert(128, 63, &[(0, 0b10), (1, u32::MAX), (2, u32::MAX), (3, 0)]);
+        v.shrink(1);
+        v.assert(96, 31, &[(0, 0b10), (1, u32::MAX), (2, u32::MAX)]);
+        v.grow(1);
+        v.assert(128, 63, &[(0, 0b10), (1, u32::MAX), (2, u32::MAX), (3, 0)]);
+        v.shrink(2);
+        v.assert(64, 31, &[(0, 0b10), (1, u32::MAX)]);
+        v.shrink(1);
+        v.assert(32, 31, &[(0, 0b10)]);
+        v.grow(1);
+        v.assert(64, 63, &[(0, 0b10), (1, 0)]);
+        v.shrink(2);
+        v.assert(0, 0, &[]);
     }
 
     #[test]
