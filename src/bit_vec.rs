@@ -118,11 +118,31 @@ impl<T: Unsigned> BitVec<T> {
         }
     }
 
-    // Checks whether a given bit is set.
+    /// Checks whether a given bit is set.
     pub fn is_set(&self, bit_idx: usize) -> bool {
         let idx = bit_idx / T::BITS;
         let bit = T::ONE << (bit_idx & (T::BITS - 1));
         self.vec[idx] & bit == bit
+    }
+
+    /// Searches for an unset bit.
+    /// It returns the index of the first unset bit found, or
+    /// `None` if every bit in the vector is set.
+    /// The bit is not set by this method.
+    pub fn find(&self) -> Option<usize> {
+        if self.rem == 0 {
+            return None;
+        }
+        self.vec.iter().enumerate().find_map(|(i, &(mut x))| {
+            (x != !T::ZERO).then(|| {
+                let mut bit = 0;
+                while x & T::ONE == T::ONE {
+                    bit += 1;
+                    x >>= 1;
+                }
+                i * T::BITS + bit
+            })
+        })
     }
 
     /// Returns the vector's length in number of bits.
@@ -523,5 +543,74 @@ mod tests {
             assert!(!v.is_set(i));
         }
         v.assert(32, 32, &[(0, 0), (1, 0)]);
+    }
+
+    #[test]
+    fn find() {
+        let mut v = BitVec::<u16>::new();
+        assert!(v.find().is_none());
+        v.grow(1);
+        assert_eq!(v.find(), Some(0));
+        v.grow(2);
+        assert_eq!(v.find(), Some(0));
+        v.set(1);
+        assert_eq!(v.find(), Some(0));
+        v.set(2);
+        assert_eq!(v.find(), Some(0));
+        v.set(0);
+        assert_eq!(v.find(), Some(3));
+        v.set(5);
+        assert_eq!(v.find(), Some(3));
+        v.set(3);
+        assert_eq!(v.find(), Some(4));
+        v.unset(1);
+        assert_eq!(v.find(), Some(1));
+        v.unset(0);
+        assert_eq!(v.find(), Some(0));
+        v.set(0);
+        v.set(1);
+        v.set(4);
+        assert_eq!(v.find(), Some(6));
+        v.set(16);
+        assert_eq!(v.find(), Some(6));
+        v.set(32);
+        assert_eq!(v.find(), Some(6));
+        for i in 6..16 {
+            v.set(i)
+        }
+        assert_eq!(v.find(), Some(17));
+        v.set(18);
+        assert_eq!(v.find(), Some(17));
+        v.set(17);
+        v.set(19);
+        assert_eq!(v.find(), Some(20));
+        for i in 20..30 {
+            v.set(i);
+        }
+        assert_eq!(v.find(), Some(30));
+        v.set(30);
+        assert_eq!(v.find(), Some(31));
+        v.set(31);
+        assert_eq!(v.find(), Some(33));
+        for i in 33..48 {
+            v.set(i);
+        }
+        assert!(v.find().is_none());
+        v.unset(16);
+        assert_eq!(v.find(), Some(16));
+        v.shrink(1);
+        assert_eq!(v.find(), Some(16));
+        v.shrink(1);
+        assert!(v.find().is_none());
+        v.unset(15);
+        assert_eq!(v.find(), Some(15));
+        v.unset(10);
+        assert_eq!(v.find(), Some(10));
+        v.unset(0);
+        assert_eq!(v.find(), Some(0));
+        v.grow(1);
+        assert_eq!(v.find(), Some(0));
+        v.shrink(2);
+        assert!(v.find().is_none());
     }
 }
