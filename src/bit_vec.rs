@@ -145,6 +145,98 @@ impl<T: Unsigned> BitVec<T> {
         })
     }
 
+    /// Searches for a contiguous range of unset bits.
+    /// It returns the index of the first unset bit in the
+    /// range, or `None` if there is no contiguous, unset
+    /// range of size `n`.
+    /// The bits are not set by this method.
+    pub fn find_contiguous(&self, n: usize) -> Option<usize> {
+        match n {
+            0..=1 => self.find(),
+            x if x > self.rem => None,
+            _ => {
+                // Number of contiguous bits found.
+                let mut cnt = 0;
+                // Index of the element where the range begins.
+                let mut idx = 0;
+                // Bit offset within `idx`.
+                let mut bit = 0;
+                // Index of the element being checked.
+                let mut i = 0;
+                loop {
+                    // Skip fully set elements.
+                    if self.vec[i] == !T::ZERO {
+                        cnt = 0;
+                        bit = 0;
+                        i += 1;
+                        for _ in i..self.vec.len() {
+                            if self.vec[i] != !T::ZERO {
+                                break;
+                            }
+                            i += 1;
+                        }
+                        idx = i;
+                    }
+
+                    // Give up if there is not enough bits left.
+                    if cnt + T::BITS * (self.vec.len() - i) < n {
+                        break None;
+                    }
+
+                    // Iterate over whole elements as much as possible.
+                    if self.vec[i] == T::ZERO {
+                        cnt += T::BITS;
+                        i += 1;
+                        if cnt < n {
+                            for j in 0..(n - cnt) / T::BITS {
+                                if self.vec[i + j] != T::ZERO {
+                                    cnt += j * T::BITS;
+                                    i += j;
+                                    break;
+                                }
+                            }
+                        }
+                        if cnt >= n {
+                            break Some(idx * T::BITS + bit);
+                        }
+                    }
+
+                    // Iterate over the bits of the ith element.
+                    // There are three possibilities:
+                    //
+                    // 1. It completes a range (i.e., bits 0..n-cnt are
+                    //    unset) or
+                    // 2. There is a range of n unset bits contained
+                    //    within this element or
+                    // 3. It has a (possibly empty) subrange x..T::BITS
+                    //    of unset bits that may yet form a full range
+                    //    with subsequent element(s).
+                    for j in 0..T::BITS {
+                        if self.vec[i] & (T::ONE << j) == T::ZERO {
+                            cnt += 1;
+                            if cnt >= n {
+                                return Some(idx * T::BITS + bit);
+                            }
+                        } else {
+                            cnt = 0;
+                            if j < T::BITS - 1 {
+                                idx = i;
+                                bit = j + 1;
+                            } else {
+                                idx = i + 1;
+                                bit = 0;
+                            }
+                        }
+                    }
+                    i += 1;
+                    if i == self.vec.len() {
+                        break None;
+                    }
+                }
+            }
+        }
+    }
+
     /// Returns the vector's length in number of bits.
     pub fn len(&self) -> usize {
         self.vec.len() * T::BITS
@@ -154,8 +246,6 @@ impl<T: Unsigned> BitVec<T> {
     pub fn rem(&self) -> usize {
         self.rem
     }
-
-    // TODO...
 }
 
 impl<T: Unsigned> Default for BitVec<T> {
@@ -612,5 +702,150 @@ mod tests {
         assert_eq!(v.find(), Some(0));
         v.shrink(2);
         assert!(v.find().is_none());
+    }
+
+    #[test]
+    fn find_contiguous() {
+        let mut v = BitVec::<u16>::new();
+        assert!(v.find_contiguous(1).is_none());
+        assert!(v.find_contiguous(16).is_none());
+        assert!(v.find_contiguous(17).is_none());
+        v.grow(1);
+        for i in 1..16 {
+            assert_eq!(v.find_contiguous(i), Some(0));
+        }
+        assert!(v.find_contiguous(17).is_none());
+        v.grow(1);
+        for i in 1..32 {
+            assert_eq!(v.find_contiguous(i), Some(0));
+        }
+        assert!(v.find_contiguous(33).is_none());
+
+        v.set(1);
+        assert_eq!(v.find_contiguous(1), Some(0));
+        assert_eq!(v.find_contiguous(2), Some(2));
+        assert_eq!(v.find_contiguous(3), Some(2));
+        assert_eq!(v.find_contiguous(16), Some(2));
+        v.set(4);
+        assert_eq!(v.find_contiguous(2), Some(2));
+        assert_eq!(v.find_contiguous(3), Some(5));
+        assert_eq!(v.find_contiguous(16), Some(5));
+        v.set(9);
+        assert_eq!(v.find_contiguous(2), Some(2));
+        assert_eq!(v.find_contiguous(3), Some(5));
+        assert_eq!(v.find_contiguous(4), Some(5));
+        assert_eq!(v.find_contiguous(5), Some(10));
+        assert_eq!(v.find_contiguous(22), Some(10));
+        assert!(v.find_contiguous(23).is_none());
+        v.set(16);
+        assert_eq!(v.find_contiguous(1), Some(0));
+        assert_eq!(v.find_contiguous(2), Some(2));
+        assert_eq!(v.find_contiguous(6), Some(10));
+        assert_eq!(v.find_contiguous(7), Some(17));
+        assert_eq!(v.find_contiguous(15), Some(17));
+        assert!(v.find_contiguous(16).is_none());
+        v.grow(1);
+        assert_eq!(v.find_contiguous(16), Some(17));
+        v.set(33);
+        assert_eq!(v.find_contiguous(16), Some(17));
+        v.set(32);
+        assert!(v.find_contiguous(16).is_none());
+        v.unset(16);
+        assert_eq!(v.find_contiguous(16), Some(10));
+        v.unset(32);
+        assert_eq!(v.find_contiguous(16), Some(10));
+        v.set(17);
+        assert!(v.find_contiguous(16).is_none());
+        v.unset(33);
+        assert_eq!(v.find_contiguous(16), Some(18));
+        v.set(20);
+        v.set(40);
+        assert!(v.find_contiguous(20).is_none());
+        v.unset(40);
+        assert_eq!(v.find_contiguous(20), Some(21));
+        v.unset(20);
+        assert_eq!(v.find_contiguous(20), Some(18));
+        assert!(v.find_contiguous(31).is_none());
+        v.unset(17);
+        v.set(13);
+        assert_eq!(v.find_contiguous(31), Some(14));
+        v.set(14);
+        assert_eq!(v.find_contiguous(31), Some(15));
+        v.set(46);
+        assert_eq!(v.find_contiguous(31), Some(15));
+        assert!(v.find_contiguous(32).is_none());
+        v.unset(46);
+        v.set(47);
+        assert_eq!(v.find_contiguous(31), Some(15));
+        assert!(v.find_contiguous(33).is_none());
+        v.unset(14);
+        assert_eq!(v.find_contiguous(33), Some(14));
+        v.set(0);
+        v.unset(1);
+        assert_eq!(v.find_contiguous(33), Some(14));
+        v.unset(13);
+        assert_eq!(v.find_contiguous(34), Some(10));
+        assert!(v.find_contiguous(38).is_none());
+        v.unset(47);
+        assert_eq!(v.find_contiguous(38), Some(10));
+
+        v.shrink(3);
+        v.grow(3);
+        assert_eq!(v.find_contiguous(16), Some(0));
+        assert_eq!(v.find_contiguous(32), Some(0));
+        assert_eq!(v.find_contiguous(48), Some(0));
+        assert!(v.find_contiguous(64).is_none());
+        for i in (0..16).chain(32..48) {
+            v.set(i);
+        }
+        assert!(v.find_contiguous(17).is_none());
+        assert_eq!(v.find_contiguous(1), Some(16));
+        assert_eq!(v.find_contiguous(15), Some(16));
+        assert_eq!(v.find_contiguous(16), Some(16));
+        v.set(16);
+        assert_eq!(v.find_contiguous(1), Some(17));
+        assert_eq!(v.find_contiguous(2), Some(17));
+        assert_eq!(v.find_contiguous(15), Some(17));
+        assert!(v.find_contiguous(16).is_none());
+
+        v.shrink(3);
+        v.grow(3);
+        for i in (0..15).chain(18..30).chain(33..48) {
+            v.set(i);
+        }
+        assert!(v.find_contiguous(4).is_none());
+        assert_eq!(v.find_contiguous(1), Some(15));
+        assert_eq!(v.find_contiguous(2), Some(15));
+        assert_eq!(v.find_contiguous(3), Some(15));
+        v.set(17);
+        assert_eq!(v.find_contiguous(1), Some(15));
+        assert_eq!(v.find_contiguous(2), Some(15));
+        assert_eq!(v.find_contiguous(3), Some(30));
+        v.set(16);
+        assert_eq!(v.find_contiguous(1), Some(15));
+        assert_eq!(v.find_contiguous(2), Some(30));
+        assert_eq!(v.find_contiguous(3), Some(30));
+        v.set(15);
+        v.set(18);
+        assert_eq!(v.find_contiguous(1), Some(30));
+        assert_eq!(v.find_contiguous(2), Some(30));
+        assert_eq!(v.find_contiguous(3), Some(30));
+        v.set(31);
+        assert_eq!(v.find_contiguous(1), Some(30));
+        assert!(v.find_contiguous(2).is_none());
+        assert!(v.find_contiguous(3).is_none());
+
+        v.shrink(9999);
+        v.grow(10);
+        for i in 0..160 {
+            assert_eq!(v.find_contiguous(160 - i), Some(i));
+            v.set(i);
+        }
+        assert!(v.find_contiguous(1).is_none());
+        for i in 0..160 {
+            v.unset(159 - i);
+            assert_eq!(v.find_contiguous(i + 1), Some(159 - i));
+        }
+        assert_eq!(v.find_contiguous(160), Some(0));
     }
 }
