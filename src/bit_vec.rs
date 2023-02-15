@@ -56,6 +56,21 @@ impl<T: Unsigned> BitVec<T> {
         }
     }
 
+    /// Creates a bit vector with an initial number of `T`s.
+    /// The total number of bits in the vector will be equal
+    /// to `n * T::BITS`.
+    /// All bits are initially unset.
+    pub fn with_count_words(n: usize) -> Self {
+        if n == 0 {
+            Self::new()
+        } else {
+            Self {
+                vec: vec![T::ZERO; n],
+                rem: n * T::BITS,
+            }
+        }
+    }
+
     /// Increment the vector by `inc` units.
     /// The unit of the increment is `T`. The number of bits
     /// pushed will be equal to `inc * T::BITS`.
@@ -340,6 +355,31 @@ mod tests {
             usize::BITS as usize * 3,
             usize::BITS as usize * 3,
             &[(0, 0), (1, 0)],
+        );
+
+        let mut v = BitVec::<u32>::with_count_words(1);
+        v.assert(32, 32, &[(0, 0)]);
+        assert_eq!(v.grow(1), Some(32));
+        v.assert(64, 64, &[(0, 0), (1, 0)]);
+        assert_eq!(v.grow(3), Some(64));
+        v.assert(160, 160, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)]);
+        assert_eq!(v.grow(1), Some(160));
+        v.assert(192, 192, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]);
+
+        let mut v = BitVec::<u16>::with_count_words(0);
+        v.assert(0, 0, &[]);
+        assert_eq!(v.grow(3), Some(0));
+        v.assert(48, 48, &[(0, 0), (1, 0), (2, 0)]);
+
+        let mut v = BitVec::<u128>::with_count_words(4);
+        v.assert(512, 512, &[(0, 0), (1, 0), (2, 0), (3, 0)]);
+        assert_eq!(v.grow(2), Some(512));
+        v.assert(768, 768, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]);
+        assert_eq!(v.grow(1), Some(768));
+        v.assert(
+            896,
+            896,
+            &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0)],
         );
     }
 
