@@ -44,25 +44,25 @@ fn insert() {
     // - front insertions
     // - first_child.prev == parent
 
-    let node = graph.nodes[graph.id().0].as_ref().unwrap();
+    let node = &graph.nodes[graph.id().0];
     assert_eq!(node.prev, None);
     assert_eq!(node.next, None);
     assert_eq!(node.sub, Some(xb.0));
     assert_eq!(node.data, 0);
 
-    let node = graph.nodes[xa.0].as_ref().unwrap();
+    let node = &graph.nodes[xa.0];
     assert_eq!(node.prev, Some(xb.0));
     assert_eq!(node.next, None);
     assert_eq!(node.sub, Some(xaa.0));
     assert_eq!(node.data, 1);
 
-    let node = graph.nodes[xaa.0].as_ref().unwrap();
+    let node = &graph.nodes[xaa.0];
     assert_eq!(node.prev, Some(xa.0));
     assert_eq!(node.next, None);
     assert_eq!(node.sub, None);
     assert_eq!(node.data, 2);
 
-    let node = graph.nodes[xb.0].as_ref().unwrap();
+    let node = &graph.nodes[xb.0];
     assert_eq!(node.prev, Some(graph.id().0));
     assert_eq!(node.next, Some(xa.0));
     assert_eq!(node.sub, None);
@@ -170,11 +170,11 @@ fn remove() {
     assert_eq!(graph.node_bits.rem(), 29);
     assert_eq!(graph.data.len(), 3);
     assert_eq!(graph.data[0].node, graph.id().0);
-    assert_eq!(graph.nodes[graph.id().0].as_ref().unwrap().data, 0);
+    assert_eq!(graph.nodes[graph.id().0].data, 0);
     assert_eq!(graph.data[1].node, xb_i);
-    assert_eq!(graph.nodes[xb_i].as_ref().unwrap().data, 1);
+    assert_eq!(graph.nodes[xb_i].data, 1);
     assert_eq!(graph.data[2].node, x.0);
-    assert_eq!(graph.nodes[x.0].as_ref().unwrap().data, 2);
+    assert_eq!(graph.nodes[x.0].data, 2);
 }
 
 #[test]

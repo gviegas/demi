@@ -2,6 +2,8 @@
 
 //! Graph of transformation matrices.
 
+use std::mem;
+
 use crate::bit_vec::BitVec;
 use crate::linear::Mat4;
 
@@ -15,7 +17,7 @@ pub struct XformId(usize);
 /// Node in a transform graph.
 // NOTE: If node size becomes an issue, the `Option`s could
 // be replaced with the use of sentinel values.
-#[derive(Clone, Debug)]
+#[derive(Clone, Default, Debug)]
 struct XformNode {
     prev: Option<usize>,
     next: Option<usize>,
@@ -24,7 +26,7 @@ struct XformNode {
 }
 
 /// Data of a transform.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 struct XformData {
     // TODO: Consider storing the local transform
     // as TRS properties instead.
@@ -37,7 +39,7 @@ struct XformData {
 /// Transform graph.
 #[derive(Debug)]
 pub struct Transform {
-    nodes: Vec<Option<XformNode>>,
+    nodes: Vec<XformNode>,
     node_bits: BitVec<u32>,
     data: Vec<XformData>,
 }
@@ -45,17 +47,10 @@ pub struct Transform {
 impl Transform {
     /// Creates a new root transform.
     pub fn new(xform: Mat4<f32>) -> Self {
-        let mut nodes = vec![None; u32::BITS as _];
-        nodes[0] = Some(XformNode {
-            prev: None,
-            next: None,
-            sub: None,
-            data: 0,
-        });
         let mut node_bits = BitVec::with_count_words(1);
         node_bits.set(0);
         Self {
-            nodes,
+            nodes: vec![XformNode::default(); u32::BITS as _],
             node_bits,
             data: vec![XformData {
                 local: xform,
@@ -93,25 +88,26 @@ impl Transform {
             .node_bits
             .find()
             .or_else(|| {
-                self.nodes.resize_with(self.nodes.len() + 32, || None);
+                self.nodes
+                    .resize_with(self.nodes.len() + 32, || Default::default());
                 self.node_bits.grow(1)
             })
             .unwrap();
         self.node_bits.set(new_idx);
-        let prev_node = self.nodes[prev.0].as_mut().unwrap();
+        let prev_node = &mut self.nodes[prev.0];
         let next_idx = prev_node.sub;
         // Insert the new transform as the first child.
         // The current first child, if any, becomes the next sibling.
         prev_node.sub = Some(new_idx);
         if let Some(x) = next_idx {
-            self.nodes[x].as_mut().unwrap().prev = Some(new_idx);
+            self.nodes[x].prev = Some(new_idx);
         }
-        self.nodes[new_idx] = Some(XformNode {
+        self.nodes[new_idx] = XformNode {
             prev: Some(prev.0),
             next: next_idx,
             sub: None,
             data: self.data.len(),
-        });
+        };
         self.data.push(XformData {
             local: xform,
             world: Default::default(),
@@ -129,32 +125,32 @@ impl Transform {
     /// descendants - they must be explicitly `remove`d.
     pub fn remove(&mut self, id: XformId) -> Mat4<f32> {
         assert_ne!(id.0, self.id().0, "cannot remove root transform");
-        let node = self.nodes[id.0].take().unwrap();
+        let node = mem::take(&mut self.nodes[id.0]);
         self.node_bits.unset(id.0);
         if let Some(x) = node.prev {
-            let prev_sub = self.nodes[x].as_ref().unwrap().sub;
+            let prev_sub = self.nodes[x].sub;
             match prev_sub {
                 // `node.prev` is the parent.
                 // The next sibling, if any, becomes the first child.
-                Some(y) if y == id.0 => self.nodes[x].as_mut().unwrap().sub = node.next,
+                Some(y) if y == id.0 => self.nodes[x].sub = node.next,
                 // `node.prev` is a sibling.
                 // The next sibling, if any, becomes the previous' next sibling.
-                _ => self.nodes[x].as_mut().unwrap().next = node.next,
+                _ => self.nodes[x].next = node.next,
             }
         }
         if let Some(x) = node.next {
-            self.nodes[x].as_mut().unwrap().prev = node.prev;
+            self.nodes[x].prev = node.prev;
         }
         if let Some(x) = node.sub {
             // NOTE: Orphaned sub-graph.
-            self.nodes[x].as_mut().unwrap().prev = None;
+            self.nodes[x].prev = None;
         }
         // Unlike nodes, data can be removed from any position, and
         // we just need to update a node's `data` index in the event
         // of a swap-removal.
         let swap = self.data.last().unwrap().node;
         if swap != id.0 {
-            self.nodes[swap].as_mut().unwrap().data = node.data;
+            self.nodes[swap].data = node.data;
             self.data.swap_remove(node.data).local
         } else {
             self.data.pop().unwrap().local
@@ -163,7 +159,7 @@ impl Transform {
 
     /// Returns a reference to a given local transform.
     pub fn local(&self, id: XformId) -> &Mat4<f32> {
-        let data_idx = self.nodes[id.0].as_ref().unwrap().data;
+        let data_idx = self.nodes[id.0].data;
         &self.data[data_idx].local
     }
 
@@ -173,7 +169,7 @@ impl Transform {
     /// world transform (and those of its descendants) will be recomputed
     /// when the graph is updated.
     pub fn local_mut(&mut self, id: XformId) -> &mut Mat4<f32> {
-        let data_idx = self.nodes[id.0].as_ref().unwrap().data;
+        let data_idx = self.nodes[id.0].data;
 
         // NOTE: Code such as the following can potentially invalidate
         // a whole sub-graph needlessly:
@@ -191,13 +187,13 @@ impl Transform {
 
     /// Returns a reference to a given world transform.
     pub fn world(&self, id: XformId) -> &Mat4<f32> {
-        let data_idx = self.nodes[id.0].as_ref().unwrap().data;
+        let data_idx = self.nodes[id.0].data;
         &self.data[data_idx].world
     }
 
     /// Updates the graph's world transforms.
     pub fn update_world(&mut self) {
-        let data = self.nodes[self.id().0].as_ref().unwrap().data;
+        let data = self.nodes[self.id().0].data;
         let changed = self.data[data].changed;
 
         // NOTE: Doing this here let us treat the root like just another
@@ -227,14 +223,14 @@ impl Transform {
         }) = nodes.pop()
         {
             loop {
-                if let Some(next) = self.nodes[node].as_ref().unwrap().next {
+                if let Some(next) = self.nodes[node].next {
                     nodes.push(Node {
                         node: next,
                         prev_data,
                         prev_chg,
                     });
                 }
-                let data = self.nodes[node].as_ref().unwrap().data;
+                let data = self.nodes[node].data;
                 if prev_chg || self.data[data].changed {
                     let prev_world = &self.data[prev_data].world;
                     let local = &self.data[data].local;
@@ -244,7 +240,7 @@ impl Transform {
                     // pushed the next sibling.
                     prev_chg = true;
                 }
-                if let Some(sub) = self.nodes[node].as_ref().unwrap().sub {
+                if let Some(sub) = self.nodes[node].sub {
                     node = sub;
                     prev_data = data;
                 } else {
@@ -261,7 +257,7 @@ impl Transform {
     /// have changed, so a `false` result here does not necessarily
     /// means that the world transform is valid.
     pub fn changed(&self, id: XformId) -> bool {
-        let data_idx = self.nodes[id.0].as_ref().unwrap().data;
+        let data_idx = self.nodes[id.0].data;
         self.data[data_idx].changed
     }
 
@@ -272,17 +268,17 @@ impl Transform {
     /// such is not fast to compute.
     pub fn changed_upward(&self, id: XformId) -> bool {
         let mut prev_idx = id.0;
-        let mut data_idx = self.nodes[id.0].as_ref().unwrap().data;
+        let mut data_idx = self.nodes[id.0].data;
         'outer: loop {
             if self.data[data_idx].changed {
                 break true;
             }
-            while let Some(prev) = self.nodes[prev_idx].as_ref().unwrap().prev {
-                let node = self.nodes[prev].as_ref().unwrap();
+            while let Some(prev) = self.nodes[prev_idx].prev {
+                let node = &self.nodes[prev];
                 match node.sub {
                     Some(x) if x == prev_idx => {
                         prev_idx = prev;
-                        data_idx = self.nodes[prev].as_ref().unwrap().data;
+                        data_idx = self.nodes[prev].data;
                         continue 'outer;
                     }
                     _ => prev_idx = prev,
