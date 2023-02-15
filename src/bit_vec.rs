@@ -3,7 +3,6 @@
 //! Vector of bits.
 
 use std::fmt;
-
 use std::ops::{
     BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Shl, ShlAssign, Shr,
     ShrAssign,
@@ -60,13 +59,22 @@ impl<T: Unsigned> BitVec<T> {
     /// Increment the vector by `inc` units.
     /// The unit of the increment is `T`. The number of bits
     /// pushed will be equal to `inc * T::BITS`.
-    pub fn grow(&mut self, inc: usize) {
-        if inc == 1 {
-            self.vec.push(T::ZERO);
-        } else {
-            self.vec.resize(self.vec.len() + inc, T::ZERO);
-        }
+    /// It returns the index of the first bit in the pushed
+    /// range, or `None` if `inc` was `0`.
+    pub fn grow(&mut self, inc: usize) -> Option<usize> {
+        let bit_idx = self.len();
         self.rem += inc * T::BITS;
+        match inc {
+            0 => None,
+            1 => {
+                self.vec.push(T::ZERO);
+                Some(bit_idx)
+            }
+            _ => {
+                self.vec.resize(self.vec.len() + inc, T::ZERO);
+                Some(bit_idx)
+            }
+        }
     }
 
     /// Decrements the vector by `dec` units.
@@ -301,20 +309,20 @@ mod tests {
     fn grow() {
         let mut v = BitVec::<u64>::new();
         v.assert(0, 0, &[]);
-        v.grow(1);
+        assert_eq!(v.grow(1), Some(0));
         v.assert(64, 64, &[(0, 0)]);
-        v.grow(1);
+        assert_eq!(v.grow(1), Some(64));
         v.assert(128, 128, &[(0, 0), (1, 0)]);
-        v.grow(3);
+        assert_eq!(v.grow(3), Some(128));
         v.assert(320, 320, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)]);
 
         let mut v: BitVec<u8> = BitVec::new();
         v.assert(0, 0, &[]);
-        v.grow(4);
+        assert_eq!(v.grow(4), Some(0));
         v.assert(32, 32, &[(0, 0), (1, 0), (2, 0), (3, 0)]);
-        v.grow(1);
+        assert_eq!(v.grow(1), Some(32));
         v.assert(40, 40, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)]);
-        v.grow(2);
+        assert_eq!(v.grow(2), Some(40));
         v.assert(
             56,
             56,
@@ -323,11 +331,11 @@ mod tests {
 
         let mut v = <BitVec<usize>>::new();
         v.assert(0, 0, &[]);
-        v.grow(0);
+        assert!(v.grow(0).is_none());
         v.assert(0, 0, &[]);
-        v.grow(1);
-        v.assert(usize::BITS as usize, usize::BITS as usize, &[(0, 0)]);
-        v.grow(2);
+        assert_eq!(v.grow(1), Some(0));
+        v.assert(usize::BITS as _, usize::BITS as _, &[(0, 0)]);
+        assert_eq!(v.grow(2), Some(usize::BITS as _));
         v.assert(
             usize::BITS as usize * 3,
             usize::BITS as usize * 3,
