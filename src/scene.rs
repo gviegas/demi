@@ -5,6 +5,7 @@
 #[cfg(test)]
 mod tests;
 
+use crate::bit_vec::BitVec;
 use crate::drawable::Drawable;
 use crate::light::Light;
 use crate::linear::Mat4;
@@ -48,8 +49,7 @@ pub struct Scene {
     graph: Transform,
     // `nodes` contains indices into `NodeData` vectors.
     nodes: Vec<Option<usize>>,
-    node_idx: usize,
-    none_cnt: usize,
+    node_bits: BitVec<u32>,
     drawables: Vec<NodeData<Drawable>>,
     lights: Vec<NodeData<Light>>,
     xforms: Vec<NodeData<()>>,
@@ -62,8 +62,7 @@ impl Scene {
         Self {
             graph: Transform::default(),
             nodes: vec![],
-            node_idx: 0,
-            none_cnt: 0,
+            node_bits: BitVec::new(),
             drawables: vec![],
             lights: vec![],
             xforms: vec![],
@@ -88,22 +87,15 @@ impl Scene {
         } else {
             self.graph.id()
         };
-        let node_idx = if self.none_cnt > 0 {
-            // There is a vacant node that we can use.
-            let n = self.nodes.len();
-            let mut i = self.node_idx;
-            while self.nodes[i].is_some() {
-                i = (i + 1) % n;
-            }
-            self.node_idx = n / 2;
-            self.none_cnt -= 1;
-            i
-        } else {
-            // No vacant nodes, so push a new one.
-            let n = self.nodes.len();
-            self.nodes.push(None);
-            n
-        };
+        let node_idx = self
+            .node_bits
+            .find()
+            .or_else(|| {
+                self.nodes.resize_with(self.nodes.len() + 32, || None);
+                self.node_bits.grow(1)
+            })
+            .unwrap();
+        self.node_bits.set(node_idx);
         let node_type = match node {
             Node::Drawable(d, x) => {
                 self.nodes[node_idx] = Some(self.drawables.len());
@@ -147,8 +139,7 @@ impl Scene {
         // so it can be ignored during rendering (as expected).
         // Either do it here or in the `Transform`.
         let data_idx = self.nodes[node_id.node_idx].take().unwrap();
-        self.node_idx = node_id.node_idx;
-        self.none_cnt += 1;
+        self.node_bits.unset(node_id.node_idx);
         match node_id.node_type {
             NodeType::Drawable => {
                 let swap = self.drawables.last().unwrap().node_idx;
