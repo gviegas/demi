@@ -82,19 +82,17 @@ impl<T: Unsigned> BitVec<T> {
             _ => {
                 for _ in 0..dec {
                     let mut u = self.vec.pop().unwrap();
-                    let mut minus = if u == !T::ZERO {
-                        u = T::ZERO;
-                        0
-                    } else {
-                        T::BITS
-                    };
-                    while u != T::ZERO {
-                        if u & T::ONE == T::ONE {
-                            minus -= 1;
+                    if u == T::ZERO {
+                        self.rem -= T::BITS;
+                    } else if u != !T::ZERO {
+                        u = !u;
+                        while u != T::ZERO {
+                            if u & T::ONE == T::ONE {
+                                self.rem -= 1;
+                            }
+                            u >>= 1;
                         }
-                        u >>= 1;
                     }
-                    self.rem -= minus;
                 }
             }
         }
