@@ -2,6 +2,7 @@
 
 //! Graph of transformation matrices.
 
+use crate::bit_vec::BitVec;
 use crate::linear::Mat4;
 
 #[cfg(test)]
@@ -14,7 +15,7 @@ pub struct XformId(usize);
 /// Node in a transform graph.
 // NOTE: If node size becomes an issue, the `Option`s could
 // be replaced with the use of sentinel values.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct XformNode {
     prev: Option<usize>,
     next: Option<usize>,
@@ -23,7 +24,7 @@ struct XformNode {
 }
 
 /// Data of a transform.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct XformData {
     // TODO: Consider storing the local transform
     // as TRS properties instead.
@@ -37,23 +38,25 @@ struct XformData {
 #[derive(Debug)]
 pub struct Transform {
     nodes: Vec<Option<XformNode>>,
-    node_idx: usize,
-    none_cnt: usize,
+    node_bits: BitVec<u32>,
     data: Vec<XformData>,
 }
 
 impl Transform {
     /// Creates a new root transform.
     pub fn new(xform: Mat4<f32>) -> Self {
+        let mut nodes = vec![None; u32::BITS as _];
+        nodes[0] = Some(XformNode {
+            prev: None,
+            next: None,
+            sub: None,
+            data: 0,
+        });
+        let mut node_bits = BitVec::with_count_words(1);
+        node_bits.set(0);
         Self {
-            nodes: vec![Some(XformNode {
-                prev: None,
-                next: None,
-                sub: None,
-                data: 0,
-            })],
-            node_idx: 0,
-            none_cnt: 0,
+            nodes,
+            node_bits,
             data: vec![XformData {
                 local: xform,
                 world: xform,
@@ -86,22 +89,15 @@ impl Transform {
     /// NOTE: The `XformId` returned by this method must not be used
     /// with `Transform`s other than the one that produced it.
     pub fn insert(&mut self, xform: Mat4<f32>, prev: XformId) -> XformId {
-        let new_idx = if self.none_cnt > 0 {
-            // There is a vacant node that we can use.
-            let n = self.nodes.len();
-            let mut i = self.node_idx;
-            while self.nodes[i].is_some() {
-                i = (i + 1) % n;
-            }
-            self.node_idx = n / 2;
-            self.none_cnt -= 1;
-            i
-        } else {
-            // No vacant nodes, so push a new one.
-            let n = self.nodes.len();
-            self.nodes.push(None);
-            n
-        };
+        let new_idx = self
+            .node_bits
+            .find()
+            .or_else(|| {
+                self.nodes.resize_with(self.nodes.len() + 32, || None);
+                self.node_bits.grow(1)
+            })
+            .unwrap();
+        self.node_bits.set(new_idx);
         let prev_node = self.nodes[prev.0].as_mut().unwrap();
         let next_idx = prev_node.sub;
         // Insert the new transform as the first child.
@@ -134,8 +130,7 @@ impl Transform {
     pub fn remove(&mut self, id: XformId) -> Mat4<f32> {
         assert_ne!(id.0, self.id().0, "cannot remove root transform");
         let node = self.nodes[id.0].take().unwrap();
-        self.node_idx = id.0;
-        self.none_cnt += 1;
+        self.node_bits.unset(id.0);
         if let Some(x) = node.prev {
             let prev_sub = self.nodes[x].as_ref().unwrap().sub;
             match prev_sub {

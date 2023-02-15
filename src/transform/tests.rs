@@ -29,12 +29,16 @@ fn insert() {
     // AKA `Transform::default()`.
     let mut graph = Transform::new(Mat4::from(1.0));
     assert_eq!(graph.len(), 1);
+    assert_eq!(graph.node_bits.rem(), 31);
     let xa = graph.insert(Mat4::translation(0.0, 0.0, -10.0), graph.id());
     assert_eq!(graph.len(), 2);
+    assert_eq!(graph.node_bits.rem(), 30);
     let xaa = graph.insert(Mat4::rotation_y(std::f32::consts::FRAC_PI_2), xa);
     assert_eq!(graph.len(), 3);
+    assert_eq!(graph.node_bits.rem(), 29);
     let xb = graph.insert(Mat4::scale(-1.0, -1.0, -1.0), graph.id());
     assert_eq!(graph.len(), 4);
+    assert_eq!(graph.node_bits.rem(), 28);
 
     // Note:
     // - front insertions
@@ -68,6 +72,20 @@ fn insert() {
     assert_eq!(graph.data[1].node, 1);
     assert_eq!(graph.data[2].node, 2);
     assert_eq!(graph.data[3].node, 3);
+
+    while graph.len() < 32 {
+        graph.insert(Default::default(), graph.id());
+        assert_eq!(graph.node_bits.len(), 32);
+        assert_eq!(graph.node_bits.rem(), 32 - graph.len());
+    }
+    graph.insert(Default::default(), graph.id());
+    assert_eq!(graph.len(), 33);
+    assert_eq!(graph.node_bits.len(), 64);
+    assert_eq!(graph.node_bits.rem(), 31);
+    graph.insert(Default::default(), graph.id());
+    assert_eq!(graph.len(), 34);
+    assert_eq!(graph.node_bits.len(), 64);
+    assert_eq!(graph.node_bits.rem(), 30);
 }
 
 #[test]
@@ -106,55 +124,50 @@ fn remove() {
     let xaa_i = xaa.0;
     let xb_i = xb.0;
 
-    assert_eq!(graph.nodes.len(), 4);
-    assert_eq!(graph.none_cnt, 0);
+    assert_eq!(graph.nodes.len(), 32);
+    assert_eq!(graph.node_bits.rem(), 28);
     assert_eq!(graph.data.len(), 4);
     eq_mat(graph.remove(xaa), maa);
-    assert_eq!(graph.nodes.len(), 4);
-    assert_eq!(graph.node_idx, xaa_i);
-    assert_eq!(graph.none_cnt, 1);
+    assert_eq!(graph.nodes.len(), 32);
+    assert_eq!(graph.node_bits.rem(), 29);
     assert_eq!(graph.data.len(), 3);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
-    // Should reuse vacant node.
     let xaa = graph.insert(maa, xa);
     assert_eq!(xaa.0, xaa_i);
-    assert_eq!(graph.nodes.len(), 4);
-    assert_eq!(graph.none_cnt, 0);
+    assert_eq!(graph.nodes.len(), 32);
+    assert_eq!(graph.node_bits.rem(), 28);
     assert_eq!(graph.data.len(), 4);
     assert_eq!(graph.data.last().unwrap().node, xaa_i);
     eq_mat(graph.remove(xaa), maa);
-    assert_eq!(graph.nodes.len(), 4);
-    assert_eq!(graph.node_idx, xaa_i);
-    assert_eq!(graph.none_cnt, 1);
+    assert_eq!(graph.nodes.len(), 32);
+    assert_eq!(graph.node_bits.rem(), 29);
     assert_eq!(graph.data.len(), 3);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
     eq_mat(graph.remove(xa), ma);
-    assert_eq!(graph.nodes.len(), 4);
-    assert_eq!(graph.node_idx, xa_i);
-    assert_eq!(graph.none_cnt, 2);
+    assert_eq!(graph.nodes.len(), 32);
+    assert_eq!(graph.node_bits.rem(), 30);
     assert_eq!(graph.data.len(), 2);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
     eq_mat(graph.remove(xb), mb);
-    assert_eq!(graph.nodes.len(), 4);
-    assert_eq!(graph.node_idx, xb_i);
-    assert_eq!(graph.none_cnt, 3);
+    assert_eq!(graph.nodes.len(), 32);
+    assert_eq!(graph.node_bits.rem(), 31);
     assert_eq!(graph.data.len(), 1);
     assert_eq!(graph.data.last().unwrap().node, graph.id().0);
 
-    // Should insert in the most recent vacant node.
     let xb = graph.insert(mb, graph.id());
+    let xb_i = xa_i;
     assert_eq!(xb.0, xb_i);
-    assert_eq!(graph.nodes.len(), 4);
-    assert_eq!(graph.none_cnt, 2);
+    assert_eq!(graph.nodes.len(), 32);
+    assert_eq!(graph.node_bits.rem(), 30);
     assert_eq!(graph.data.len(), 2);
     assert_eq!(graph.data.last().unwrap().node, xb_i);
 
     let x = graph.insert(Default::default(), graph.id());
-    assert_eq!(graph.nodes.len(), 4);
-    assert_eq!(graph.none_cnt, 1);
+    assert_eq!(graph.nodes.len(), 32);
+    assert_eq!(graph.node_bits.rem(), 29);
     assert_eq!(graph.data.len(), 3);
     assert_eq!(graph.data[0].node, graph.id().0);
     assert_eq!(graph.nodes[graph.id().0].as_ref().unwrap().data, 0);
