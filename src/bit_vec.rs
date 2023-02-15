@@ -2,6 +2,8 @@
 
 //! Vector of bits.
 
+use std::fmt;
+
 use std::ops::{
     BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Shl, ShlAssign, Shr,
     ShrAssign,
@@ -249,8 +251,36 @@ impl<T: Unsigned> BitVec<T> {
 }
 
 impl<T: Unsigned> Default for BitVec<T> {
+    /// Calls [`BitVec::new`].
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<T: Unsigned + fmt::Binary> fmt::Display for BitVec<T> {
+    /// Formats the bit vector to display the bits themselves.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let bits = T::BITS;
+        write!(f, "{bits}-bit BitVec\n")?;
+
+        let wdt10 = (|| {
+            let mut n = self.len() as isize - T::BITS as isize;
+            let mut w = 1;
+            while n >= 10 {
+                n /= 10;
+                w += 1;
+            }
+            w
+        })();
+
+        for (i, x) in self.vec.iter().enumerate() {
+            let beg = i * T::BITS;
+            let end = beg + T::BITS - 1;
+            write!(f, "    {x:0bits$b} {beg:wdt10$} ..= {end}\n")?;
+        }
+
+        write!(f, "Number of bits: {}\n", self.len())?;
+        write!(f, "Remaining bits: {}\n", self.rem())
     }
 }
 
@@ -847,5 +877,51 @@ mod tests {
             assert_eq!(v.find_contiguous(i + 1), Some(159 - i));
         }
         assert_eq!(v.find_contiguous(160), Some(0));
+    }
+
+    #[test]
+    #[ignore]
+    fn fmt() {
+        let mut v8 = BitVec::<u8>::new();
+        v8.grow(10);
+        v8.set(0);
+        v8.set(v8.len() / 2);
+        v8.set(v8.len() - 1);
+        println!("{v8}");
+
+        let mut v16 = BitVec::<u16>::new();
+        v16.grow(5);
+        v16.set(0);
+        v16.set(v16.len() / 2);
+        v16.set(v16.len() - 1);
+        println!("{v16}");
+
+        let mut v32 = BitVec::<u32>::new();
+        v32.grow(21);
+        v32.set(0);
+        v32.set(v32.len() / 2);
+        v32.set(v32.len() - 1);
+        println!("{v32}");
+
+        let mut v64 = BitVec::<u64>::new();
+        v64.grow(16);
+        v64.set(0);
+        v64.set(v64.len() / 2);
+        v64.set(v64.len() - 1);
+        println!("{v64}");
+
+        let mut v128 = BitVec::<u128>::new();
+        v128.grow(9);
+        v128.set(0);
+        v128.set(v128.len() / 2);
+        v128.set(v128.len() - 1);
+        println!("{v128}");
+
+        let mut vsz = BitVec::<usize>::new();
+        vsz.grow(1);
+        vsz.set(0);
+        vsz.set(vsz.len() / 2);
+        vsz.set(vsz.len() - 1);
+        println!("{vsz}");
     }
 }
