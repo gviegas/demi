@@ -79,10 +79,10 @@ fn insert() {
     assert_eq!(scene.lights.len(), 2);
     assert_eq!(scene.xforms.len(), 2);
 
-    assert_eq!(scene.nodes[nd0.node_idx].unwrap(), 0); // Into `scene.lights`.
-    assert_eq!(scene.nodes[nd1.node_idx].unwrap(), 0); // Into `scene.xforms`.
-    assert_eq!(scene.nodes[nd2.node_idx].unwrap(), 1); // Into `scene.xforms`.
-    assert_eq!(scene.nodes[nd3.node_idx].unwrap(), 1); // Into `scene.lights`.
+    assert_eq!(scene.nodes[nd0.node_idx], 0); // Into `scene.lights`.
+    assert_eq!(scene.nodes[nd1.node_idx], 0); // Into `scene.xforms`.
+    assert_eq!(scene.nodes[nd2.node_idx], 1); // Into `scene.xforms`.
+    assert_eq!(scene.nodes[nd3.node_idx], 1); // Into `scene.lights`.
 
     while scene.node_bits.rem() > 0 {
         assert_eq!(scene.nodes.len(), 32);
@@ -126,7 +126,7 @@ fn remove() {
         Node::Light(l, _) => {
             assert_eq!(scene.graph.len(), 1);
             assert_eq!(scene.nodes.len(), 32);
-            assert!(scene.nodes[0].is_none());
+            assert_eq!(scene.nodes[0], usize::MAX);
             assert!(scene.drawables.is_empty());
             assert!(scene.lights.is_empty());
             assert!(scene.xforms.is_empty());
@@ -156,10 +156,10 @@ fn remove() {
     assert!(scene.drawables.is_empty());
     assert_eq!(scene.lights.len(), 2);
     assert_eq!(scene.xforms.len(), 2);
-    assert_eq!(scene.nodes[nd0.node_idx].unwrap(), 0); // Into `scene.lights`.
-    assert_eq!(scene.nodes[nd1.node_idx].unwrap(), 0); // Into `scene.xforms`.
-    assert_eq!(scene.nodes[nd2.node_idx].unwrap(), 1); // Into `scene.xforms`.
-    assert_eq!(scene.nodes[nd3.node_idx].unwrap(), 1); // Into `scene.lights`.
+    assert_eq!(scene.nodes[nd0.node_idx], 0); // Into `scene.lights`.
+    assert_eq!(scene.nodes[nd1.node_idx], 0); // Into `scene.xforms`.
+    assert_eq!(scene.nodes[nd2.node_idx], 1); // Into `scene.xforms`.
+    assert_eq!(scene.nodes[nd3.node_idx], 1); // Into `scene.lights`.
 
     match scene.remove(nd1) {
         Node::Xform(_) => {
@@ -167,10 +167,10 @@ fn remove() {
             assert_eq!(scene.nodes.len(), 32);
             assert_eq!(scene.lights.len(), 2);
             assert_eq!(scene.xforms.len(), 1);
-            assert_eq!(scene.nodes[nd0.node_idx].unwrap(), 0); // Into `scene.lights`.
-                                                               // Should swap-remove.
-            assert_eq!(scene.nodes[nd2.node_idx].unwrap(), 0); // Into `scene.xforms`.
-            assert_eq!(scene.nodes[nd3.node_idx].unwrap(), 1); // Into `scene.lights`.
+            assert_eq!(scene.nodes[nd0.node_idx], 0); // Into `scene.lights`.
+                                                      // Should swap-remove.
+            assert_eq!(scene.nodes[nd2.node_idx], 0); // Into `scene.xforms`.
+            assert_eq!(scene.nodes[nd3.node_idx], 1); // Into `scene.lights`.
         }
         x => panic!("unexpected Node: {:#?}", x),
     };
@@ -180,11 +180,11 @@ fn remove() {
         Node::Light(..) => {
             assert_eq!(scene.graph.len(), 3);
             assert_eq!(scene.nodes.len(), 32);
-            assert!(scene.nodes[nd3_idx].is_none());
+            assert_eq!(scene.nodes[nd3_idx], usize::MAX);
             assert_eq!(scene.lights.len(), 1);
             assert_eq!(scene.xforms.len(), 1);
-            assert_eq!(scene.nodes[nd0.node_idx].unwrap(), 0); // Into `scene.lights`.
-            assert_eq!(scene.nodes[nd2.node_idx].unwrap(), 0); // Into `scene.xforms`.
+            assert_eq!(scene.nodes[nd0.node_idx], 0); // Into `scene.lights`.
+            assert_eq!(scene.nodes[nd2.node_idx], 0); // Into `scene.xforms`.
         }
         x => panic!("unexpected Node: {:#?}", x),
     };
@@ -200,10 +200,10 @@ fn remove() {
         Node::Xform(x) => {
             assert_eq!(scene.graph.len(), 2);
             assert_eq!(scene.nodes.len(), 32);
-            assert!(scene.nodes[nd2_idx].is_none());
+            assert_eq!(scene.nodes[nd2_idx], usize::MAX);
             assert_eq!(scene.lights.len(), 1);
             assert!(scene.xforms.is_empty());
-            assert_eq!(scene.nodes[nd0.node_idx].unwrap(), 0); // Into `scene.lights`.
+            assert_eq!(scene.nodes[nd0.node_idx], 0); // Into `scene.lights`.
             x
         }
         x => panic!("unexpected Node: {:#?}", x),
@@ -220,8 +220,8 @@ fn remove() {
     assert_eq!(scene.nodes.len(), 32);
     assert_eq!(scene.lights.len(), 1);
     assert_eq!(scene.xforms.len(), 1);
-    assert_eq!(scene.nodes[nd0.node_idx].unwrap(), 0); // Into `scene.lights`.
-    assert_eq!(scene.nodes[nd4.node_idx].unwrap(), 0); // Into `scene.xforms`.
+    assert_eq!(scene.nodes[nd0.node_idx], 0); // Into `scene.lights`.
+    assert_eq!(scene.nodes[nd4.node_idx], 0); // Into `scene.xforms`.
 }
 
 #[test]

@@ -2,14 +2,16 @@
 
 //! Scene graph.
 
-#[cfg(test)]
-mod tests;
+use std::mem;
 
 use crate::bit_vec::BitVec;
 use crate::drawable::Drawable;
 use crate::light::Light;
 use crate::linear::Mat4;
 use crate::transform::{Transform, XformId};
+
+#[cfg(test)]
+mod tests;
 
 /// Node data.
 #[derive(Debug)]
@@ -48,7 +50,7 @@ pub enum Node {
 pub struct Scene {
     graph: Transform,
     // `nodes` contains indices into `NodeData` vectors.
-    nodes: Vec<Option<usize>>,
+    nodes: Vec<usize>,
     node_bits: BitVec<u32>,
     drawables: Vec<NodeData<Drawable>>,
     lights: Vec<NodeData<Light>>,
@@ -78,7 +80,7 @@ impl Scene {
         // graph's root transform. Each of these nodes can then be
         // treated as a separate graph.
         let prev = if let Some(x) = prev {
-            let prev_idx = self.nodes[x.node_idx].unwrap();
+            let prev_idx = self.nodes[x.node_idx];
             match x.node_type {
                 NodeType::Drawable => self.drawables[prev_idx].xform_id,
                 NodeType::Light => self.lights[prev_idx].xform_id,
@@ -91,14 +93,14 @@ impl Scene {
             .node_bits
             .find()
             .or_else(|| {
-                self.nodes.resize_with(self.nodes.len() + 32, || None);
+                self.nodes.resize(self.nodes.len() + 32, usize::MAX);
                 self.node_bits.grow(1)
             })
             .unwrap();
         self.node_bits.set(node_idx);
         let node_type = match node {
             Node::Drawable(d, x) => {
-                self.nodes[node_idx] = Some(self.drawables.len());
+                self.nodes[node_idx] = self.drawables.len();
                 self.drawables.push(NodeData {
                     data: d,
                     xform_id: self.graph.insert(x, prev),
@@ -107,7 +109,7 @@ impl Scene {
                 NodeType::Drawable
             }
             Node::Light(l, x) => {
-                self.nodes[node_idx] = Some(self.lights.len());
+                self.nodes[node_idx] = self.lights.len();
                 self.lights.push(NodeData {
                     data: l,
                     xform_id: self.graph.insert(x, prev),
@@ -116,7 +118,7 @@ impl Scene {
                 NodeType::Light
             }
             Node::Xform(x) => {
-                self.nodes[node_idx] = Some(self.xforms.len());
+                self.nodes[node_idx] = self.xforms.len();
                 self.xforms.push(NodeData {
                     data: (),
                     xform_id: self.graph.insert(x, prev),
@@ -138,13 +140,16 @@ impl Scene {
         // TODO: Need a quick way to check whether a node is an orphan,
         // so it can be ignored during rendering (as expected).
         // Either do it here or in the `Transform`.
-        let data_idx = self.nodes[node_id.node_idx].take().unwrap();
+        // TODO(2): Consider disallowing orphan sub-graphs altogether now
+        // that `NodeId`s and `XformId`s are `Copy` (i.e., remove whole
+        // sub-graphs at once).
+        let data_idx = mem::replace(&mut self.nodes[node_id.node_idx], usize::MAX);
         self.node_bits.unset(node_id.node_idx);
         match node_id.node_type {
             NodeType::Drawable => {
                 let swap = self.drawables.last().unwrap().node_idx;
                 let drawable = if swap != node_id.node_idx {
-                    self.nodes[swap] = Some(data_idx);
+                    self.nodes[swap] = data_idx;
                     self.drawables.swap_remove(data_idx)
                 } else {
                     self.drawables.pop().unwrap()
@@ -155,7 +160,7 @@ impl Scene {
             NodeType::Light => {
                 let swap = self.lights.last().unwrap().node_idx;
                 let light = if swap != node_id.node_idx {
-                    self.nodes[swap] = Some(data_idx);
+                    self.nodes[swap] = data_idx;
                     self.lights.swap_remove(data_idx)
                 } else {
                     self.lights.pop().unwrap()
@@ -166,7 +171,7 @@ impl Scene {
             NodeType::Xform => {
                 let swap = self.xforms.last().unwrap().node_idx;
                 let xform = if swap != node_id.node_idx {
-                    self.nodes[swap] = Some(data_idx);
+                    self.nodes[swap] = data_idx;
                     self.xforms.swap_remove(data_idx)
                 } else {
                     self.xforms.pop().unwrap()
@@ -184,7 +189,7 @@ impl Scene {
     pub fn drawable(&self, node_id: NodeId) -> &Drawable {
         match node_id.node_type {
             NodeType::Drawable => {
-                let data_idx = self.nodes[node_id.node_idx].unwrap();
+                let data_idx = self.nodes[node_id.node_idx];
                 &self.drawables[data_idx].data
             }
             _ => panic!("Not a Drawable node: {:?}", node_id),
@@ -198,7 +203,7 @@ impl Scene {
     pub fn drawable_mut(&mut self, node_id: NodeId) -> &mut Drawable {
         match node_id.node_type {
             NodeType::Drawable => {
-                let data_idx = self.nodes[node_id.node_idx].unwrap();
+                let data_idx = self.nodes[node_id.node_idx];
                 &mut self.drawables[data_idx].data
             }
             _ => panic!("Not a Drawable node: {:?}", node_id),
@@ -212,7 +217,7 @@ impl Scene {
     pub fn light(&self, node_id: NodeId) -> &Light {
         match node_id.node_type {
             NodeType::Light => {
-                let data_idx = self.nodes[node_id.node_idx].unwrap();
+                let data_idx = self.nodes[node_id.node_idx];
                 &self.lights[data_idx].data
             }
             _ => panic!("Not a Light node: {:?}", node_id),
@@ -226,7 +231,7 @@ impl Scene {
     pub fn light_mut(&mut self, node_id: NodeId) -> &mut Light {
         match node_id.node_type {
             NodeType::Light => {
-                let data_idx = self.nodes[node_id.node_idx].unwrap();
+                let data_idx = self.nodes[node_id.node_idx];
                 &mut self.lights[data_idx].data
             }
             _ => panic!("Not a Light node: {:?}", node_id),
@@ -246,7 +251,7 @@ impl Scene {
     ///
     /// NOTE: See `transform::Transform::local_mut` for usage advice.
     pub fn local_mut(&mut self, node_id: NodeId) -> &mut Mat4<f32> {
-        let data_idx = self.nodes[node_id.node_idx].unwrap();
+        let data_idx = self.nodes[node_id.node_idx];
         let xform_id = match node_id.node_type {
             NodeType::Drawable => self.drawables[data_idx].xform_id,
             NodeType::Light => self.lights[data_idx].xform_id,
@@ -270,7 +275,7 @@ impl Scene {
 
     /// Returns a node's `XformId`.
     pub fn xform_id(&self, node_id: NodeId) -> XformId {
-        let data_idx = self.nodes[node_id.node_idx].unwrap();
+        let data_idx = self.nodes[node_id.node_idx];
         match node_id.node_type {
             NodeType::Drawable => self.drawables[data_idx].xform_id,
             NodeType::Light => self.lights[data_idx].xform_id,
