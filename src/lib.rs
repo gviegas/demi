@@ -13,6 +13,7 @@ pub mod light;
 pub mod linear;
 pub mod material;
 pub mod mesh;
+pub mod node;
 pub mod renderer;
 pub mod sampler;
 pub mod scene;
