@@ -286,3 +286,31 @@ impl Default for Transform {
         Self::new(Mat4::from(1.0))
     }
 }
+
+/// Node of a `XformBranch`.
+/// This keeps only the necessary fields from `XformNode`
+/// and `XformData`.
+#[derive(Clone, Debug)]
+struct BranchNode {
+    prev: Option<usize>,
+    next: Option<usize>,
+    sub: Option<usize>,
+    local: Mat4<f32>,
+}
+
+/// A static, unconnected sub-graph.
+#[derive(Clone, Debug)]
+pub struct XformBranch {
+    // We can forgo the heap allocation for
+    // single-node branches.
+    root: BranchNode,
+    desc: Vec<BranchNode>,
+}
+
+impl XformBranch {
+    /// Returns the length of the transform sub-graph.
+    /// It is never `0`.
+    pub fn len(&self) -> usize {
+        1 + self.desc.len()
+    }
+}
