@@ -681,6 +681,7 @@ impl Builder {
     /// The data is assumed to be tightly packed.
     /// It must not be called after the given slot/semantic has been
     /// filled by `set_displacement`.
+    #[allow(unused_variables, unused_mut)] // TODO
     pub fn set_displacement_sparse<T: Read>(
         &mut self,
         mut reader: T,
@@ -700,6 +701,7 @@ impl Builder {
     /// The number of [`DataType`] elements to read is defined by
     /// either a previous call to `set_displacement_sparse` with the
     /// same slot/semantic, or `set_vertex_count`.
+    #[allow(unused_variables, unused_mut)] // TODO
     pub fn set_displacement<T: Read>(
         &mut self,
         mut reader: T,
