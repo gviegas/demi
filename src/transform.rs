@@ -28,8 +28,6 @@ struct XformNode {
 /// Data of a transform.
 #[derive(Debug)]
 struct XformData {
-    // TODO: Consider storing the local transform
-    // as TRS properties instead.
     local: Mat4<f32>,
     world: Mat4<f32>,
     changed: bool,
@@ -67,16 +65,9 @@ impl Transform {
     }
 
     /// Returns the length of the transform graph.
+    /// This includes the root node and hence is never `0`.
     pub fn len(&self) -> usize {
         self.data.len()
-    }
-
-    /// Checks whether `len() == 0`.
-    ///
-    /// This always returns `false` since the root transform
-    /// cannot be removed.
-    pub const fn is_empty(&self) -> bool {
-        false
     }
 
     /// Inserts a new transform.
