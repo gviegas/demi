@@ -108,13 +108,10 @@ impl Transform {
         XformId(new_idx)
     }
 
-    /// Removes a given transform, returning its local matrix.
+    /// Removes a given transform and its descendants.
     ///
     /// Panics if `id` is the root transform.
-    ///
-    /// NOTE: Removing a non-leaf transform does not remove any of its
-    /// descendants - they must be explicitly `remove`d.
-    pub fn remove(&mut self, id: XformId) -> Mat4<f32> {
+    pub fn remove(&mut self, id: XformId) -> XformBranch {
         assert_ne!(id.0, self.id().0, "cannot remove root transform");
         let node = mem::take(&mut self.nodes[id.0]);
         self.node_bits.unset(id.0);
@@ -132,19 +129,53 @@ impl Transform {
         if let Some(x) = node.next {
             self.nodes[x].prev = node.prev;
         }
+        let mut desc = vec![];
         if let Some(x) = node.sub {
-            // NOTE: Orphaned sub-graph.
             self.nodes[x].prev = None;
+            let mut nodes = vec![];
+            let mut cur = x;
+            loop {
+                self.nodes[cur].next.map_or((), |next| nodes.push(next));
+                self.nodes[cur].sub.map_or((), |sub| nodes.push(sub));
+                self.node_bits.unset(cur);
+                desc.push(BranchNode {
+                    prev: self.nodes[cur].prev,
+                    next: self.nodes[cur].next,
+                    sub: self.nodes[cur].sub,
+                    local: {
+                        let swap = self.data.last().unwrap().node;
+                        let data = self.nodes[cur].data;
+                        if swap != cur {
+                            self.nodes[swap].data = data;
+                            self.data.swap_remove(data).local
+                        } else {
+                            self.data.pop().unwrap().local
+                        }
+                    },
+                });
+                cur = if let Some(x) = nodes.pop() {
+                    x
+                } else {
+                    break;
+                }
+            }
         }
-        // Unlike nodes, data can be removed from any position, and
-        // we just need to update a node's `data` index in the event
-        // of a swap-removal.
-        let swap = self.data.last().unwrap().node;
-        if swap != id.0 {
-            self.nodes[swap].data = node.data;
-            self.data.swap_remove(node.data).local
-        } else {
-            self.data.pop().unwrap().local
+        XformBranch {
+            root: BranchNode {
+                prev: None,
+                next: None,
+                sub: desc.first().map(|_| 0),
+                local: {
+                    let swap = self.data.last().unwrap().node;
+                    if swap != id.0 {
+                        self.nodes[swap].data = node.data;
+                        self.data.swap_remove(node.data).local
+                    } else {
+                        self.data.pop().unwrap().local
+                    }
+                },
+            },
+            desc,
         }
     }
 

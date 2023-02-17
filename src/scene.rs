@@ -154,7 +154,10 @@ impl Scene {
                 } else {
                     self.drawables.pop().unwrap()
                 };
-                let xform = self.graph.remove(drawable.xform_id);
+                // TODO
+                /*let xform = */
+                self.graph.remove(drawable.xform_id);
+                let xform = Mat4::from(1.0);
                 Node::Drawable(drawable.data, xform)
             }
             NodeType::Light => {
@@ -165,7 +168,10 @@ impl Scene {
                 } else {
                     self.lights.pop().unwrap()
                 };
-                let xform = self.graph.remove(light.xform_id);
+                // TODO
+                /*let xform = */
+                self.graph.remove(light.xform_id);
+                let xform = Mat4::from(1.0);
                 Node::Light(light.data, xform)
             }
             NodeType::Xform => {
@@ -176,7 +182,10 @@ impl Scene {
                 } else {
                     self.xforms.pop().unwrap()
                 };
-                let xform = self.graph.remove(xform.xform_id);
+                // TODO
+                /*let xform = */
+                self.graph.remove(xform.xform_id);
+                let xform = Mat4::from(1.0);
                 Node::Xform(xform)
             }
         }
