@@ -5,7 +5,7 @@ use std::ops::{Add, Mul, MulAssign, Sub};
 use crate::linear::{Float, Mat3, Vec3, Vec4};
 
 /// Quaternion.
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub struct Quat<T>(Vec3<T>, T);
 
 impl<T: Copy> Quat<T> {

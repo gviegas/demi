@@ -6,15 +6,15 @@ use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAss
 use crate::linear::{Float, Quat, Scalar, Vec2, Vec3, Vec4};
 
 /// Column-major 2x2 matrix.
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub struct Mat2<T>([Vec2<T>; 2]);
 
 /// Column-major 3x3 matrix.
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub struct Mat3<T>([Vec3<T>; 3]);
 
 /// Column-major 4x4 matrix.
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub struct Mat4<T>([Vec4<T>; 4]);
 
 impl<T> Mat2<T> {

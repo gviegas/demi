@@ -7,15 +7,15 @@ use std::ops::{
 use crate::linear::{Float, Mat2, Mat3, Mat4, Quat, Scalar};
 
 /// 2-component vector.
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub struct Vec2<T>([T; 2]);
 
 /// 3-component vector.
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub struct Vec3<T>([T; 3]);
 
 /// 4-component vector.
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub struct Vec4<T>([T; 4]);
 
 impl<T> Vec2<T> {
