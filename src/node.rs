@@ -8,7 +8,7 @@ use std::mem;
 
 use crate::bit_vec::BitVec;
 use crate::drawable::Drawable;
-use crate::light::{Light, LightType};
+use crate::light::Light;
 use crate::linear::Mat4;
 
 pub enum Node {
@@ -33,6 +33,7 @@ struct NodeLink {
     prev: usize,
     supr: usize,
     infr: usize,
+    typ: NodeType,
     data: usize,
 }
 
@@ -46,10 +47,7 @@ struct NodeData<T> {
 }
 
 #[derive(Copy, Clone)]
-pub struct NodeId {
-    typ: NodeType,
-    node: usize,
-}
+pub struct NodeId(usize);
 
 pub struct NodeIdRemap {
     pub old_id: NodeId,
@@ -85,12 +83,12 @@ impl Graph {
         }
     }
 
-    /// Inserts `node` as descendant of `supr`.
-    /// If `supr` is `None`, then `node` is inserted in the graph
-    /// unconnected.
+    /// Inserts `node` as descendant of `parent`.
+    /// If `parent` is `None`, then `node` is inserted in the graph
+    /// as an unconnected node.
     /// It returns a [`NodeId`] that identifies `node` in this
     /// specific graph.
-    pub fn insert(&mut self, node: Node, supr: Option<NodeId>) -> NodeId {
+    pub fn insert(&mut self, node: Node, parent: Option<NodeId>) -> NodeId {
         let idx = self
             .nbits
             .find()
@@ -101,6 +99,7 @@ impl Graph {
                         prev: NONE,
                         supr: NONE,
                         infr: NONE,
+                        typ: NodeType::Xform,
                         data: NONE,
                     });
                 self.nbits.grow(1)
@@ -108,7 +107,7 @@ impl Graph {
             .unwrap();
         self.nbits.set(idx);
 
-        if let Some(NodeId { node: supr, .. }) = supr {
+        if let Some(NodeId(supr)) = parent {
             match self.nodes[supr].infr {
                 NONE => self.nodes[idx].next = NONE,
                 infr => {
@@ -160,25 +159,27 @@ impl Graph {
                 (NodeType::Xform, self.xforms.len() - 1)
             }
         };
+        self.nodes[idx].typ = typ;
         self.nodes[idx].data = data;
 
-        NodeId { typ, node: idx }
+        NodeId(idx)
     }
 
     /// Removes `node` from the graph.
-    /// Descendants of `node` are inherited by its parent,
-    /// unless `node` is a root node, in which case its
-    /// immediate descendants become roots in the graph.
+    /// Descendants of `node` are inherited by its parent, unless
+    /// `node` is a root node, in which case its immediate
+    /// descendants become roots in the graph.
     pub fn remove(&mut self, node: NodeId) -> Node {
-        self.nbits.unset(node.node);
-        let (typ, idx) = (node.typ, node.node);
+        self.nbits.unset(node.0);
+        let idx = node.0;
         let node = mem::replace(
-            &mut self.nodes[node.node],
+            &mut self.nodes[node.0],
             NodeLink {
                 next: NONE,
                 prev: NONE,
                 supr: NONE,
                 infr: NONE,
+                typ: NodeType::Xform,
                 data: NONE,
             },
         );
@@ -195,7 +196,7 @@ impl Graph {
             self.nodes[node.infr].supr = node.supr;
         }
 
-        match typ {
+        match node.typ {
             NodeType::Drawable => {
                 let swap = self.drawables.last().unwrap().node;
                 self.nodes[swap].data = node.data;
@@ -217,7 +218,7 @@ impl Graph {
         }
     }
 
-    pub fn merge(&mut self, subgraph: Subgraph, prev: Option<NodeId>) -> Vec<NodeIdRemap> {
+    pub fn merge(&mut self, subgraph: Subgraph, parent: Option<NodeId>) -> Vec<NodeIdRemap> {
         todo!();
     }
 
@@ -235,6 +236,7 @@ impl Graph {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::light::LightType;
 
     impl Graph {
         fn assert(&self) {
@@ -271,18 +273,19 @@ mod tests {
         }
 
         fn assert_loc(&self, node: NodeId, local: Mat4<f32>) {
-            let data = self.nodes[node.node].data;
-            let m = match node.typ {
+            let typ = self.nodes[node.0].typ;
+            let data = self.nodes[node.0].data;
+            let m = match typ {
                 NodeType::Drawable => {
-                    assert_eq!(self.drawables[data].node, node.node);
+                    assert_eq!(self.drawables[data].node, node.0);
                     self.drawables[data].local
                 }
                 NodeType::Light => {
-                    assert_eq!(self.lights[data].node, node.node);
+                    assert_eq!(self.lights[data].node, node.0);
                     self.lights[data].local
                 }
                 NodeType::Xform => {
-                    assert_eq!(self.xforms[data].node, node.node);
+                    assert_eq!(self.xforms[data].node, node.0);
                     self.xforms[data].local
                 }
             };
@@ -295,8 +298,9 @@ mod tests {
                 prev,
                 supr,
                 infr,
+                typ,
                 data,
-            } = &self.nodes[node.node];
+            } = &self.nodes[node.0];
             assert_eq!(next, NONE);
             assert_eq!(prev, NONE);
             assert_eq!(supr, NONE);
@@ -304,7 +308,7 @@ mod tests {
             assert!(
                 data != NONE
                     && data
-                        < match node.typ {
+                        < match typ {
                             NodeType::Drawable => self.drawables.len(),
                             NodeType::Light => self.lights.len(),
                             NodeType::Xform => self.xforms.len(),
