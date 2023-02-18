@@ -21,10 +21,15 @@ enum NodeType {
     Xform,
 }
 
+// Use this sentinel value to identify a link's absence
+// since `Option<usize>` has twice the size of `usize`.
+const NONE: usize = usize::MAX;
+
 struct NodeLink {
-    next: Option<usize>,
-    prev: Option<usize>,
-    sub: Option<usize>,
+    next: usize,
+    prev: usize,
+    supr: usize,
+    infr: usize,
     data: usize,
 }
 
@@ -79,42 +84,45 @@ impl Graph {
         }
     }
 
-    /// Inserts `node` as descendant of `prev`.
-    /// If `prev` is `None`, then `node` is inserted in the graph
+    /// Inserts `node` as descendant of `supr`.
+    /// If `supr` is `None`, then `node` is inserted in the graph
     /// unconnected.
     /// It returns a [`NodeId`] that identifies `node` in this
     /// specific graph.
-    pub fn insert(&mut self, node: Node, prev: Option<NodeId>) -> NodeId {
+    pub fn insert(&mut self, node: Node, supr: Option<NodeId>) -> NodeId {
         let idx = self
             .nbits
             .find()
             .or_else(|| {
                 self.nodes
                     .resize_with(self.nodes.len() + NBITS_GRAN, || NodeLink {
-                        next: None,
-                        prev: None,
-                        sub: None,
-                        data: usize::MAX,
+                        next: NONE,
+                        prev: NONE,
+                        supr: NONE,
+                        infr: NONE,
+                        data: NONE,
                     });
                 self.nbits.grow(1)
             })
             .unwrap();
         self.nbits.set(idx);
 
-        if let Some(NodeId { node: prev, .. }) = prev {
-            if let Some(sub) = self.nodes[prev].sub {
-                self.nodes[idx].next = Some(sub);
-                self.nodes[sub].prev = Some(idx);
-            } else {
-                self.nodes[idx].next = None;
+        if let Some(NodeId { node: supr, .. }) = supr {
+            match self.nodes[supr].infr {
+                NONE => self.nodes[idx].next = NONE,
+                infr => {
+                    self.nodes[idx].next = infr;
+                    self.nodes[infr].prev = idx;
+                }
             }
-            self.nodes[prev].sub = Some(idx);
-            self.nodes[idx].prev = Some(prev);
+            self.nodes[supr].infr = idx;
+            self.nodes[idx].supr = supr;
         } else {
-            self.nodes[idx].next = None;
-            self.nodes[idx].prev = None;
+            self.nodes[idx].next = NONE;
+            self.nodes[idx].prev = NONE;
+            self.nodes[idx].supr = NONE;
         }
-        self.nodes[idx].sub = None;
+        self.nodes[idx].infr = NONE;
 
         let (typ, data) = match node {
             Node::Drawable(d, x) => {
