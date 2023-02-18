@@ -4,6 +4,8 @@
 
 #![allow(unused_variables)] // TODO
 
+use std::mem;
+
 use crate::bit_vec::BitVec;
 use crate::drawable::Drawable;
 use crate::light::Light;
@@ -164,8 +166,56 @@ impl Graph {
         NodeId { typ, node: idx }
     }
 
+    /// Removes `node` from the graph.
+    /// Descendants of `node` are inherited by its parent,
+    /// unless `node` is a root node, in which case its
+    /// immediate descendants become roots in the graph.
     pub fn remove(&mut self, node: NodeId) -> Node {
-        todo!();
+        self.nbits.unset(node.node);
+        let (typ, idx) = (node.typ, node.node);
+        let node = mem::replace(
+            &mut self.nodes[node.node],
+            NodeLink {
+                next: NONE,
+                prev: NONE,
+                supr: NONE,
+                infr: NONE,
+                data: NONE,
+            },
+        );
+
+        if node.next != NONE {
+            self.nodes[node.next].prev = node.prev;
+        }
+        if node.prev != NONE {
+            self.nodes[node.prev].next = node.next;
+        } else if node.supr != NONE {
+            self.nodes[node.supr].infr = node.next;
+        }
+        if node.infr != NONE {
+            self.nodes[node.infr].supr = node.supr;
+        }
+
+        match typ {
+            NodeType::Drawable => {
+                let swap = self.drawables.last().unwrap().node;
+                self.nodes[swap].data = node.data;
+                let data = self.drawables.swap_remove(node.data);
+                Node::Drawable(data.data, data.local)
+            }
+            NodeType::Light => {
+                let swap = self.lights.last().unwrap().node;
+                self.nodes[swap].data = node.data;
+                let data = self.lights.swap_remove(node.data);
+                Node::Light(data.data, data.local)
+            }
+            NodeType::Xform => {
+                let swap = self.xforms.last().unwrap().node;
+                self.nodes[swap].data = node.data;
+                let data = self.xforms.swap_remove(node.data);
+                Node::Xform(data.local)
+            }
+        }
     }
 
     pub fn merge(&mut self, subgraph: Subgraph, prev: Option<NodeId>) -> Vec<NodeIdRemap> {
