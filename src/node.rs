@@ -8,7 +8,7 @@ use std::mem;
 
 use crate::bit_vec::BitVec;
 use crate::drawable::Drawable;
-use crate::light::Light;
+use crate::light::{Light, LightType};
 use crate::linear::Mat4;
 
 pub enum Node {
@@ -17,6 +17,7 @@ pub enum Node {
     Xform(Mat4<f32>),
 }
 
+#[derive(Copy, Clone)]
 enum NodeType {
     Drawable,
     Light,
@@ -44,6 +45,7 @@ struct NodeData<T> {
     data: T,
 }
 
+#[derive(Copy, Clone)]
 pub struct NodeId {
     typ: NodeType,
     node: usize,
@@ -231,4 +233,160 @@ impl Graph {
     }
 
     // TODO: Getters/setters.
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    impl Graph {
+        fn assert(&self) {
+            assert_eq!(self.nodes.len(), self.nbits.len());
+            assert_eq!(
+                self.drawables.len() + self.lights.len() + self.xforms.len(),
+                self.nbits.len() - self.nbits.rem()
+            );
+            for (i, x) in self.nodes.iter().enumerate() {
+                assert_ne!(i, x.next);
+                assert_ne!(i, x.prev);
+                assert_ne!(i, x.supr);
+                assert_ne!(i, x.infr);
+                assert!(x.next == NONE || x.next < self.nodes.len());
+                assert!(x.prev == NONE || x.prev < self.nodes.len());
+                assert!(x.supr == NONE || x.supr < self.nodes.len());
+                assert!(x.infr == NONE || x.infr < self.nodes.len());
+                if self.nbits.is_set(i) {
+                    assert!(
+                        x.data != NONE
+                            && (x.data < self.drawables.len()
+                                || x.data < self.lights.len()
+                                || x.data < self.xforms.len())
+                    );
+                }
+            }
+        }
+
+        fn assert_len(&self, nodes: usize, drawables: usize, lights: usize, xforms: usize) {
+            assert_eq!(nodes, self.nodes.len());
+            assert_eq!(drawables, self.drawables.len());
+            assert_eq!(lights, self.lights.len());
+            assert_eq!(xforms, self.xforms.len());
+        }
+
+        fn assert_loc(&self, node: NodeId, local: Mat4<f32>) {
+            let data = self.nodes[node.node].data;
+            let m = match node.typ {
+                NodeType::Drawable => {
+                    assert_eq!(self.drawables[data].node, node.node);
+                    self.drawables[data].local
+                }
+                NodeType::Light => {
+                    assert_eq!(self.lights[data].node, node.node);
+                    self.lights[data].local
+                }
+                NodeType::Xform => {
+                    assert_eq!(self.xforms[data].node, node.node);
+                    self.xforms[data].local
+                }
+            };
+            assert_eq!(local, m);
+        }
+
+        fn assert_unconn(&self, node: NodeId) {
+            let &NodeLink {
+                next,
+                prev,
+                supr,
+                infr,
+                data,
+            } = &self.nodes[node.node];
+            assert_eq!(next, NONE);
+            assert_eq!(prev, NONE);
+            assert_eq!(supr, NONE);
+            assert_eq!(infr, NONE);
+            assert!(
+                data != NONE
+                    && data
+                        < match node.typ {
+                            NodeType::Drawable => self.drawables.len(),
+                            NodeType::Light => self.lights.len(),
+                            NodeType::Xform => self.xforms.len(),
+                        }
+            );
+        }
+    }
+
+    #[test]
+    fn insert_one() {
+        // TODO:  Node::Drawable.
+
+        let mut g = Graph::new(vec![]);
+        let n = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 500.0),
+                Mat4::from(1.0),
+            ),
+            None,
+        );
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 1, 0);
+        g.assert_loc(n, Mat4::from(1.0));
+        g.assert_unconn(n);
+
+        let mut g = Graph::new(vec![]);
+        let n = g.insert(Node::Xform(Mat4::from(1.0)), None);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 0, 1);
+        g.assert_loc(n, Mat4::from(1.0));
+        g.assert_unconn(n);
+    }
+
+    #[test]
+    fn insert() {
+        let mut g = Graph::new(vec![]);
+        g.assert();
+        g.assert_len(0, 0, 0, 0);
+
+        let n1 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 500.0),
+                Mat4::from(1.0),
+            ),
+            None,
+        );
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 1, 0);
+        g.assert_loc(n1, Mat4::from(1.0));
+
+        let n2 = g.insert(Node::Xform(Mat4::from(2.0)), None);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 1, 1);
+        g.assert_loc(n2, Mat4::from(2.0));
+
+        let n21 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 1000.0),
+                Mat4::from(21.0),
+            ),
+            Some(n2),
+        );
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 2, 1);
+        g.assert_loc(n21, Mat4::from(21.0));
+
+        let n211 = g.insert(Node::Xform(Mat4::from(211.0)), Some(n21));
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 2, 2);
+        g.assert_loc(n211, Mat4::from(211.0));
+
+        let n3 = g.insert(Node::Xform(Mat4::from(3.0)), None);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 2, 3);
+        g.assert_loc(n3, Mat4::from(3.0));
+
+        let n11 = g.insert(Node::Xform(Mat4::from(11.0)), Some(n1));
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 2, 4);
+        g.assert_loc(n11, Mat4::from(11.0));
+    }
 }
