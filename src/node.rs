@@ -184,16 +184,40 @@ impl Graph {
             },
         );
 
-        if node.next != NONE {
-            self.nodes[node.next].prev = node.prev;
-        }
-        if node.prev != NONE {
-            self.nodes[node.prev].next = node.next;
-        } else if node.supr != NONE {
-            self.nodes[node.supr].infr = node.next;
-        }
         if node.infr != NONE {
-            self.nodes[node.infr].supr = node.supr;
+            let mut ninfr = node.infr;
+            loop {
+                self.nodes[ninfr].supr = node.supr;
+                let next = self.nodes[ninfr].next;
+                if next == NONE {
+                    break;
+                } else {
+                    ninfr = next;
+                }
+            }
+            if node.supr != NONE {
+                let sinfr = self.nodes[node.supr].infr;
+                if sinfr == idx {
+                    self.nodes[node.supr].infr = node.infr;
+                    self.nodes[ninfr].next = node.next;
+                } else {
+                    self.nodes[node.prev].next = node.infr;
+                    self.nodes[node.infr].prev = node.prev;
+                    self.nodes[ninfr].next = node.next;
+                }
+                if node.next != NONE {
+                    self.nodes[node.prev].prev = ninfr;
+                }
+            }
+        } else {
+            if node.prev != NONE {
+                self.nodes[node.prev].next = node.next;
+            } else if node.supr != NONE {
+                self.nodes[node.supr].infr = node.next;
+            }
+            if node.next != NONE {
+                self.nodes[node.next].prev = node.prev;
+            }
         }
 
         match node.typ {
