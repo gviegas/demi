@@ -74,17 +74,14 @@ pub struct Graph {
 const NBITS_GRAN: usize = u32::BITS as _;
 
 impl Graph {
-    pub fn new(nodes: Vec<Node>) -> Self {
-        if nodes.is_empty() {
-            Self {
-                nodes: vec![],
-                nbits: BitVec::new(),
-                drawables: vec![],
-                lights: vec![],
-                xforms: vec![],
-            }
-        } else {
-            todo!();
+    /// Creates an empty graph.
+    pub fn new() -> Self {
+        Self {
+            nodes: vec![],
+            nbits: BitVec::new(),
+            drawables: vec![],
+            lights: vec![],
+            xforms: vec![],
         }
     }
 
@@ -320,7 +317,7 @@ mod tests {
     fn insert_one() {
         // TODO:  Node::Drawable.
 
-        let mut g = Graph::new(vec![]);
+        let mut g = Graph::new();
         let n = g.insert(
             Node::Light(
                 Light::new_white(LightType::Directional, 500.0),
@@ -333,7 +330,7 @@ mod tests {
         g.assert_loc(n, Mat4::from(1.0));
         g.assert_unconn(n);
 
-        let mut g = Graph::new(vec![]);
+        let mut g = Graph::new();
         let n = g.insert(Node::Xform(Mat4::from(1.0)), None);
         g.assert();
         g.assert_len(NBITS_GRAN, 0, 0, 1);
@@ -343,7 +340,7 @@ mod tests {
 
     #[test]
     fn insert() {
-        let mut g = Graph::new(vec![]);
+        let mut g = Graph::new();
         g.assert();
         g.assert_len(0, 0, 0, 0);
 
