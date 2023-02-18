@@ -230,6 +230,32 @@ impl Graph {
         todo!();
     }
 
+    /// Returns the parent of `node`, or `None` if `node`
+    /// is a root node.
+    pub fn parent(&self, node: NodeId) -> Option<NodeId> {
+        match self.nodes[node.0].supr {
+            NONE => None,
+            supr => Some(NodeId(supr)),
+        }
+    }
+
+    /// Returns the children of `node`, or an empty vector
+    /// if `node` is a leaf node.
+    pub fn children(&self, node: NodeId) -> Vec<NodeId> {
+        match self.nodes[node.0].infr {
+            NONE => vec![],
+            infr => {
+                let mut chdn = vec![NodeId(infr)];
+                let mut next = self.nodes[infr].next;
+                while next != NONE {
+                    chdn.push(NodeId(next));
+                    next = self.nodes[next].next;
+                }
+                chdn
+            }
+        }
+    }
+
     // TODO: Getters/setters.
 }
 
@@ -315,6 +341,21 @@ mod tests {
                         }
             );
         }
+
+        fn assert_hier(&self, node: NodeId, parent: Option<NodeId>, mut children: Vec<NodeId>) {
+            assert_eq!(
+                parent.map_or(NONE, |x| x.0),
+                self.parent(node).map_or(NONE, |x| x.0)
+            );
+
+            children.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+            let mut other = self.children(node);
+            other.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+            children
+                .into_iter()
+                .zip(other)
+                .for_each(|(a, b)| assert_eq!(a.0, b.0));
+        }
     }
 
     #[test]
@@ -333,6 +374,7 @@ mod tests {
         g.assert_len(NBITS_GRAN, 0, 1, 0);
         g.assert_loc(n, Mat4::from(1.0));
         g.assert_unconn(n);
+        g.assert_hier(n, None, vec![]);
 
         let mut g = Graph::new();
         let n = g.insert(Node::Xform(Mat4::from(1.0)), None);
@@ -340,6 +382,7 @@ mod tests {
         g.assert_len(NBITS_GRAN, 0, 0, 1);
         g.assert_loc(n, Mat4::from(1.0));
         g.assert_unconn(n);
+        g.assert_hier(n, None, vec![]);
     }
 
     #[test]
@@ -358,11 +401,13 @@ mod tests {
         g.assert();
         g.assert_len(NBITS_GRAN, 0, 1, 0);
         g.assert_loc(n1, Mat4::from(1.0));
+        g.assert_hier(n1, None, vec![]);
 
         let n2 = g.insert(Node::Xform(Mat4::from(2.0)), None);
         g.assert();
         g.assert_len(NBITS_GRAN, 0, 1, 1);
         g.assert_loc(n2, Mat4::from(2.0));
+        g.assert_hier(n2, None, vec![]);
 
         let n21 = g.insert(
             Node::Light(
@@ -374,20 +419,45 @@ mod tests {
         g.assert();
         g.assert_len(NBITS_GRAN, 0, 2, 1);
         g.assert_loc(n21, Mat4::from(21.0));
+        g.assert_hier(n21, Some(n2), vec![]);
+
+        g.assert_hier(n2, None, vec![n21]);
 
         let n211 = g.insert(Node::Xform(Mat4::from(211.0)), Some(n21));
         g.assert();
         g.assert_len(NBITS_GRAN, 0, 2, 2);
         g.assert_loc(n211, Mat4::from(211.0));
+        g.assert_hier(n211, Some(n21), vec![]);
+
+        g.assert_hier(n2, None, vec![n21]);
+        g.assert_hier(n21, Some(n2), vec![n211]);
 
         let n3 = g.insert(Node::Xform(Mat4::from(3.0)), None);
         g.assert();
         g.assert_len(NBITS_GRAN, 0, 2, 3);
         g.assert_loc(n3, Mat4::from(3.0));
+        g.assert_hier(n3, None, vec![]);
 
         let n11 = g.insert(Node::Xform(Mat4::from(11.0)), Some(n1));
         g.assert();
         g.assert_len(NBITS_GRAN, 0, 2, 4);
         g.assert_loc(n11, Mat4::from(11.0));
+        g.assert_hier(n11, Some(n1), vec![]);
+
+        g.assert_hier(n1, None, vec![n11]);
+
+        let n212 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 650.0),
+                Mat4::from(212.0),
+            ),
+            Some(n21),
+        );
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 3, 4);
+        g.assert_loc(n212, Mat4::from(212.0));
+        g.assert_hier(n212, Some(n21), vec![]);
+
+        g.assert_hier(n21, Some(n2), vec![n212, n211]);
     }
 }
