@@ -199,13 +199,12 @@ impl Graph {
                 let sinfr = self.nodes[node.supr].infr;
                 if sinfr == idx {
                     self.nodes[node.supr].infr = node.infr;
-                    self.nodes[ninfr].next = node.next;
                 } else {
                     self.nodes[node.prev].next = node.infr;
                     self.nodes[node.infr].prev = node.prev;
-                    self.nodes[ninfr].next = node.next;
                 }
                 if node.next != NONE {
+                    self.nodes[ninfr].next = node.next;
                     self.nodes[node.next].prev = ninfr;
                 }
             }
