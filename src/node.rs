@@ -206,7 +206,7 @@ impl Graph {
                     self.nodes[ninfr].next = node.next;
                 }
                 if node.next != NONE {
-                    self.nodes[node.prev].prev = ninfr;
+                    self.nodes[node.next].prev = ninfr;
                 }
             }
         } else {
@@ -372,8 +372,9 @@ mod tests {
                 self.parent(node).map_or(NONE, |x| x.0)
             );
 
-            children.sort_unstable_by(|a, b| a.0.cmp(&b.0));
             let mut other = self.children(node);
+            assert_eq!(children.len(), other.len());
+            children.sort_unstable_by(|a, b| a.0.cmp(&b.0));
             other.sort_unstable_by(|a, b| a.0.cmp(&b.0));
             children
                 .into_iter()
@@ -634,6 +635,278 @@ mod tests {
                 assert_eq!(l.intensity(), 650.0);
                 assert_eq!(x, Mat4::from(212.0));
             }
+            _ => assert!(false),
+        }
+    }
+
+    #[test]
+    fn insert_remove() {
+        let mut g = Graph::new();
+
+        let n1 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 500.0),
+                Mat4::from(1.0),
+            ),
+            None,
+        );
+
+        let n2 = g.insert(Node::Xform(Mat4::from(2.0)), None);
+
+        let n21 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 1000.0),
+                Mat4::from(21.0),
+            ),
+            Some(n2),
+        );
+
+        let n211 = g.insert(Node::Xform(Mat4::from(211.0)), Some(n21));
+
+        let n3 = g.insert(Node::Xform(Mat4::from(3.0)), None);
+
+        let n11 = g.insert(Node::Xform(Mat4::from(11.0)), Some(n1));
+
+        let n212 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 650.0),
+                Mat4::from(212.0),
+            ),
+            Some(n21),
+        );
+
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 3, 4);
+        g.assert_hier(n1, None, vec![n11]);
+        g.assert_hier(n11, Some(n1), vec![]);
+        g.assert_hier(n2, None, vec![n21]);
+        g.assert_hier(n21, Some(n2), vec![n211, n212]);
+        g.assert_hier(n211, Some(n21), vec![]);
+        g.assert_hier(n212, Some(n21), vec![]);
+        g.assert_hier(n3, None, vec![]);
+
+        let n3 = g.remove(n3);
+        let n3 = g.insert(Node::Xform(Mat4::from(3.0)), None);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 3, 4);
+        g.assert_loc(n3, Mat4::from(3.0));
+        g.assert_hier(n3, None, vec![]);
+        let n3 = g.remove(n3);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 3, 3);
+        match n3 {
+            Node::Xform(x) => assert_eq!(x, Mat4::from(3.0)),
+            _ => assert!(false),
+        }
+
+        let n1 = g.remove(n1);
+        let n111 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 900.0),
+                Mat4::from(111.0),
+            ),
+            Some(n11),
+        );
+        let n112 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 380.0),
+                Mat4::from(112.0),
+            ),
+            Some(n11),
+        );
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 4, 3);
+        g.assert_loc(n111, Mat4::from(111.0));
+        g.assert_loc(n112, Mat4::from(112.0));
+        g.assert_hier(n11, None, vec![n111, n112]);
+        g.assert_hier(n111, Some(n11), vec![]);
+        g.assert_hier(n112, Some(n11), vec![]);
+
+        let n213 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 440.0),
+                Mat4::from(213.0),
+            ),
+            Some(n21),
+        );
+        let n2131 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 100.0),
+                Mat4::from(2131.0),
+            ),
+            Some(n213),
+        );
+        let n21 = g.remove(n21);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 5, 3);
+        g.assert_loc(n213, Mat4::from(213.0));
+        g.assert_loc(n2131, Mat4::from(2131.0));
+        g.assert_hier(n2, None, vec![n211, n212, n213]);
+        g.assert_hier(n211, Some(n2), vec![]);
+        g.assert_hier(n212, Some(n2), vec![]);
+        g.assert_hier(n213, Some(n2), vec![n2131]);
+        g.assert_hier(n2131, Some(n213), vec![]);
+
+        let n21 = g.insert(Node::Xform(Mat4::from(21.0)), Some(n2));
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 5, 4);
+        g.assert_loc(n21, Mat4::from(21.0));
+        g.assert_hier(n2, None, vec![n211, n212, n213, n21]);
+        g.assert_hier(n21, Some(n2), vec![]);
+
+        let n2132 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 1260.0),
+                Mat4::from(2132.0),
+            ),
+            Some(n213),
+        );
+        let n21321 = g.insert(Node::Xform(Mat4::from(21321.0)), Some(n2132));
+        let n21322 = g.insert(Node::Xform(Mat4::from(21322.0)), Some(n2132));
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 6, 6);
+        g.assert_loc(n2132, Mat4::from(2132.0));
+        g.assert_loc(n21321, Mat4::from(21321.0));
+        g.assert_loc(n21322, Mat4::from(21322.0));
+        g.assert_hier(n213, Some(n2), vec![n2131, n2132]);
+        g.assert_hier(n2132, Some(n213), vec![n21321, n21322]);
+        g.assert_hier(n21321, Some(n2132), vec![]);
+        g.assert_hier(n21322, Some(n2132), vec![]);
+
+        let n213 = g.remove(n213);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 5, 6);
+        g.assert_hier(n2, None, vec![n211, n212, n21, n2131, n2132]);
+        g.assert_hier(n2131, Some(n2), vec![]);
+        g.assert_hier(n2132, Some(n2), vec![n21321, n21322]);
+        g.assert_hier(n21321, Some(n2132), vec![]);
+        g.assert_hier(n21322, Some(n2132), vec![]);
+        match n213 {
+            Node::Light(l, x) => {
+                assert_eq!(l.intensity(), 440.0);
+                assert_eq!(x, Mat4::from(213.0));
+            }
+            _ => assert!(false),
+        }
+
+        let n2 = g.remove(n2);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 5, 5);
+        g.assert_hier(n21, None, vec![]);
+        g.assert_hier(n211, None, vec![]);
+        g.assert_hier(n212, None, vec![]);
+        g.assert_hier(n2131, None, vec![]);
+        g.assert_hier(n2132, None, vec![n21321, n21322]);
+        g.assert_hier(n21321, Some(n2132), vec![]);
+        g.assert_hier(n21322, Some(n2132), vec![]);
+        match n2 {
+            Node::Xform(x) => assert_eq!(x, Mat4::from(2.0)),
+            _ => assert!(false),
+        }
+
+        let n11 = g.remove(n11);
+        let n211 = g.remove(n211);
+        let n212 = g.remove(n212);
+        g.assert_len(NBITS_GRAN, 0, 4, 3);
+        g.assert_hier(n111, None, vec![]);
+        g.assert_hier(n112, None, vec![]);
+        match n11 {
+            Node::Xform(x) => assert_eq!(x, Mat4::from(11.0)),
+            _ => assert!(false),
+        }
+        match n211 {
+            Node::Xform(x) => assert_eq!(x, Mat4::from(211.0)),
+            _ => assert!(false),
+        }
+        match n212 {
+            Node::Light(l, x) => {
+                assert_eq!(l.intensity(), 650.0);
+                assert_eq!(x, Mat4::from(212.0));
+            }
+            _ => assert!(false),
+        }
+
+        let n21321 = g.remove(n21321);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 4, 2);
+        g.assert_hier(n2131, None, vec![]);
+        g.assert_hier(n2132, None, vec![n21322]);
+        g.assert_hier(n21322, Some(n2132), vec![]);
+        match n21321 {
+            Node::Xform(x) => assert_eq!(x, Mat4::from(21321.0)),
+            _ => assert!(false),
+        }
+
+        let n2132 = g.remove(n2132);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 3, 2);
+        g.assert_hier(n2131, None, vec![]);
+        g.assert_hier(n21322, None, vec![]);
+        match n2132 {
+            Node::Light(l, x) => {
+                assert_eq!(l.intensity(), 1260.0);
+                assert_eq!(x, Mat4::from(2132.0));
+            }
+            _ => assert!(false),
+        }
+
+        let n112 = g.remove(n112);
+        let n111 = g.remove(n111);
+        g.assert_len(NBITS_GRAN, 0, 1, 2);
+        match n112 {
+            Node::Light(l, x) => {
+                assert_eq!(l.intensity(), 380.0);
+                assert_eq!(x, Mat4::from(112.0));
+            }
+            _ => assert!(false),
+        }
+        match n111 {
+            Node::Light(l, x) => {
+                assert_eq!(l.intensity(), 900.0);
+                assert_eq!(x, Mat4::from(111.0));
+            }
+            _ => assert!(false),
+        }
+
+        let n2131 = g.remove(n2131);
+        let n21322 = g.remove(n21322);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 0, 1);
+        match n2131 {
+            Node::Light(l, x) => {
+                assert_eq!(l.intensity(), 100.0);
+                assert_eq!(x, Mat4::from(2131.0));
+            }
+            _ => assert!(false),
+        }
+        match n21322 {
+            Node::Xform(x) => assert_eq!(x, Mat4::from(21322.0)),
+            _ => assert!(false),
+        }
+
+        let n211 = g.insert(
+            Node::Light(
+                Light::new_white(LightType::Directional, 225.0),
+                Mat4::from(211.0),
+            ),
+            Some(n21),
+        );
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 1, 1);
+        g.assert_loc(n211, Mat4::from(211.0));
+        g.assert_hier(n21, None, vec![n211]);
+        g.assert_hier(n211, Some(n21), vec![]);
+
+        let n211 = g.remove(n211);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 0, 1);
+        g.assert_hier(n21, None, vec![]);
+
+        let n21 = g.remove(n21);
+        g.assert();
+        g.assert_len(NBITS_GRAN, 0, 0, 0);
+        match n21 {
+            Node::Xform(x) => assert_eq!(x, Mat4::from(21.0)),
             _ => assert!(false),
         }
     }
