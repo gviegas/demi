@@ -1228,4 +1228,81 @@ mod tests {
         g.assert();
         g.assert_len(len.0, 0, 0, 0);
     }
+
+    #[test]
+    fn insert_remove_mid() {
+        const N: usize = 6;
+        let mut g = Graph::new();
+
+        let (mut lend, mut lenl, mut lenx) = (0, 0, 0);
+        let mut xnode = |x: usize| {
+            if x % 3 == 0 {
+                lenl += 1;
+                Node::Light(
+                    Light::new_white(LightType::Directional, x as _),
+                    Mat4::from(x as f32),
+                )
+            } else {
+                lenx += 1;
+                Node::Xform(Mat4::from(x as f32))
+            }
+        };
+
+        let n1 = g.insert(xnode(1), None);
+        let n2 = g.insert(xnode(2), None);
+        let n3 = g.insert(xnode(3), None);
+
+        for i in [n1, n2, n3] {
+            for j in 0..N {
+                let n = g.insert(xnode(j), Some(i));
+                for k in 0..N {
+                    g.insert(xnode(k), Some(n));
+                }
+            }
+        }
+
+        for i in [n2, n3, n1] {
+            let chdn = g.children(i);
+            let mut nchdn = chdn[..N / 2].to_vec();
+            for j in N / 2..N {
+                nchdn.append(&mut g.children(chdn[j]));
+                match g.remove(chdn[j]) {
+                    Node::Drawable(_, x) => lend -= 1,
+                    Node::Light(_, x) => lenl -= 1,
+                    Node::Xform(x) => lenx -= 1,
+                }
+                let mut a = nchdn.clone();
+                a.extend_from_slice(&chdn[j + 1..]);
+                g.assert_hier(i, None, a);
+            }
+        }
+
+        g.assert();
+        g.assert_len(g.nbits.len(), lend, lenl, lenx);
+        assert_eq!(g.children(n1).len(), N / 2 + N / 2 * N);
+        assert_eq!(g.children(n2).len(), N / 2 + N / 2 * N);
+        assert_eq!(g.children(n3).len(), N / 2 + N / 2 * N);
+
+        for i in [n3, n1] {
+            let chdn = g.children(i);
+            let mut nchdn = chdn[N / 2..].to_vec();
+            for j in 0..N / 2 {
+                nchdn.append(&mut g.children(chdn[j]));
+                match g.remove(chdn[j]) {
+                    Node::Drawable(_, x) => lend -= 1,
+                    Node::Light(_, x) => lenl -= 1,
+                    Node::Xform(x) => lenx -= 1,
+                }
+                let mut a = nchdn.clone();
+                a.extend_from_slice(&chdn[j + 1..N / 2]);
+                g.assert_hier(i, None, a);
+            }
+        }
+
+        g.assert();
+        g.assert_len(g.nbits.len(), lend, lenl, lenx);
+        assert_eq!(g.children(n1).len(), N * N);
+        assert_eq!(g.children(n2).len(), N / 2 + N / 2 * N);
+        assert_eq!(g.children(n3).len(), N * N);
+    }
 }
