@@ -255,5 +255,26 @@ impl Graph {
         todo!();
     }
 
-    // TODO: Getters/setters.
+    /// Returns the length of the graph.
+    pub fn len(&self) -> usize {
+        self.drawables.len() + self.lights.len() + self.xforms.len()
+    }
+
+    /// Returns the number of [`Node::Drawable`]s that the
+    /// graph contains.
+    pub fn drawable_len(&self) -> usize {
+        self.drawables.len()
+    }
+
+    /// Returns the number of [`Node::Light`]s that the
+    /// graph contains.
+    pub fn light_len(&self) -> usize {
+        self.lights.len()
+    }
+
+    /// Returns the number of [`Node::Xform`]s that the
+    /// graph contains.
+    pub fn xform_len(&self) -> usize {
+        self.xforms.len()
+    }
 }
