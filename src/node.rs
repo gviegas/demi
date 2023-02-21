@@ -34,8 +34,7 @@ const NONE: usize = usize::MAX;
 struct NodeLink {
     next: usize,
     prev: usize,
-    supr: usize,
-    infr: usize,
+    sub: usize,
     typ: NodeType,
     data: usize,
 }
@@ -86,22 +85,22 @@ impl Graph {
         }
     }
 
-    /// Inserts `node` as descendant of `parent`.
-    /// If `parent` is `None`, then `node` is inserted in the graph
+    /// Inserts `node` as descendant of `prev`.
+    /// If `prev` is `None`, then `node` is inserted in the graph
     /// as an unconnected node.
     /// It returns a [`NodeId`] that identifies `node` in this
     /// specific graph.
-    pub fn insert(&mut self, node: Node, parent: Option<NodeId>) -> NodeId {
+    pub fn insert(&mut self, node: Node, prev: Option<NodeId>) -> NodeId {
         let idx = self
             .nbits
             .find()
             .or_else(|| {
+                // TODO: Consider growing exponentially instead.
                 self.nodes
                     .resize_with(self.nodes.len() + NBITS_GRAN, || NodeLink {
                         next: NONE,
                         prev: NONE,
-                        supr: NONE,
-                        infr: NONE,
+                        sub: NONE,
                         typ: NodeType::Xform,
                         data: NONE,
                     });
@@ -110,22 +109,21 @@ impl Graph {
             .unwrap();
         self.nbits.set(idx);
 
-        if let Some(NodeId(supr)) = parent {
-            match self.nodes[supr].infr {
+        if let Some(NodeId(prev)) = prev {
+            match self.nodes[prev].sub {
                 NONE => self.nodes[idx].next = NONE,
-                infr => {
-                    self.nodes[idx].next = infr;
-                    self.nodes[infr].prev = idx;
+                sub => {
+                    self.nodes[idx].next = sub;
+                    self.nodes[sub].prev = idx;
                 }
             }
-            self.nodes[supr].infr = idx;
-            self.nodes[idx].supr = supr;
+            self.nodes[prev].sub = idx;
+            self.nodes[idx].prev = prev;
         } else {
             self.nodes[idx].next = NONE;
             self.nodes[idx].prev = NONE;
-            self.nodes[idx].supr = NONE;
         }
-        self.nodes[idx].infr = NONE;
+        self.nodes[idx].sub = NONE;
 
         let (typ, data) = match node {
             Node::Drawable(d, x) => {
@@ -168,6 +166,7 @@ impl Graph {
         NodeId(idx)
     }
 
+/*
     /// Removes `node` from the graph.
     /// Descendants of `node` are inherited by its parent, unless
     /// `node` is a root node, in which case its immediate
@@ -281,6 +280,6 @@ impl Graph {
             }
         }
     }
-
+*/
     // TODO: Getters/setters.
 }
