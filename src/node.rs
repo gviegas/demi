@@ -281,6 +281,52 @@ impl Graph {
         }
     }
 
+    /// Returns a reference to the local transform that a
+    /// given [`NodeId`] identifies.
+    pub fn local(&self, node: NodeId) -> &Mat4<f32> {
+        let data = self.nodes[node.0].data;
+        match self.nodes[node.0].typ {
+            NodeType::Drawable => &self.drawables[data].local,
+            NodeType::Light => &self.lights[data].local,
+            NodeType::Xform => &self.xforms[data].local,
+        }
+    }
+
+    /// Returns a mutable reference to the local transform
+    /// that a given [`NodeId`] identifies.
+    ///
+    /// The sub-graph rooted at `node` becomes out of date.
+    pub fn local_mut(&mut self, node: NodeId) -> &mut Mat4<f32> {
+        let data = self.nodes[node.0].data;
+        match self.nodes[node.0].typ {
+            NodeType::Drawable => {
+                self.drawables[data].changed = true;
+                &mut self.drawables[data].local
+            }
+            NodeType::Light => {
+                self.lights[data].changed = true;
+                &mut self.lights[data].local
+            }
+            NodeType::Xform => {
+                self.xforms[data].changed = true;
+                &mut self.xforms[data].local
+            }
+        }
+    }
+
+    /// Returns a reference to the world transform that a
+    /// given [`NodeId`] identifies.
+    ///
+    /// This transform is not necessarily up to date.
+    pub fn world(&self, node: NodeId) -> &Mat4<f32> {
+        let data = self.nodes[node.0].data;
+        match self.nodes[node.0].typ {
+            NodeType::Drawable => &self.drawables[data].world,
+            NodeType::Light => &self.lights[data].world,
+            NodeType::Xform => &self.xforms[data].world,
+        }
+    }
+
     /// Returns the length of the graph.
     pub fn len(&self) -> usize {
         self.drawables.len() + self.lights.len() + self.xforms.len()
