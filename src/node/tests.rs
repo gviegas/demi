@@ -7,10 +7,7 @@ use super::*;
 impl Graph {
     fn assert(&self) {
         assert_eq!(self.nodes.len(), self.nbits.len());
-        assert_eq!(
-            self.drawables.len() + self.lights.len() + self.xforms.len(),
-            self.nbits.len() - self.nbits.rem()
-        );
+        assert_eq!(self.len(), self.nbits.len() - self.nbits.rem());
         for (i, x) in self.nodes.iter().enumerate() {
             assert_ne!(i, x.next);
             assert_ne!(i, x.prev);
@@ -21,38 +18,22 @@ impl Graph {
             if self.nbits.is_set(i) {
                 assert!(
                     x.data != NONE
-                        && (x.data < self.drawables.len()
-                            || x.data < self.lights.len()
-                            || x.data < self.xforms.len())
+                        && (x.data < self.drawable_len()
+                            || x.data < self.light_len()
+                            || x.data < self.xform_len())
                 );
             }
         }
     }
 
     fn assert_len(&self, drawables: usize, lights: usize, xforms: usize) {
-        assert_eq!(drawables, self.drawables.len());
-        assert_eq!(lights, self.lights.len());
-        assert_eq!(xforms, self.xforms.len());
+        assert_eq!(drawables, self.drawable_len());
+        assert_eq!(lights, self.light_len());
+        assert_eq!(xforms, self.xform_len());
     }
 
     fn assert_loc(&self, node: NodeId, local: Mat4<f32>) {
-        let typ = self.nodes[node.0].typ;
-        let data = self.nodes[node.0].data;
-        let m = match typ {
-            NodeType::Drawable => {
-                assert_eq!(self.drawables[data].node, node.0);
-                self.drawables[data].local
-            }
-            NodeType::Light => {
-                assert_eq!(self.lights[data].node, node.0);
-                self.lights[data].local
-            }
-            NodeType::Xform => {
-                assert_eq!(self.xforms[data].node, node.0);
-                self.xforms[data].local
-            }
-        };
-        assert_eq!(local, m);
+        assert_eq!(&local, self.local(node));
     }
 
     fn assert_unconn(&self, node: NodeId) {
@@ -70,9 +51,9 @@ impl Graph {
             data != NONE
                 && data
                     < match typ {
-                        NodeType::Drawable => self.drawables.len(),
-                        NodeType::Light => self.lights.len(),
-                        NodeType::Xform => self.xforms.len(),
+                        NodeType::Drawable => self.drawable_len(),
+                        NodeType::Light => self.light_len(),
+                        NodeType::Xform => self.xform_len(),
                     }
         );
     }
@@ -271,7 +252,7 @@ fn remove_one() {
             assert_eq!(l.intensity(), 500.0);
             assert_eq!(x, Mat4::from(0.5));
         }
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 0, 0);
@@ -282,7 +263,7 @@ fn remove_one() {
     assert_eq!(n.len(), 1);
     match n.pop().unwrap() {
         Node::Xform(x) => assert_eq!(x, Mat4::from(0.25)),
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 0, 0);
@@ -339,7 +320,7 @@ fn remove() {
     let n3 = n3.pop().unwrap();
     match n3 {
         Node::Xform(x) => assert_eq!(x, Mat4::from(3.0)),
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 3, 3);
@@ -359,11 +340,11 @@ fn remove() {
             assert_eq!(l.intensity(), 500.0);
             assert_eq!(x, Mat4::from(1.0));
         }
-        _ => assert!(false),
+        _ => panic!(),
     }
     match n11 {
         Node::Xform(x) => assert_eq!(x, Mat4::from(11.0)),
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 2, 2);
@@ -380,14 +361,14 @@ fn remove() {
             assert_eq!(x, Mat4::from(212.0));
         }
         Node::Xform(x) => assert_eq!(x, Mat4::from(211.0)),
-        _ => assert!(false),
+        _ => panic!(),
     });
     match n21.pop().unwrap() {
         Node::Light(l, x) => {
             assert_eq!(l.intensity(), 1000.0);
             assert_eq!(x, Mat4::from(21.0));
         }
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 0, 1);
@@ -398,7 +379,7 @@ fn remove() {
     let n2 = n2.pop().unwrap();
     match n2 {
         Node::Xform(x) => assert_eq!(x, Mat4::from(2.0)),
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 0, 0);
@@ -464,7 +445,7 @@ fn insert_remove() {
     let n3 = g.remove(n3).pop().unwrap();
     match n3 {
         Node::Xform(x) => assert_eq!(x, Mat4::from(3.0)),
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 3, 3);
@@ -495,11 +476,11 @@ fn insert_remove() {
             assert_eq!(l.intensity(), 500.0);
             assert_eq!(x, Mat4::from(1.0));
         }
-        _ => assert!(false),
+        _ => panic!(),
     }
     match n11 {
         Node::Xform(x) => assert_eq!(x, Mat4::from(11.0)),
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 2, 2);
@@ -539,7 +520,7 @@ fn insert_remove() {
             assert_eq!(l.intensity(), 1000.0);
             assert_eq!(x, Mat4::from(21.0));
         }
-        _ => assert!(false),
+        _ => panic!(),
     }
     g.assert();
     g.assert_len(0, 0, 1);
