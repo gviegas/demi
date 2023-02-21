@@ -166,89 +166,88 @@ impl Graph {
         NodeId(idx)
     }
 
-    /*
-    /// Removes `node` from the graph.
-    /// Descendants of `node` are inherited by its parent, unless
-    /// `node` is a root node, in which case its immediate
-    /// descendants become roots in the graph.
-    pub fn remove(&mut self, node: NodeId) -> Node {
-        self.nbits.unset(node.0);
+    /// Removes `node` and its descendants.
+    /// The [`NodeId`] of every removed node becomes invalid and
+    /// thus must no longer be used.
+    pub fn remove(&mut self, node: NodeId) -> Vec<Node> {
         let idx = node.0;
-        let node = mem::replace(
-            &mut self.nodes[node.0],
-            NodeLink {
-                next: NONE,
-                prev: NONE,
-                supr: NONE,
-                infr: NONE,
-                typ: NodeType::Xform,
-                data: NONE,
-            },
-        );
+        let node = remove_link(self, idx);
+        self.nbits.unset(idx);
+        let mut nodes = vec![remove_node(self, &node)];
 
-        if node.infr != NONE {
-            let mut ninfr = node.infr;
-            loop {
-                self.nodes[ninfr].supr = node.supr;
-                let next = self.nodes[ninfr].next;
-                if next == NONE {
-                    break;
-                } else {
-                    ninfr = next;
-                }
-            }
-            if node.supr != NONE {
-                let sinfr = self.nodes[node.supr].infr;
-                if sinfr == idx {
-                    self.nodes[node.supr].infr = node.infr;
-                } else {
-                    self.nodes[node.prev].next = node.infr;
-                    self.nodes[node.infr].prev = node.prev;
-                }
-                if node.next != NONE {
-                    self.nodes[ninfr].next = node.next;
-                    self.nodes[node.next].prev = ninfr;
-                }
-            }
-        } else {
-            if node.prev != NONE {
+        if node.next != NONE {
+            self.nodes[node.next].prev = node.prev;
+        }
+        if node.prev != NONE {
+            if self.nodes[node.prev].sub == idx {
+                self.nodes[node.prev].sub = node.next;
+            } else {
                 self.nodes[node.prev].next = node.next;
-            } else if node.supr != NONE {
-                self.nodes[node.supr].infr = node.next;
             }
-            if node.next != NONE {
-                self.nodes[node.next].prev = node.prev;
+        }
+        if node.sub != NONE {
+            let mut desc = vec![node.sub];
+            while let Some(idx) = desc.pop() {
+                let node = remove_link(self, idx);
+                self.nbits.unset(idx);
+                nodes.push(remove_node(self, &node));
+                if node.next != NONE {
+                    desc.push(node.next);
+                }
+                if node.sub != NONE {
+                    desc.push(node.sub);
+                }
             }
         }
 
-        match node.typ {
-            NodeType::Drawable => {
-                let swap = self.drawables.last().unwrap().node;
-                self.nodes[swap].data = node.data;
-                let data = self.drawables.swap_remove(node.data);
-                Node::Drawable(data.data, data.local)
-            }
-            NodeType::Light => {
-                let swap = self.lights.last().unwrap().node;
-                self.nodes[swap].data = node.data;
-                let data = self.lights.swap_remove(node.data);
-                Node::Light(data.data, data.local)
-            }
-            NodeType::Xform => {
-                let swap = self.xforms.last().unwrap().node;
-                self.nodes[swap].data = node.data;
-                let data = self.xforms.swap_remove(node.data);
-                Node::Xform(data.local)
+        return nodes;
+
+        fn remove_link(g: &mut Graph, n: usize) -> NodeLink {
+            mem::replace(
+                &mut g.nodes[n],
+                NodeLink {
+                    next: NONE,
+                    prev: NONE,
+                    sub: NONE,
+                    typ: NodeType::Xform,
+                    data: NONE,
+                },
+            )
+        }
+
+        fn remove_node(g: &mut Graph, n: &NodeLink) -> Node {
+            match n.typ {
+                NodeType::Drawable => {
+                    let swap = g.drawables.last().unwrap().node;
+                    g.nodes[swap].data = n.data;
+                    let data = g.drawables.swap_remove(n.data);
+                    Node::Drawable(data.data, data.local)
+                }
+                NodeType::Light => {
+                    let swap = g.lights.last().unwrap().node;
+                    g.nodes[swap].data = n.data;
+                    let data = g.lights.swap_remove(n.data);
+                    Node::Light(data.data, data.local)
+                }
+                NodeType::Xform => {
+                    let swap = g.xforms.last().unwrap().node;
+                    g.nodes[swap].data = n.data;
+                    let data = g.xforms.swap_remove(n.data);
+                    Node::Xform(data.local)
+                }
             }
         }
     }
-    */
 
-    pub fn merge(&mut self, subgraph: Subgraph, prev: Option<NodeId>) -> Vec<NodeIdRemap> {
+    pub fn insert_subgraph(
+        &mut self,
+        subgraph: Subgraph,
+        prev: Option<NodeId>,
+    ) -> Vec<NodeIdRemap> {
         todo!();
     }
 
-    pub fn split(&mut self, node: NodeId) -> Subgraph {
+    pub fn remove_subgraph(&mut self, node: NodeId) -> Subgraph {
         todo!();
     }
 
