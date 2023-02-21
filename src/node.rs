@@ -255,6 +255,32 @@ impl Graph {
         todo!();
     }
 
+    /// Returns a reference to the [`Drawable`] that a given
+    /// [`NodeId`] identifies, or `None` if it is not a
+    /// [`Node::Drawable`].
+    pub fn drawable(&self, node: NodeId) -> Option<&Drawable> {
+        match self.nodes[node.0].typ {
+            NodeType::Drawable => {
+                let data = self.nodes[node.0].data;
+                Some(&self.drawables[data].data)
+            }
+            _ => None,
+        }
+    }
+
+    /// Returns a reference to the [`Light`] that a given
+    /// [`NodeId`] identifies, or `None` if it is not a
+    /// [`Node::Light`].
+    pub fn light(&self, node: NodeId) -> Option<&Light> {
+        match self.nodes[node.0].typ {
+            NodeType::Light => {
+                let data = self.nodes[node.0].data;
+                Some(&self.lights[data].data)
+            }
+            _ => None,
+        }
+    }
+
     /// Returns the length of the graph.
     pub fn len(&self) -> usize {
         self.drawables.len() + self.lights.len() + self.xforms.len()
