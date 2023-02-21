@@ -166,7 +166,7 @@ impl Graph {
         NodeId(idx)
     }
 
-/*
+    /*
     /// Removes `node` from the graph.
     /// Descendants of `node` are inherited by its parent, unless
     /// `node` is a root node, in which case its immediate
@@ -242,8 +242,9 @@ impl Graph {
             }
         }
     }
+    */
 
-    pub fn merge(&mut self, subgraph: Subgraph, parent: Option<NodeId>) -> Vec<NodeIdRemap> {
+    pub fn merge(&mut self, subgraph: Subgraph, prev: Option<NodeId>) -> Vec<NodeIdRemap> {
         todo!();
     }
 
@@ -255,31 +256,5 @@ impl Graph {
         todo!();
     }
 
-    /// Returns the parent of `node`, or `None` if `node`
-    /// is a root node.
-    pub fn parent(&self, node: NodeId) -> Option<NodeId> {
-        match self.nodes[node.0].supr {
-            NONE => None,
-            supr => Some(NodeId(supr)),
-        }
-    }
-
-    /// Returns the children of `node`, or an empty vector
-    /// if `node` is a leaf node.
-    pub fn children(&self, node: NodeId) -> Vec<NodeId> {
-        match self.nodes[node.0].infr {
-            NONE => vec![],
-            infr => {
-                let mut chdn = vec![NodeId(infr)];
-                let mut next = self.nodes[infr].next;
-                while next != NONE {
-                    chdn.push(NodeId(next));
-                    next = self.nodes[next].next;
-                }
-                chdn
-            }
-        }
-    }
-*/
     // TODO: Getters/setters.
 }

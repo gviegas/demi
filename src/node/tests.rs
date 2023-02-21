@@ -80,21 +80,39 @@ impl Graph {
     }
 
     fn assert_hier(&self, node: NodeId, parent: Option<NodeId>, mut children: Vec<NodeId>) {
-        /*
-        assert_eq!(
-            parent.map_or(NONE, |x| x.0),
-            self.parent(node).map_or(NONE, |x| x.0)
-        );
+        let pnt = match self.nodes[node.0].prev {
+            NONE => NONE,
+            mut prev => {
+                let mut pprev = prev;
+                prev = node.0;
+                while self.nodes[pprev].sub != prev {
+                    prev = pprev;
+                    pprev = self.nodes[pprev].prev;
+                }
+                assert_eq!(self.nodes[pprev].sub, node.0);
+                pprev
+            }
+        };
+        assert_eq!(pnt, parent.map_or(NONE, |x| x.0),);
 
-        let mut other = self.children(node);
-        assert_eq!(children.len(), other.len());
+        let mut chdn = match self.nodes[node.0].sub {
+            NONE => vec![],
+            sub => {
+                let mut chdn = vec![NodeId(sub)];
+                let mut next = self.nodes[sub].next;
+                while next != NONE {
+                    chdn.push(NodeId(next));
+                    next = self.nodes[next].next;
+                }
+                chdn
+            }
+        };
+        assert_eq!(chdn.len(), children.len());
+        chdn.sort_unstable_by(|a, b| a.0.cmp(&b.0));
         children.sort_unstable_by(|a, b| a.0.cmp(&b.0));
-        other.sort_unstable_by(|a, b| a.0.cmp(&b.0));
-        children
-            .into_iter()
-            .zip(other)
+        chdn.into_iter()
+            .zip(children)
             .for_each(|(a, b)| assert_eq!(a.0, b.0));
-        */
     }
 }
 
