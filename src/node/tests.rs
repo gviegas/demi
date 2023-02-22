@@ -722,3 +722,98 @@ fn insert_remove() {
         )
     });
 }
+
+#[test]
+fn node_growth() {
+    let mut g = Graph::new();
+    assert_eq!(g.nodes.len(), 0);
+    assert_eq!(g.nbits.len(), 0);
+    assert_eq!(g.nbits.rem(), 0);
+
+    let node = |x| match x & 1 {
+        0 => Node::Xform(Mat4::from(1.0)),
+        _ => Node::Light(
+            Light::new_white(LightType::Directional, 500.0),
+            Mat4::from(1.0),
+        ),
+    };
+
+    g.insert(node(1), None);
+    assert_eq!(g.nodes.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN - 1);
+    let n = g.insert(node(2), None);
+    assert_eq!(g.nodes.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN - 2);
+    g.insert(node(3), Some(n));
+    assert_eq!(g.nodes.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN - 3);
+
+    for i in 0..g.nbits.rem() {
+        g.insert(node(i), None);
+    }
+    assert_eq!(g.nodes.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.rem(), 0);
+    let mut ns = g.remove(n);
+    assert_eq!(g.nodes.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.rem(), 2);
+    let n = g.insert(ns.pop().unwrap(), None);
+    g.insert(ns.pop().unwrap(), Some(n));
+    assert_eq!(g.nodes.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.len(), NBITS_GRAN);
+    assert_eq!(g.nbits.rem(), 0);
+
+    g.insert(node(1), None);
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN - 1);
+    let n2 = g.insert(node(2), None);
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN - 2);
+    g.remove(n);
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN);
+    g.remove(n2);
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN + 1);
+
+    let n0 = g.insert(node(3), None);
+    let mut n = n0;
+    for i in 0..g.nbits.rem() {
+        n = g.insert(node(i), Some(n));
+    }
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.rem(), 0);
+    let mut n = g.remove(n);
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 2);
+    assert_eq!(g.nbits.rem(), 1);
+    let n = g.insert(n.pop().unwrap(), None);
+    g.insert(node(6), Some(n));
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 4);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 4);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN * 2 - 1);
+
+    for i in 0..g.nbits.rem() {
+        g.insert(node(i), None);
+    }
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 4);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 4);
+    assert_eq!(g.nbits.rem(), 0);
+    g.insert(node(9), Some(n));
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 8);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 8);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN * 4 - 1);
+    g.remove(n0);
+    assert_eq!(g.nodes.len(), NBITS_GRAN * 8);
+    assert_eq!(g.nbits.len(), NBITS_GRAN * 8);
+    assert_eq!(g.nbits.rem(), NBITS_GRAN * 4 + NBITS_GRAN - 1);
+}

@@ -95,16 +95,16 @@ impl Graph {
             .nbits
             .find()
             .or_else(|| {
-                // TODO: Consider growing exponentially instead.
-                self.nodes
-                    .resize_with(self.nodes.len() + NBITS_GRAN, || NodeLink {
-                        next: NONE,
-                        prev: NONE,
-                        sub: NONE,
-                        typ: NodeType::Xform,
-                        data: NONE,
-                    });
-                self.nbits.grow(1)
+                let nlen = usize::max(NBITS_GRAN, self.nodes.len() * 2);
+                self.nodes.resize_with(nlen, || NodeLink {
+                    next: NONE,
+                    prev: NONE,
+                    sub: NONE,
+                    typ: NodeType::Xform,
+                    data: NONE,
+                });
+                let nlen = (self.nodes.len() - self.nbits.len()) / NBITS_GRAN;
+                self.nbits.grow(nlen)
             })
             .unwrap();
         self.nbits.set(idx);
