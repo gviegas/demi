@@ -16,20 +16,9 @@ impl Graph {
             assert!(x.prev == NONE || x.prev < self.nodes.len());
             assert!(x.sub == NONE || x.sub < self.nodes.len());
             if self.nbits.is_set(i) {
-                assert!(
-                    x.data != NONE
-                        && (x.data < self.drawable_len()
-                            || x.data < self.light_len()
-                            || x.data < self.xform_len())
-                );
+                assert!(x.data != NONE && x.data < self.len());
             }
         }
-    }
-
-    fn assert_len(&self, drawables: usize, lights: usize, xforms: usize) {
-        assert_eq!(drawables, self.drawable_len());
-        assert_eq!(lights, self.light_len());
-        assert_eq!(xforms, self.xform_len());
     }
 
     fn assert_loc(&self, node: NodeId, local: Mat4<f32>) {
@@ -47,15 +36,7 @@ impl Graph {
         assert_eq!(next, NONE);
         assert_eq!(prev, NONE);
         assert_eq!(sub, NONE);
-        assert!(
-            data != NONE
-                && data
-                    < match typ {
-                        NodeType::Drawable => self.drawable_len(),
-                        NodeType::Light => self.light_len(),
-                        NodeType::Xform => self.xform_len(),
-                    }
-        );
+        assert!(data != NONE && data < self.len());
     }
 
     fn assert_hier(&self, node: NodeId, parent: Option<NodeId>, mut children: Vec<NodeId>) {
@@ -108,7 +89,7 @@ fn insert_one() {
         None,
     );
     g.assert();
-    g.assert_len(0, 1, 0);
+    assert_eq!(g.len(), 1);
     g.assert_loc(n, Mat4::from(1.5));
     g.assert_unconn(n);
     g.assert_hier(n, None, vec![]);
@@ -116,7 +97,7 @@ fn insert_one() {
     let mut g = Graph::new();
     let n = g.insert(Node::Xform(Mat4::from(-1.0)), None);
     g.assert();
-    g.assert_len(0, 0, 1);
+    assert_eq!(g.len(), 1);
     g.assert_loc(n, Mat4::from(-1.0));
     g.assert_unconn(n);
     g.assert_hier(n, None, vec![]);
@@ -126,7 +107,7 @@ fn insert_one() {
 fn insert() {
     let mut g = Graph::new();
     g.assert();
-    g.assert_len(0, 0, 0);
+    assert_eq!(g.len(), 0);
 
     let n1 = g.insert(
         Node::Light(
@@ -136,13 +117,13 @@ fn insert() {
         None,
     );
     g.assert();
-    g.assert_len(0, 1, 0);
+    assert_eq!(g.len(), 1);
     g.assert_loc(n1, Mat4::from(1.0));
     g.assert_hier(n1, None, vec![]);
 
     let n2 = g.insert(Node::Xform(Mat4::from(2.0)), None);
     g.assert();
-    g.assert_len(0, 1, 1);
+    assert_eq!(g.len(), 2);
     g.assert_loc(n1, Mat4::from(1.0));
     g.assert_loc(n2, Mat4::from(2.0));
     g.assert_hier(n1, None, vec![]);
@@ -156,7 +137,7 @@ fn insert() {
         Some(n2),
     );
     g.assert();
-    g.assert_len(0, 2, 1);
+    assert_eq!(g.len(), 3);
     g.assert_loc(n1, Mat4::from(1.0));
     g.assert_loc(n2, Mat4::from(2.0));
     g.assert_loc(n21, Mat4::from(21.0));
@@ -168,7 +149,7 @@ fn insert() {
 
     let n211 = g.insert(Node::Xform(Mat4::from(211.0)), Some(n21));
     g.assert();
-    g.assert_len(0, 2, 2);
+    assert_eq!(g.len(), 4);
     g.assert_loc(n1, Mat4::from(1.0));
     g.assert_loc(n2, Mat4::from(2.0));
     g.assert_loc(n21, Mat4::from(21.0));
@@ -180,7 +161,7 @@ fn insert() {
 
     let n3 = g.insert(Node::Xform(Mat4::from(3.0)), None);
     g.assert();
-    g.assert_len(0, 2, 3);
+    assert_eq!(g.len(), 5);
     g.assert_loc(n1, Mat4::from(1.0));
     g.assert_loc(n2, Mat4::from(2.0));
     g.assert_loc(n21, Mat4::from(21.0));
@@ -194,7 +175,7 @@ fn insert() {
 
     let n11 = g.insert(Node::Xform(Mat4::from(11.0)), Some(n1));
     g.assert();
-    g.assert_len(0, 2, 4);
+    assert_eq!(g.len(), 6);
     g.assert_loc(n1, Mat4::from(1.0));
     g.assert_loc(n11, Mat4::from(11.0));
     g.assert_loc(n2, Mat4::from(2.0));
@@ -216,7 +197,7 @@ fn insert() {
         Some(n21),
     );
     g.assert();
-    g.assert_len(0, 3, 4);
+    assert_eq!(g.len(), 7);
     g.assert_loc(n1, Mat4::from(1.0));
     g.assert_loc(n11, Mat4::from(11.0));
     g.assert_loc(n2, Mat4::from(2.0));
@@ -255,7 +236,7 @@ fn remove_one() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 0, 0);
+    assert_eq!(g.len(), 0);
 
     let mut g = Graph::new();
     let n = g.insert(Node::Xform(Mat4::from(0.25)), None);
@@ -266,7 +247,7 @@ fn remove_one() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 0, 0);
+    assert_eq!(g.len(), 0);
 }
 
 #[test]
@@ -306,7 +287,7 @@ fn remove() {
     );
 
     g.assert();
-    g.assert_len(0, 3, 4);
+    assert_eq!(g.len(), 7);
     g.assert_hier(n1, None, vec![n11]);
     g.assert_hier(n11, Some(n1), vec![]);
     g.assert_hier(n2, None, vec![n21]);
@@ -323,7 +304,7 @@ fn remove() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 3, 3);
+    assert_eq!(g.len(), 6);
     g.assert_hier(n1, None, vec![n11]);
     g.assert_hier(n11, Some(n1), vec![]);
     g.assert_hier(n2, None, vec![n21]);
@@ -347,7 +328,7 @@ fn remove() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 2, 2);
+    assert_eq!(g.len(), 4);
     g.assert_hier(n2, None, vec![n21]);
     g.assert_hier(n21, Some(n2), vec![n211, n212]);
     g.assert_hier(n211, Some(n21), vec![]);
@@ -371,7 +352,7 @@ fn remove() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 0, 1);
+    assert_eq!(g.len(), 1);
     g.assert_hier(n2, None, vec![]);
 
     let mut n2 = g.remove(n2);
@@ -382,7 +363,7 @@ fn remove() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 0, 0);
+    assert_eq!(g.len(), 0);
 }
 
 #[test]
@@ -422,7 +403,7 @@ fn insert_remove() {
     );
 
     g.assert();
-    g.assert_len(0, 3, 4);
+    assert_eq!(g.len(), 7);
     g.assert_hier(n1, None, vec![n11]);
     g.assert_hier(n11, Some(n1), vec![]);
     g.assert_hier(n2, None, vec![n21]);
@@ -434,7 +415,7 @@ fn insert_remove() {
     let n3 = g.remove(n3).pop().unwrap();
     let n3 = g.insert(n3, None);
     g.assert();
-    g.assert_len(0, 3, 4);
+    assert_eq!(g.len(), 7);
     g.assert_hier(n1, None, vec![n11]);
     g.assert_hier(n11, Some(n1), vec![]);
     g.assert_hier(n2, None, vec![n21]);
@@ -448,7 +429,7 @@ fn insert_remove() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 3, 3);
+    assert_eq!(g.len(), 6);
     g.assert_hier(n1, None, vec![n11]);
     g.assert_hier(n11, Some(n1), vec![]);
     g.assert_hier(n2, None, vec![n21]);
@@ -461,7 +442,7 @@ fn insert_remove() {
     let n1 = g.insert(n1.pop().unwrap(), None);
     let n11 = g.insert(n11, Some(n1));
     g.assert();
-    g.assert_len(0, 3, 3);
+    assert_eq!(g.len(), 6);
     g.assert_hier(n1, None, vec![n11]);
     g.assert_hier(n11, Some(n1), vec![]);
     g.assert_hier(n2, None, vec![n21]);
@@ -483,7 +464,7 @@ fn insert_remove() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 2, 2);
+    assert_eq!(g.len(), 4);
     g.assert_hier(n2, None, vec![n21]);
     g.assert_hier(n21, Some(n2), vec![n211, n212]);
     g.assert_hier(n211, Some(n21), vec![]);
@@ -523,7 +504,7 @@ fn insert_remove() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 0, 1);
+    assert_eq!(g.len(), 1);
     g.assert_hier(n2, None, vec![]);
 
     let n21 = g.insert(Node::Xform(Mat4::from(21.0)), Some(n2));
@@ -542,7 +523,7 @@ fn insert_remove() {
         None,
     );
     g.assert();
-    g.assert_len(0, 2, 2);
+    assert_eq!(g.len(), 4);
     g.assert_hier(n1, None, vec![]);
     g.assert_hier(n2, None, vec![n21]);
     g.assert_hier(n21, Some(n2), vec![n211]);
@@ -562,12 +543,12 @@ fn insert_remove() {
         _ => panic!(),
     }
     g.assert();
-    g.assert_len(0, 1, 0);
+    assert_eq!(g.len(), 1);
     g.assert_hier(n1, None, vec![]);
     let mut n1 = g.remove(n1);
     assert_eq!(n1.len(), 1);
     g.assert();
-    g.assert_len(0, 0, 0);
+    assert_eq!(g.len(), 0);
     match n1.pop().unwrap() {
         Node::Light(l, x) => {
             assert_eq!(l.intensity(), 275.0);
@@ -609,7 +590,7 @@ fn insert_remove() {
     );
 
     g.assert();
-    g.assert_len(0, 3, 4);
+    assert_eq!(g.len(), 7);
     g.assert_hier(n1, None, vec![n11]);
     g.assert_hier(n11, Some(n1), vec![]);
     g.assert_hier(n2, None, vec![n21]);
@@ -628,7 +609,7 @@ fn insert_remove() {
         .collect::<Vec<_>>();
     assert_eq!(ns.len(), 7);
     g.assert();
-    g.assert_len(0, 0, 0);
+    assert_eq!(g.len(), 0);
     ns.sort_unstable_by(|a, b| {
         let x = match a {
             Node::Drawable(_, x) => x[0][0],
@@ -647,7 +628,7 @@ fn insert_remove() {
         ndep.push(g.insert(n, Some(*ndep.last().unwrap())));
     }
     g.assert();
-    g.assert_len(0, 3, 4);
+    assert_eq!(g.len(), 7);
     g.assert_hier(ndep[0], None, vec![ndep[1]]);
     g.assert_hier(ndep[1], Some(ndep[0]), vec![ndep[2]]);
     g.assert_hier(ndep[2], Some(ndep[1]), vec![ndep[3]]);
@@ -658,10 +639,10 @@ fn insert_remove() {
     CMP.iter().zip(ndep.iter()).for_each(|(&x, n)| {
         assert_eq!(
             x,
-            match g.nodes[n.0].typ {
-                NodeType::Drawable => g.drawables[g.nodes[n.0].data].local[0][0],
-                NodeType::Light => g.lights[g.nodes[n.0].data].local[0][0],
-                NodeType::Xform => g.xforms[g.nodes[n.0].data].local[0][0],
+            match g.data[g.nodes[n.0].data].data {
+                Node::Drawable(_, x) => x[0][0],
+                Node::Light(_, x) => x[0][0],
+                Node::Xform(x) => x[0][0],
             }
         )
     });
@@ -669,7 +650,7 @@ fn insert_remove() {
     let ns = g.remove(n1);
     assert_eq!(ns.len(), 7);
     g.assert();
-    g.assert_len(0, 0, 0);
+    assert_eq!(g.len(), 0);
     CMP.iter().zip(ns.iter()).for_each(|(&x, n)| {
         assert_eq!(
             x,
@@ -685,7 +666,7 @@ fn insert_remove() {
         nbdt.push(g.insert(i, None));
     }
     g.assert();
-    g.assert_len(0, 3, 4);
+    assert_eq!(g.len(), 7);
     g.assert_hier(nbdt[0], None, vec![]);
     g.assert_hier(nbdt[1], None, vec![]);
     g.assert_hier(nbdt[2], None, vec![]);
@@ -696,10 +677,10 @@ fn insert_remove() {
     CMP.iter().zip(nbdt.iter()).for_each(|(&x, n)| {
         assert_eq!(
             x,
-            match g.nodes[n.0].typ {
-                NodeType::Drawable => g.drawables[g.nodes[n.0].data].local[0][0],
-                NodeType::Light => g.lights[g.nodes[n.0].data].local[0][0],
-                NodeType::Xform => g.xforms[g.nodes[n.0].data].local[0][0],
+            match g.data[g.nodes[n.0].data].data {
+                Node::Drawable(_, x) => x[0][0],
+                Node::Light(_, x) => x[0][0],
+                Node::Xform(x) => x[0][0],
             }
         )
     });
@@ -710,7 +691,7 @@ fn insert_remove() {
     }
     assert_eq!(ns.len(), 7);
     g.assert();
-    g.assert_len(0, 0, 0);
+    assert_eq!(g.len(), 0);
     CMP.iter().zip(ns.iter()).for_each(|(&x, n)| {
         assert_eq!(
             x,

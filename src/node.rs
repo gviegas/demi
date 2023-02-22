@@ -39,13 +39,12 @@ struct NodeLink {
     data: usize,
 }
 
-struct NodeData<T> {
-    local: Mat4<f32>,
+struct NodeData {
+    data: Node,
     world: Mat4<f32>,
     changed: bool,
     hidden: bool,
     node: usize,
-    data: T,
 }
 
 #[derive(Copy, Clone)]
@@ -58,17 +57,13 @@ pub struct NodeIdRemap {
 
 pub struct Subgraph {
     nodes: Vec<(NodeLink, NodeId)>,
-    drawables: Vec<NodeData<Drawable>>,
-    lights: Vec<NodeData<Light>>,
-    xforms: Vec<NodeData<()>>,
+    data: Vec<NodeData>,
 }
 
 pub struct Graph {
     nodes: Vec<NodeLink>,
     nbits: BitVec<u32>,
-    drawables: Vec<NodeData<Drawable>>,
-    lights: Vec<NodeData<Light>>,
-    xforms: Vec<NodeData<()>>,
+    data: Vec<NodeData>,
 }
 
 const NBITS_GRAN: usize = u32::BITS as _;
@@ -79,9 +74,7 @@ impl Graph {
         Self {
             nodes: vec![],
             nbits: BitVec::new(),
-            drawables: vec![],
-            lights: vec![],
-            xforms: vec![],
+            data: vec![],
         }
     }
 
@@ -125,43 +118,19 @@ impl Graph {
         }
         self.nodes[idx].sub = NONE;
 
-        let (typ, data) = match node {
-            Node::Drawable(d, x) => {
-                self.drawables.push(NodeData {
-                    local: x,
-                    world: Default::default(),
-                    changed: true,
-                    hidden: false,
-                    node: idx,
-                    data: d,
-                });
-                (NodeType::Drawable, self.drawables.len() - 1)
-            }
-            Node::Light(l, x) => {
-                self.lights.push(NodeData {
-                    local: x,
-                    world: Default::default(),
-                    changed: true,
-                    hidden: false,
-                    node: idx,
-                    data: l,
-                });
-                (NodeType::Light, self.lights.len() - 1)
-            }
-            Node::Xform(x) => {
-                self.xforms.push(NodeData {
-                    local: x,
-                    world: Default::default(),
-                    changed: true,
-                    hidden: false,
-                    node: idx,
-                    data: (),
-                });
-                (NodeType::Xform, self.xforms.len() - 1)
-            }
+        self.nodes[idx].data = self.data.len();
+        self.nodes[idx].typ = match node {
+            Node::Drawable(..) => NodeType::Drawable,
+            Node::Light(..) => NodeType::Light,
+            Node::Xform(..) => NodeType::Xform,
         };
-        self.nodes[idx].typ = typ;
-        self.nodes[idx].data = data;
+        self.data.push(NodeData {
+            data: node,
+            world: Default::default(),
+            changed: true,
+            hidden: false,
+            node: idx,
+        });
 
         NodeId(idx)
     }
@@ -216,26 +185,9 @@ impl Graph {
         }
 
         fn remove_node(g: &mut Graph, n: &NodeLink) -> Node {
-            match n.typ {
-                NodeType::Drawable => {
-                    let swap = g.drawables.last().unwrap().node;
-                    g.nodes[swap].data = n.data;
-                    let data = g.drawables.swap_remove(n.data);
-                    Node::Drawable(data.data, data.local)
-                }
-                NodeType::Light => {
-                    let swap = g.lights.last().unwrap().node;
-                    g.nodes[swap].data = n.data;
-                    let data = g.lights.swap_remove(n.data);
-                    Node::Light(data.data, data.local)
-                }
-                NodeType::Xform => {
-                    let swap = g.xforms.last().unwrap().node;
-                    g.nodes[swap].data = n.data;
-                    let data = g.xforms.swap_remove(n.data);
-                    Node::Xform(data.local)
-                }
-            }
+            let swap = g.data.last().unwrap().node;
+            g.nodes[swap].data = n.data;
+            g.data.swap_remove(n.data).data
         }
     }
 
@@ -259,11 +211,9 @@ impl Graph {
     /// [`NodeId`] identifies, or `None` if it is not a
     /// [`Node::Drawable`].
     pub fn drawable(&self, node: NodeId) -> Option<&Drawable> {
-        match self.nodes[node.0].typ {
-            NodeType::Drawable => {
-                let data = self.nodes[node.0].data;
-                Some(&self.drawables[data].data)
-            }
+        let data = self.nodes[node.0].data;
+        match &self.data[data].data {
+            Node::Drawable(d, _) => Some(d),
             _ => None,
         }
     }
@@ -272,11 +222,9 @@ impl Graph {
     /// [`NodeId`] identifies, or `None` if it is not a
     /// [`Node::Light`].
     pub fn light(&self, node: NodeId) -> Option<&Light> {
-        match self.nodes[node.0].typ {
-            NodeType::Light => {
-                let data = self.nodes[node.0].data;
-                Some(&self.lights[data].data)
-            }
+        let data = self.nodes[node.0].data;
+        match &self.data[data].data {
+            Node::Light(l, _) => Some(l),
             _ => None,
         }
     }
@@ -285,10 +233,10 @@ impl Graph {
     /// given [`NodeId`] identifies.
     pub fn local(&self, node: NodeId) -> &Mat4<f32> {
         let data = self.nodes[node.0].data;
-        match self.nodes[node.0].typ {
-            NodeType::Drawable => &self.drawables[data].local,
-            NodeType::Light => &self.lights[data].local,
-            NodeType::Xform => &self.xforms[data].local,
+        match &self.data[data].data {
+            Node::Drawable(_, x) => x,
+            Node::Light(_, x) => x,
+            Node::Xform(x) => x,
         }
     }
 
@@ -298,19 +246,11 @@ impl Graph {
     /// The sub-graph rooted at `node` becomes out of date.
     pub fn local_mut(&mut self, node: NodeId) -> &mut Mat4<f32> {
         let data = self.nodes[node.0].data;
-        match self.nodes[node.0].typ {
-            NodeType::Drawable => {
-                self.drawables[data].changed = true;
-                &mut self.drawables[data].local
-            }
-            NodeType::Light => {
-                self.lights[data].changed = true;
-                &mut self.lights[data].local
-            }
-            NodeType::Xform => {
-                self.xforms[data].changed = true;
-                &mut self.xforms[data].local
-            }
+        self.data[data].changed = true;
+        match &mut self.data[data].data {
+            Node::Drawable(_, x) => x,
+            Node::Light(_, x) => x,
+            Node::Xform(x) => x,
         }
     }
 
@@ -320,33 +260,11 @@ impl Graph {
     /// This transform is not necessarily up to date.
     pub fn world(&self, node: NodeId) -> &Mat4<f32> {
         let data = self.nodes[node.0].data;
-        match self.nodes[node.0].typ {
-            NodeType::Drawable => &self.drawables[data].world,
-            NodeType::Light => &self.lights[data].world,
-            NodeType::Xform => &self.xforms[data].world,
-        }
+        &self.data[data].world
     }
 
     /// Returns the length of the graph.
     pub fn len(&self) -> usize {
-        self.drawables.len() + self.lights.len() + self.xforms.len()
-    }
-
-    /// Returns the number of [`Node::Drawable`]s that the
-    /// graph contains.
-    pub fn drawable_len(&self) -> usize {
-        self.drawables.len()
-    }
-
-    /// Returns the number of [`Node::Light`]s that the
-    /// graph contains.
-    pub fn light_len(&self) -> usize {
-        self.lights.len()
-    }
-
-    /// Returns the number of [`Node::Xform`]s that the
-    /// graph contains.
-    pub fn xform_len(&self) -> usize {
-        self.xforms.len()
+        self.data.len()
     }
 }
