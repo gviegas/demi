@@ -234,9 +234,7 @@ pub fn init() -> Result<(), &'static str> {
 /// NOTE: It should be paired with a previous [`init`] call.
 pub fn fini() {
     match RC.swap(usize::MAX, Ordering::AcqRel) {
-        0 => {
-            RC.store(0, Ordering::Release);
-        }
+        0 => RC.store(0, Ordering::Release),
         1 => {
             unsafe {
                 LIB = None;
@@ -249,9 +247,7 @@ pub fn fini() {
             }
             fini();
         }
-        x => {
-            RC.store(x - 1, Ordering::Release);
-        }
+        x => RC.store(x - 1, Ordering::Release),
     }
 }
 

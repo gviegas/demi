@@ -62,9 +62,7 @@ pub fn init() {
 /// NOTE: The crate must not be used after calling this function.
 pub fn shutdown() {
     match RC.swap(usize::MAX, Ordering::AcqRel) {
-        0 => {
-            RC.store(0, Ordering::Release);
-        }
+        0 => RC.store(0, Ordering::Release),
         1 => {
             // NOTE: Finalization of global data must
             // be done here.
@@ -78,9 +76,7 @@ pub fn shutdown() {
             }
             shutdown();
         }
-        x => {
-            RC.store(x - 1, Ordering::Release);
-        }
+        x => RC.store(x - 1, Ordering::Release),
     }
 }
 
