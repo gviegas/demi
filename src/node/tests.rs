@@ -74,6 +74,16 @@ impl Graph {
             .zip(children)
             .for_each(|(a, b)| assert_eq!(a.0, b.0));
     }
+
+    fn assert_wld(&self, node: NodeId) {
+        let world = self.world(node);
+        let mut x = self.nodes[node.0].sub;
+        while x != NONE {
+            assert_eq!(*self.world(NodeId(x)), world * self.local(NodeId(x)));
+            self.assert_wld(NodeId(x));
+            x = self.nodes[x].next;
+        }
+    }
 }
 
 #[test]
@@ -797,4 +807,217 @@ fn node_growth() {
     assert_eq!(g.nodes.len(), NBITS_GRAN * 8);
     assert_eq!(g.nbits.len(), NBITS_GRAN * 8);
     assert_eq!(g.nbits.rem(), NBITS_GRAN * 4 + NBITS_GRAN - 1);
+}
+
+#[test]
+fn update_one() {
+    let mut g = Graph::new();
+
+    let m1 = Mat4::from(1.0);
+    let n1 = g.insert(Node::Xform(m1), None);
+    g.update(n1);
+    assert_eq!(g.world(n1), &m1);
+    let m2 = Mat4::scale(2.0, 2.0, 2.0);
+    *g.local_mut(n1) = m2;
+    assert_eq!(g.world(n1), &m1);
+    g.update(n1);
+    assert_eq!(g.world(n1), &m2);
+
+    let n2 = g.insert(Node::Xform(m2), None);
+    g.update(n2);
+    assert_eq!(g.world(n2), &m2);
+    *g.local_mut(n2) = m1;
+    assert_eq!(g.world(n2), &m2);
+    g.update(n2);
+    assert_eq!(g.world(n2), &m1);
+    assert_eq!(g.world(n1), &m2);
+    g.update(n1);
+    assert_eq!(g.world(n2), &m1);
+    assert_eq!(g.world(n1), &m2);
+
+    let n11 = g.insert(
+        Node::Light(Light::new_white(LightType::Directional, 1000.0), m1),
+        Some(n1),
+    );
+    g.update(n11);
+    assert_eq!(g.world(n11), &m1);
+    assert_eq!(g.world(n1), &m2);
+    let m3 = Mat4::translation(-10.0, 2.0, -6.0);
+    *g.local_mut(n11) = m3;
+    assert_eq!(g.world(n11), &m1);
+    g.update(n11);
+    assert_eq!(g.world(n11), &m3);
+    assert_eq!(g.world(n1), &m2);
+    assert_eq!(g.world(n2), &m1);
+    *g.local_mut(n1) = m1;
+    assert_eq!(g.world(n11), &m3);
+    assert_eq!(g.world(n1), &m2);
+    g.update(n11);
+    g.update(n2);
+    assert_eq!(g.world(n11), &m3);
+    assert_eq!(g.world(n1), &m2);
+    assert_eq!(g.world(n2), &m1);
+    *g.local_mut(n11) = m1;
+    g.update(n11);
+    assert_eq!(g.world(n11), &m1);
+    assert_eq!(g.world(n1), &m2);
+}
+
+#[test]
+fn update() {
+    let mut g = Graph::new();
+
+    let light = |m| Node::Light(Light::new_white(LightType::Directional, 1000.0), m);
+    let xform = |m| Node::Xform(m);
+
+    let m1 = Mat4::scale(2.0, 2.0, 2.0);
+    let m2 = Mat4::scale(4.0, 4.0, 4.0);
+    let m3 = Mat4::scale(-1.0, -1.0, -1.0);
+    let m4 = Mat4::translation(1.0, 2.0, 3.0);
+    let m5 = Mat4::translation(-1.0, -2.0, -2.0);
+    let m6 = Mat4::translation(30.0, 20.0, 10.0);
+    let m7 = Mat4::translation(100.0, 0.0, 0.0);
+    let m8 = Mat4::translation(0.0, 100.0, 0.0);
+    let m9 = Mat4::translation(0.0, 0.0, 100.0);
+
+    let n1 = g.insert(xform(Mat4::from(0.0)), None);
+    let n11 = g.insert(light(m2), Some(n1));
+    let n12 = g.insert(xform(m3), Some(n1));
+    let n121 = g.insert(xform(m4), Some(n12));
+    let n122 = g.insert(light(m5), Some(n12));
+    let n123 = g.insert(xform(m6), Some(n12));
+    let n1221 = g.insert(xform(m7), Some(n122));
+    let n1222 = g.insert(light(m8), Some(n122));
+    let n1231 = g.insert(xform(m9), Some(n123));
+    let n2 = g.insert(light(Mat4::from(0.0)), None);
+    let n21 = g.insert(xform(m8), Some(n2));
+    let n22 = g.insert(light(m7), Some(n2));
+    let n23 = g.insert(light(m6), Some(n2));
+    let n24 = g.insert(xform(m5), Some(n2));
+    let n25 = g.insert(xform(m4), Some(n2));
+    let n26 = g.insert(light(m3), Some(n2));
+    let n3 = g.insert(xform(Mat4::from(0.0)), None);
+    let n31 = g.insert(xform(m6), Some(n3));
+
+    let w1 = m1;
+    let w11 = w1 * m2;
+    let w12 = w1 * m3;
+    let w121 = w12 * m4;
+    let w122 = w12 * m5;
+    let w123 = w12 * m6;
+    let w1221 = w122 * m7;
+    let w1222 = w122 * m8;
+    let w1231 = w123 * m9;
+    let w2 = m9;
+    let w21 = w2 * m8;
+    let w22 = w2 * m7;
+    let w23 = w2 * m6;
+    let w24 = w2 * m5;
+    let w25 = w2 * m4;
+    let w26 = w2 * m3;
+    let w3 = m3;
+    let w31 = w3 * m6;
+
+    *g.local_mut(n1) = m1;
+    g.update(n1);
+    g.assert_wld(n1);
+    assert_eq!(g.world(n1), &w1);
+    assert_eq!(g.world(n11), &w11);
+    assert_eq!(g.world(n12), &w12);
+    assert_eq!(g.world(n121), &w121);
+    assert_eq!(g.world(n122), &w122);
+    assert_eq!(g.world(n123), &w123);
+    assert_eq!(g.world(n1221), &w1221);
+    assert_eq!(g.world(n1222), &w1222);
+    assert_eq!(g.world(n1231), &w1231);
+
+    *g.local_mut(n2) = m9;
+    g.update(n2);
+    g.assert_wld(n2);
+    assert_eq!(g.world(n2), &w2);
+    assert_eq!(g.world(n21), &w21);
+    assert_eq!(g.world(n22), &w22);
+    assert_eq!(g.world(n23), &w23);
+    assert_eq!(g.world(n24), &w24);
+    assert_eq!(g.world(n25), &w25);
+    assert_eq!(g.world(n26), &w26);
+    assert_eq!(g.world(n1), &w1);
+    assert_eq!(g.world(n11), &w11);
+    assert_eq!(g.world(n12), &w12);
+    assert_eq!(g.world(n121), &w121);
+    assert_eq!(g.world(n122), &w122);
+    assert_eq!(g.world(n123), &w123);
+    assert_eq!(g.world(n1221), &w1221);
+    assert_eq!(g.world(n1222), &w1222);
+    assert_eq!(g.world(n1231), &w1231);
+
+    *g.local_mut(n3) = m3;
+    g.update(n3);
+    g.assert_wld(n3);
+    assert_eq!(g.world(n3), &w3);
+    assert_eq!(g.world(n31), &w31);
+    assert_eq!(g.world(n2), &w2);
+    assert_eq!(g.world(n21), &w21);
+    assert_eq!(g.world(n22), &w22);
+    assert_eq!(g.world(n23), &w23);
+    assert_eq!(g.world(n24), &w24);
+    assert_eq!(g.world(n25), &w25);
+    assert_eq!(g.world(n26), &w26);
+    assert_eq!(g.world(n1), &w1);
+    assert_eq!(g.world(n11), &w11);
+    assert_eq!(g.world(n12), &w12);
+    assert_eq!(g.world(n121), &w121);
+    assert_eq!(g.world(n122), &w122);
+    assert_eq!(g.world(n123), &w123);
+    assert_eq!(g.world(n1221), &w1221);
+    assert_eq!(g.world(n1222), &w1222);
+    assert_eq!(g.world(n1231), &w1231);
+
+    *g.local_mut(n1) = m9;
+    g.update(n1);
+    g.assert_wld(n1);
+
+    *g.local_mut(n1) = m5;
+    g.update(n11);
+    g.assert_wld(n1);
+
+    *g.local_mut(n12) = m8;
+    g.update(n11);
+    g.assert_wld(n11);
+    // Panics.
+    //g.assert_wld(n1);
+
+    *g.local_mut(n2) = m4;
+    g.update(n2);
+    g.assert_wld(n2);
+    g.assert_wld(n21);
+    g.assert_wld(n22);
+    g.assert_wld(n23);
+    g.assert_wld(n24);
+    g.assert_wld(n25);
+
+    *g.local_mut(n23) = m7;
+    g.update(n23);
+    g.assert_wld(n22);
+    g.assert_wld(n23);
+    g.assert_wld(n24);
+    g.assert_wld(n25);
+    g.assert_wld(n26);
+    // Panics.
+    //g.assert_wld(n2);
+
+    *g.local_mut(n31) = m6;
+    g.update(n31);
+    // Panics.
+    //g.assert_wld(n3);
+    g.assert_wld(n31);
+    *g.local_mut(n31) = m3;
+    g.update(n3);
+    g.assert_wld(n3);
+    g.assert_wld(n31);
+    *g.local_mut(n31) = m1;
+    g.update(n31);
+    // Panics.
+    //g.assert_wld(n3);
+    g.assert_wld(n31);
 }

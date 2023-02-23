@@ -203,8 +203,81 @@ impl Graph {
         todo!();
     }
 
-    pub fn update(&mut self) {
-        todo!();
+    /// Updates the world of the sub-graph rooted at `node`.
+    /// If `node` is not up to date, then its local matrix will
+    /// be used as the world's root transform.
+    pub fn update(&mut self, node: NodeId) {
+        let data = self.nodes[node.0].data;
+        if self.data[data].hidden {
+            return;
+        }
+        let changed = self.data[data].changed;
+        if changed {
+            self.data[data].world = match self.data[data].data {
+                Node::Drawable(_, x) => x,
+                Node::Light(_, x) => x,
+                Node::Xform(x) => x,
+            };
+        }
+        let sub = self.nodes[node.0].sub;
+        if sub == NONE {
+            return;
+        }
+
+        // TODO: May want to cache this vector
+        // in the `Graph` struct.
+        struct Nd {
+            node: usize,
+            prev: usize,
+            prev_chg: bool,
+        }
+        let mut nodes = vec![Nd {
+            node: sub,
+            prev: node.0,
+            prev_chg: changed,
+        }];
+
+        while let Some(Nd {
+            mut node,
+            mut prev,
+            mut prev_chg,
+        }) = nodes.pop()
+        {
+            loop {
+                let next = self.nodes[node].next;
+                if next != NONE {
+                    nodes.push(Nd {
+                        node: next,
+                        prev,
+                        prev_chg,
+                    });
+                }
+                let data = self.nodes[node].data;
+                if self.data[data].hidden {
+                    continue;
+                }
+                if prev_chg || self.data[data].changed {
+                    let prev_world = &self.data[self.nodes[prev].data].world;
+                    let local = match &self.data[data].data {
+                        Node::Drawable(_, x) => x,
+                        Node::Light(_, x) => x,
+                        Node::Xform(x) => x,
+                    };
+                    self.data[data].world = prev_world * local;
+                    self.data[data].changed = false;
+                    // This will only affect descendants of `node`
+                    // since we already pushed the next sibling.
+                    prev_chg = true;
+                }
+                let sub = self.nodes[node].sub;
+                if sub != NONE {
+                    prev = node;
+                    node = sub;
+                } else {
+                    break;
+                }
+            }
+        }
     }
 
     /// Returns a reference to the [`Drawable`] that a given
