@@ -16,11 +16,10 @@ pub mod mesh;
 pub mod node;
 pub mod renderer;
 pub mod sampler;
-pub mod scene;
+//pub mod scene;
 pub mod shape;
 pub mod skin;
 pub mod texture;
-pub mod transform;
 
 mod bit_vec;
 mod gpu;
