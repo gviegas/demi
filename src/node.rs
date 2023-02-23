@@ -2,8 +2,6 @@
 
 //! Node graph.
 
-#![allow(unused_variables)] // TODO
-
 use std::mem;
 
 use crate::bit_vec::BitVec;
@@ -14,6 +12,7 @@ use crate::linear::Mat4;
 #[cfg(test)]
 mod tests;
 
+/// Node in a [`Graph`].
 pub enum Node {
     Drawable(Drawable, Mat4<f32>),
     Light(Light, Mat4<f32>),
@@ -35,7 +34,6 @@ struct NodeLink {
     next: usize,
     prev: usize,
     sub: usize,
-    typ: NodeType,
     data: usize,
 }
 
@@ -47,6 +45,7 @@ struct NodeData {
     node: usize,
 }
 
+/// Identifier of a [`Node`] in a [`Graph`].
 #[derive(Copy, Clone)]
 pub struct NodeId(usize);
 
@@ -60,6 +59,7 @@ pub struct Subgraph {
     data: Vec<NodeData>,
 }
 
+/// Node graph.
 pub struct Graph {
     nodes: Vec<NodeLink>,
     nbits: BitVec<u32>,
@@ -93,7 +93,6 @@ impl Graph {
                     next: NONE,
                     prev: NONE,
                     sub: NONE,
-                    typ: NodeType::Xform,
                     data: NONE,
                 });
                 let nlen = (self.nodes.len() - self.nbits.len()) / NBITS_GRAN;
@@ -119,11 +118,6 @@ impl Graph {
         self.nodes[idx].sub = NONE;
 
         self.nodes[idx].data = self.data.len();
-        self.nodes[idx].typ = match node {
-            Node::Drawable(..) => NodeType::Drawable,
-            Node::Light(..) => NodeType::Light,
-            Node::Xform(..) => NodeType::Xform,
-        };
         self.data.push(NodeData {
             data: node,
             world: Default::default(),
@@ -178,7 +172,6 @@ impl Graph {
                     next: NONE,
                     prev: NONE,
                     sub: NONE,
-                    typ: NodeType::Xform,
                     data: NONE,
                 },
             )
@@ -191,6 +184,7 @@ impl Graph {
         }
     }
 
+    #[allow(unused_variables)] // TODO
     pub fn insert_subgraph(
         &mut self,
         subgraph: Subgraph,
@@ -199,6 +193,7 @@ impl Graph {
         todo!();
     }
 
+    #[allow(unused_variables)] // TODO
     pub fn remove_subgraph(&mut self, node: NodeId) -> Subgraph {
         todo!();
     }

@@ -30,7 +30,6 @@ impl Graph {
             next,
             prev,
             sub,
-            typ,
             data,
         } = &self.nodes[node.0];
         assert_eq!(next, NONE);
@@ -487,7 +486,7 @@ fn insert_remove() {
         ),
         Some(n21),
     );
-    let n2131 = g.insert(
+    let _n2131 = g.insert(
         Node::Light(
             Light::new_white(LightType::Directional, 100.0),
             Mat4::from(2131.0),
