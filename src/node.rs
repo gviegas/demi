@@ -41,23 +41,13 @@ struct NodeData {
     data: Node,
     world: Mat4<f32>,
     changed: bool,
-    hidden: bool,
+    ignored: bool,
     node: usize,
 }
 
 /// Identifier of a [`Node`] in a [`Graph`].
 #[derive(Copy, Clone)]
 pub struct NodeId(usize);
-
-pub struct NodeIdRemap {
-    pub old_id: NodeId,
-    pub new_id: NodeId,
-}
-
-pub struct Subgraph {
-    nodes: Vec<(NodeLink, NodeId)>,
-    data: Vec<NodeData>,
-}
 
 /// Node graph.
 pub struct Graph {
@@ -122,7 +112,7 @@ impl Graph {
             data: node,
             world: Default::default(),
             changed: true,
-            hidden: false,
+            ignored: false,
             node: idx,
         });
 
@@ -184,18 +174,11 @@ impl Graph {
         }
     }
 
-    #[allow(unused_variables)] // TODO
-    pub fn insert_subgraph(
-        &mut self,
-        subgraph: Subgraph,
-        prev: Option<NodeId>,
-    ) -> Vec<NodeIdRemap> {
-        todo!();
-    }
-
-    #[allow(unused_variables)] // TODO
-    pub fn remove_subgraph(&mut self, node: NodeId) -> Subgraph {
-        todo!();
+    /// Sets whether a `node` and its descendants are ignored
+    /// by graph updates.
+    pub fn ignore(&mut self, node: NodeId, ignore: bool) {
+        let data = self.nodes[node.0].data;
+        self.data[data].ignored = ignore;
     }
 
     /// Updates the world of the sub-graph rooted at `node`.
@@ -203,7 +186,7 @@ impl Graph {
     /// be used as the world's root transform.
     pub fn update(&mut self, node: NodeId) {
         let data = self.nodes[node.0].data;
-        if self.data[data].hidden {
+        if self.data[data].ignored {
             return;
         }
         let changed = self.data[data].changed;
@@ -248,8 +231,8 @@ impl Graph {
                     });
                 }
                 let data = self.nodes[node].data;
-                if self.data[data].hidden {
-                    continue;
+                if self.data[data].ignored {
+                    break;
                 }
                 if prev_chg || self.data[data].changed {
                     let prev_world = &self.data[self.nodes[prev].data].world;

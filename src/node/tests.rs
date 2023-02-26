@@ -1020,3 +1020,232 @@ fn update() {
     //g.assert_wld(n3);
     g.assert_wld(n31);
 }
+
+#[test]
+fn ignore() {
+    let mut g = Graph::new();
+
+    let m1 = Mat4::scale(0.5, 0.5, 0.5);
+    let m2 = Mat4::translation(-1.0, -2.0, -3.0);
+    let m3 = Mat4::scale(2.0, 2.0, 2.0);
+    let m4 = Mat4::translation(16.0, 64.0, 256.0);
+    let m5 = Mat4::scale(0.25, 0.25, 0.25);
+    let m6 = Mat4::translation(30.0, 20.0, 10.0);
+
+    let n1 = g.insert(
+        Node::Light(Light::new_white(LightType::Directional, 600.0), m1),
+        None,
+    );
+    let n11 = g.insert(Node::Xform(m2), Some(n1));
+    let n12 = g.insert(
+        Node::Light(Light::new_white(LightType::Directional, 500.0), m3),
+        Some(n1),
+    );
+    let n121 = g.insert(Node::Xform(m4), Some(n12));
+
+    let n2 = g.insert(Node::Xform(m2), None);
+
+    let n3 = g.insert(
+        Node::Light(Light::new_white(LightType::Directional, 300.0), m3),
+        None,
+    );
+    let n31 = g.insert(Node::Xform(m4), Some(n3));
+    let n311 = g.insert(Node::Xform(m5), Some(n31));
+    let n3111 = g.insert(Node::Xform(m6), Some(n311));
+
+    let eq_chain = |w: &Mat4<f32>, ms: &[Mat4<f32>]| -> bool {
+        let mut world = Mat4::from(1f32);
+        for i in ms {
+            world *= i;
+        }
+        w == &world
+    };
+
+    g.update(n1);
+    assert!(eq_chain(g.world(n1), &[m1]));
+    assert!(eq_chain(g.world(n11), &[m1, m2]));
+    assert!(eq_chain(g.world(n12), &[m1, m3]));
+    assert!(eq_chain(g.world(n121), &[m1, m3, m4]));
+    assert!(!eq_chain(g.world(n2), &[m2]));
+    assert!(!eq_chain(g.world(n3), &[m3]));
+    assert!(!eq_chain(g.world(n31), &[m3, m4]));
+    assert!(!eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(!eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.update(n2);
+    assert!(eq_chain(g.world(n1), &[m1]));
+    assert!(eq_chain(g.world(n11), &[m1, m2]));
+    assert!(eq_chain(g.world(n12), &[m1, m3]));
+    assert!(eq_chain(g.world(n121), &[m1, m3, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(!eq_chain(g.world(n3), &[m3]));
+    assert!(!eq_chain(g.world(n31), &[m3, m4]));
+    assert!(!eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(!eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.update(n3);
+    assert!(eq_chain(g.world(n1), &[m1]));
+    assert!(eq_chain(g.world(n11), &[m1, m2]));
+    assert!(eq_chain(g.world(n12), &[m1, m3]));
+    assert!(eq_chain(g.world(n121), &[m1, m3, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m4]));
+    assert!(eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.ignore(n1, true);
+    g.update(n1);
+    assert!(eq_chain(g.world(n1), &[m1]));
+    assert!(eq_chain(g.world(n11), &[m1, m2]));
+    assert!(eq_chain(g.world(n12), &[m1, m3]));
+    assert!(eq_chain(g.world(n121), &[m1, m3, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m4]));
+    assert!(eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    *g.local_mut(n1) = m6;
+    g.update(n1);
+    assert!(eq_chain(g.world(n1), &[m1]));
+    assert!(eq_chain(g.world(n11), &[m1, m2]));
+    assert!(eq_chain(g.world(n12), &[m1, m3]));
+    assert!(eq_chain(g.world(n121), &[m1, m3, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m4]));
+    assert!(eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.ignore(n1, false);
+    g.update(n1);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m2]));
+    assert!(eq_chain(g.world(n12), &[m6, m3]));
+    assert!(eq_chain(g.world(n121), &[m6, m3, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m4]));
+    assert!(eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.ignore(n11, true);
+    *g.local_mut(n11) = m1;
+    g.update(n1);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m2]));
+    assert!(eq_chain(g.world(n12), &[m6, m3]));
+    assert!(eq_chain(g.world(n121), &[m6, m3, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m4]));
+    assert!(eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.ignore(n11, false);
+    g.update(n1);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m1]));
+    assert!(eq_chain(g.world(n12), &[m6, m3]));
+    assert!(eq_chain(g.world(n121), &[m6, m3, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m4]));
+    assert!(eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.ignore(n12, true);
+    *g.local_mut(n12) = m2;
+    g.update(n1);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m1]));
+    assert!(eq_chain(g.world(n12), &[m6, m3]));
+    assert!(eq_chain(g.world(n121), &[m6, m3, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m4]));
+    assert!(eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.ignore(n12, false);
+    g.update(n1);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m1]));
+    assert!(eq_chain(g.world(n12), &[m6, m2]));
+    assert!(eq_chain(g.world(n121), &[m6, m2, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m4]));
+    assert!(eq_chain(g.world(n311), &[m3, m4, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.ignore(n3111, true);
+    g.ignore(n2, true);
+    *g.local_mut(n31) = m2;
+    *g.local_mut(n2) = m1;
+    g.update(n3);
+    g.update(n2);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m1]));
+    assert!(eq_chain(g.world(n12), &[m6, m2]));
+    assert!(eq_chain(g.world(n121), &[m6, m2, m4]));
+    assert!(eq_chain(g.world(n2), &[m2]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m2]));
+    assert!(eq_chain(g.world(n311), &[m3, m2, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m4, m5, m6]));
+
+    g.ignore(n2, false);
+    g.ignore(n3111, false);
+    g.update(n2);
+    g.update(n3);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m1]));
+    assert!(eq_chain(g.world(n12), &[m6, m2]));
+    assert!(eq_chain(g.world(n121), &[m6, m2, m4]));
+    assert!(eq_chain(g.world(n2), &[m1]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m2]));
+    assert!(eq_chain(g.world(n311), &[m3, m2, m5]));
+    assert!(eq_chain(g.world(n3111), &[m3, m2, m5, m6]));
+
+    g.ignore(n3, true);
+    *g.local_mut(n3) = m5;
+    *g.local_mut(n311) = m4;
+    g.update(n31);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m1]));
+    assert!(eq_chain(g.world(n12), &[m6, m2]));
+    assert!(eq_chain(g.world(n121), &[m6, m2, m4]));
+    assert!(eq_chain(g.world(n2), &[m1]));
+    assert!(eq_chain(g.world(n3), &[m3]));
+    assert!(eq_chain(g.world(n31), &[m3, m2]));
+    assert!(eq_chain(g.world(n311), &[m3, m2, m4]));
+    assert!(eq_chain(g.world(n3111), &[m3, m2, m4, m6]));
+
+    g.ignore(n3, false);
+    g.ignore(n311, true);
+    g.update(n3);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m1]));
+    assert!(eq_chain(g.world(n12), &[m6, m2]));
+    assert!(eq_chain(g.world(n121), &[m6, m2, m4]));
+    assert!(eq_chain(g.world(n2), &[m1]));
+    assert!(eq_chain(g.world(n3), &[m5]));
+    assert!(eq_chain(g.world(n31), &[m5, m2]));
+    assert!(eq_chain(g.world(n311), &[m3, m2, m4]));
+    assert!(eq_chain(g.world(n3111), &[m3, m2, m4, m6]));
+
+    g.ignore(n311, false);
+    g.update(n3);
+    assert!(eq_chain(g.world(n1), &[m6]));
+    assert!(eq_chain(g.world(n11), &[m6, m1]));
+    assert!(eq_chain(g.world(n12), &[m6, m2]));
+    assert!(eq_chain(g.world(n121), &[m6, m2, m4]));
+    assert!(eq_chain(g.world(n2), &[m1]));
+    assert!(eq_chain(g.world(n3), &[m5]));
+    assert!(eq_chain(g.world(n31), &[m5, m2]));
+    assert!(eq_chain(g.world(n311), &[m5, m2, m4]));
+    assert!(eq_chain(g.world(n3111), &[m5, m2, m4, m6]));
+}
