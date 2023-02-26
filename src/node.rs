@@ -258,6 +258,13 @@ impl Graph {
         }
     }
 
+    /// Returns a reference to the [`Node`] that a given
+    /// [`NodeId`] identifies.
+    pub fn node(&self, node: NodeId) -> &Node {
+        let data = self.nodes[node.0].data;
+        &self.data[data].data
+    }
+
     /// Returns a reference to the [`Drawable`] that a given
     /// [`NodeId`] identifies, or `None` if it is not a
     /// [`Node::Drawable`].

@@ -1249,3 +1249,52 @@ fn ignore() {
     assert!(eq_chain(g.world(n311), &[m5, m2, m4]));
     assert!(eq_chain(g.world(n3111), &[m5, m2, m4, m6]));
 }
+
+#[test]
+fn get_set() {
+    let mut g = Graph::new();
+
+    let light = |i, m| Node::Light(Light::new_white(LightType::Directional, i), m);
+    let xform = |m| Node::Xform(m);
+
+    let m = Mat4::scale(2.0, 2.0, 2.0);
+    let n = g.insert(xform(m), None);
+    assert!(match g.node(n) {
+        Node::Xform(x) => x == &m,
+        _ => false,
+    });
+    assert_eq!(g.local(n), &m);
+    assert_eq!(g.local_mut(n), &m);
+
+    let i = 1000.0;
+    let m = Mat4::scale(0.5, 0.5, 0.5);
+    let n = g.insert(light(i, m), None);
+    assert!(match g.node(n) {
+        Node::Light(l, x) => l.intensity() == i && x == &m,
+        _ => false,
+    });
+    assert_eq!(g.local(n), &m);
+    assert_eq!(g.local_mut(n), &m);
+
+    let m = Mat4::scale(4.0, 4.0, 4.0);
+    let n = g.insert(xform(m), Some(n));
+    assert!(match g.node(n) {
+        Node::Xform(x) => x == &m,
+        _ => false,
+    });
+    assert_eq!(g.local(n), &m);
+    assert_eq!(g.local_mut(n), &m);
+
+    *g.local_mut(n) *= Mat4::scale(8.0, 8.0, 8.0);
+    let m = Mat4::scale(32.0, 32.0, 32.0);
+    assert!(match g.node(n) {
+        Node::Xform(x) => x == &m,
+        _ => false,
+    });
+    assert_eq!(g.local(n), &m);
+    assert_eq!(g.local_mut(n), &m);
+
+    g.update(NodeId(g.nodes[n.0].prev));
+    let m = Mat4::scale(0.5, 0.5, 0.5) * m;
+    assert_eq!(g.world(n), &m);
+}
