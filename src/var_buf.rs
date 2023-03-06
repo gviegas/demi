@@ -9,10 +9,10 @@ use std::ptr::{self, NonNull};
 
 /// [`VarBuf`]'s allocation.
 pub trait VarAlloc {
-    /// The minimum alignment supported by the allocation.
+    /// The stride between allocated blocks, in bytes.
     ///
     /// It must be a power of two.
-    const MIN_ALIGN: usize = 4;
+    const STRIDE: usize = 512;
 
     /// Grows the allocation to a given size in bytes.
     ///
@@ -114,7 +114,7 @@ impl<T: VarAlloc> VarBuf<T> {
         }
 
         // Enforce alignment at entries' boundaries.
-        let size = (size + T::MIN_ALIGN - 1) & !(T::MIN_ALIGN - 1);
+        let size = (size + T::STRIDE - 1) & !(T::STRIDE - 1);
 
         // TODO
         if cfg!(test) {

@@ -59,8 +59,8 @@ impl VertAlloc {
     /// Creating a zero-sized [`VertAlloc`] does not allocate
     /// [`gpu`] resources.
     pub fn new(size_hint: usize) -> Self {
-        debug_assert_eq!(Self::MIN_ALIGN & (Self::MIN_ALIGN - 1), 0);
-        let mut size = (size_hint + VertAlloc::MIN_ALIGN - 1) & !(VertAlloc::MIN_ALIGN - 1);
+        debug_assert_eq!(Self::STRIDE & (Self::STRIDE - 1), 0);
+        let mut size = (size_hint + VertAlloc::STRIDE - 1) & !(VertAlloc::STRIDE - 1);
         loop {
             if size > 0 {
                 if let Ok(mut gid) = gpu::create_vb(&BufOptions {
@@ -89,11 +89,7 @@ impl VertAlloc {
 }
 
 impl VarAlloc for VertAlloc {
-    // NOTE: This alignment value should suffice for all
-    // `gpu` back-ends (the widest `DataType` variants
-    // currently defined have 32 bits per component).
-    // It can be increased if necessary.
-    const MIN_ALIGN: usize = 4;
+    const STRIDE: usize = 512;
 
     fn grow(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
         if new_size <= self.size {
@@ -575,7 +571,7 @@ impl Builder {
         stride: usize,
     ) -> io::Result<&mut Self> {
         let layout = data_type.layout();
-        debug_assert!(VertAlloc::MIN_ALIGN >= layout.align());
+        debug_assert!(VertAlloc::STRIDE >= layout.align());
         if self.vert_count == 0 {
             return Err(io::Error::from(io::ErrorKind::Other));
         }
@@ -641,7 +637,7 @@ impl Builder {
             DataType::U8 => (1, 2),
             _ => return Err(io::Error::from(io::ErrorKind::InvalidInput)),
         };
-        debug_assert!(stride <= VertAlloc::MIN_ALIGN);
+        debug_assert!(stride <= VertAlloc::STRIDE);
         if let Some(DataEntry { entry, .. }) = self.indices.take() {
             eprintln!("[!] mesh::Builder: set_indexed called twice");
             self.vert_buf.write().unwrap().dealloc(entry);
