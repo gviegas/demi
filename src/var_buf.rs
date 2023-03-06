@@ -7,6 +7,8 @@ use std::io;
 use std::ops::Range;
 use std::ptr::{self, NonNull};
 
+use crate::bit_vec::BitVec;
+
 /// [`VarBuf`]'s allocation.
 pub trait VarAlloc {
     /// The stride between allocated blocks, in bytes.
@@ -33,6 +35,8 @@ pub trait VarAlloc {
     fn shrink(&mut self, new_size: usize) -> io::Result<NonNull<()>>;
 
     /// Returns the size of the allocation, in bytes.
+    ///
+    /// It must be a multiple of `STRIDE`, or `0`.
     fn size(&self) -> usize;
 }
 
@@ -93,17 +97,24 @@ impl Ord for VarEntry {
 /// Buffer for storing data of variable size.
 #[derive(Debug)]
 pub struct VarBuf<T: VarAlloc> {
-    // TODO
     ptr: NonNull<()>,
     alloc: T,
+    bits: BitVec<u32>,
 }
 
 impl<T: VarAlloc> VarBuf<T> {
     /// Creates a new [`VarBuf`] using a given allocation.
+    ///
+    /// The caller must ensure that `alloc.size()` is either `0`
+    /// or a multiple of `T::STRIDE`.
     pub fn new(mut alloc: T) -> Self {
+        debug_assert_eq!(alloc.size() % T::STRIDE, 0);
+        let size = alloc.size();
+        let n = (size / T::STRIDE + 31) / 32;
         Self {
-            ptr: alloc.grow(alloc.size()).unwrap(),
+            ptr: alloc.grow(size).unwrap(),
             alloc,
+            bits: BitVec::with_count_words(n),
         }
     }
 
@@ -112,32 +123,33 @@ impl<T: VarAlloc> VarBuf<T> {
         if size == 0 {
             return Err(io::Error::from(io::ErrorKind::InvalidInput));
         }
-
         // Enforce alignment at entries' boundaries.
         let size = (size + T::STRIDE - 1) & !(T::STRIDE - 1);
-
-        // TODO
-        if cfg!(test) {
-            eprintln!("[!] var_buf: using test alloc");
-            let offset = self.alloc.size();
-            self.ptr = self.alloc.grow(offset + size)?;
-            Ok(VarEntry { offset, size })
+        let n = size / T::STRIDE;
+        let idx = if let Some(x) = self.bits.find_contiguous(n) {
+            x
         } else {
-            todo!();
+            // TODO: Grow exponentially.
+            self.ptr = self.alloc.grow(self.alloc.size() + size)?;
+            self.bits.grow(n).unwrap()
+        };
+        for i in 0..n {
+            self.bits.set(idx + i);
         }
+        Ok(VarEntry {
+            offset: idx * T::STRIDE,
+            size,
+        })
     }
 
     /// Frees a given entry.
     pub fn dealloc(&mut self, entry: VarEntry) {
-        // TODO
-        if cfg!(test) {
-            eprintln!("[!] var_buf: using test dealloc");
-            if let Ok(x) = self.alloc.shrink(self.alloc.size() - entry.size) {
-                self.ptr = x;
-            }
-        } else {
-            todo!();
+        let start = entry.offset / T::STRIDE;
+        let end = start + entry.size / T::STRIDE;
+        for i in start..end {
+            self.bits.unset(i);
         }
+        // TODO: Shrink the allocation.
     }
 
     /// Copies data to a given entry.
