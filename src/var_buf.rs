@@ -130,6 +130,8 @@ impl<T: VarAlloc> VarBuf<T> {
             x
         } else {
             // TODO: Grow exponentially.
+            let n = (n + 31) / 32;
+            let size = n * 32 * T::STRIDE;
             self.ptr = self.alloc.grow(self.alloc.size() + size)?;
             self.bits.grow(n).unwrap()
         };
