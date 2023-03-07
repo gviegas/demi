@@ -206,3 +206,308 @@ impl<T: VarAlloc> Drop for VarBuf<T> {
         let _ = self.alloc.shrink(0);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Debug)]
+    struct TestAlloc(Vec<u8>);
+
+    impl VarAlloc for TestAlloc {
+        const STRIDE: usize = 4;
+
+        fn grow(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
+            if new_size > self.0.len() {
+                self.0.resize(new_size, 0);
+            }
+            println!("grow {new_size:#?}");
+            Ok(NonNull::new(self.0.as_mut_ptr().cast()).unwrap())
+        }
+
+        fn shrink(&mut self, new_size: usize) -> io::Result<NonNull<()>> {
+            if new_size < self.0.len() {
+                self.0.resize(new_size, 0);
+            }
+            Ok(NonNull::new(self.0.as_mut_ptr().cast()).unwrap())
+        }
+
+        fn size(&self) -> usize {
+            self.0.len()
+        }
+    }
+
+    impl<T: VarAlloc> VarBuf<T> {
+        fn assert(&self, alloc_size: usize, rem_bits: usize) {
+            assert_eq!(alloc_size, self.alloc.size());
+            assert_eq!(rem_bits, self.bits.rem());
+            assert_eq!(self.alloc.size() / T::STRIDE, self.bits.len());
+        }
+    }
+
+    impl VarEntry {
+        fn assert(&self, v: &VarBuf<TestAlloc>) {
+            assert_eq!(self.offset % TestAlloc::STRIDE, 0);
+            assert_eq!(self.size % TestAlloc::STRIDE, 0);
+            assert_ne!(self.size, 0);
+            assert!(self.range().end <= v.alloc.size());
+            let start = self.offset / TestAlloc::STRIDE;
+            let end = start + self.size / TestAlloc::STRIDE;
+            for i in start..end {
+                assert!(v.bits.is_set(i));
+            }
+        }
+    }
+
+    #[test]
+    fn new() {
+        let v = VarBuf::new(TestAlloc(vec![]));
+        v.assert(0, 0);
+
+        let v = VarBuf::new(TestAlloc(vec![0]));
+        v.assert(TestAlloc::STRIDE * 32, 32);
+
+        let v = VarBuf::new(TestAlloc(vec![0; TestAlloc::STRIDE]));
+        v.assert(TestAlloc::STRIDE * 32, 32);
+
+        let v = VarBuf::new(TestAlloc(vec![0; TestAlloc::STRIDE * 31]));
+        v.assert(TestAlloc::STRIDE * 32, 32);
+
+        let v = VarBuf::new(TestAlloc(vec![0; TestAlloc::STRIDE * 32]));
+        v.assert(TestAlloc::STRIDE * 32, 32);
+
+        let v = VarBuf::new(TestAlloc(vec![0; TestAlloc::STRIDE * 32 + 1]));
+        v.assert(TestAlloc::STRIDE * 64, 64)
+    }
+
+    #[test]
+    fn alloc0() {
+        let mut v = VarBuf::new(TestAlloc(vec![]));
+
+        let x = v.alloc(1).unwrap();
+        v.assert(TestAlloc::STRIDE * 32, 31);
+        x.assert(&v);
+
+        let x = v.alloc(2).unwrap();
+        v.assert(TestAlloc::STRIDE * 32, 30);
+        x.assert(&v);
+
+        let x = v.alloc(116).unwrap();
+        v.assert(TestAlloc::STRIDE * 32, 1);
+        x.assert(&v);
+
+        let x = v.alloc(1).unwrap();
+        v.assert(TestAlloc::STRIDE * 32, 0);
+        x.assert(&v);
+
+        let x = v.alloc(3).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 31);
+        x.assert(&v);
+    }
+
+    #[test]
+    fn alloc() {
+        let mut v = VarBuf::new(TestAlloc(vec![0; TestAlloc::STRIDE * 2 * 32]));
+
+        let x = v.alloc(2).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 63);
+        x.assert(&v);
+
+        let x = v.alloc(1).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 62);
+        x.assert(&v);
+
+        let x = v.alloc(20).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 57);
+        x.assert(&v);
+
+        let x = v.alloc(100).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 32);
+        x.assert(&v);
+
+        let x = v.alloc(4).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 31);
+        x.assert(&v);
+
+        let x = v.alloc(3).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 30);
+        x.assert(&v);
+
+        let x = v.alloc(25).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 23);
+        x.assert(&v);
+
+        let x = v.alloc(24).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 17);
+        x.assert(&v);
+
+        let x = v.alloc(26).unwrap();
+        v.assert(TestAlloc::STRIDE * 64, 10);
+        x.assert(&v);
+
+        let x = v.alloc(41).unwrap();
+        v.assert(TestAlloc::STRIDE * 96, 31);
+        x.assert(&v);
+
+        let x = v.alloc(4).unwrap();
+        v.assert(TestAlloc::STRIDE * 96, 30);
+        x.assert(&v);
+
+        let x = v.alloc(10).unwrap();
+        v.assert(TestAlloc::STRIDE * 96, 27);
+        x.assert(&v);
+
+        let x = v.alloc(200).unwrap();
+        v.assert(TestAlloc::STRIDE * 160, 27 + 56 / 4);
+        x.assert(&v);
+    }
+
+    #[test]
+    fn dealloc0() {
+        let mut v = VarBuf::new(TestAlloc(vec![]));
+
+        let x1 = v.alloc(1).unwrap();
+        let x2 = v.alloc(2).unwrap();
+        let x3 = v.alloc(116).unwrap();
+        let x4 = v.alloc(1).unwrap();
+        let x5 = v.alloc(3).unwrap();
+
+        v.dealloc(x1);
+        v.assert(TestAlloc::STRIDE * 64, 32);
+        v.dealloc(x3);
+        v.assert(TestAlloc::STRIDE * 64, 61);
+        v.dealloc(x5);
+        v.assert(TestAlloc::STRIDE * 64, 62);
+        v.dealloc(x4);
+        v.assert(TestAlloc::STRIDE * 64, 63);
+        v.dealloc(x2);
+        v.assert(TestAlloc::STRIDE * 64, 64);
+    }
+
+    #[test]
+    fn dealloc() {
+        let mut v = VarBuf::new(TestAlloc(vec![0; TestAlloc::STRIDE * 2 * 32]));
+
+        let x1 = v.alloc(2).unwrap();
+        let x2 = v.alloc(1).unwrap();
+        let x3 = v.alloc(20).unwrap();
+        let x4 = v.alloc(100).unwrap();
+        let x5 = v.alloc(4).unwrap();
+        let x6 = v.alloc(3).unwrap();
+        let x7 = v.alloc(25).unwrap();
+        let x8 = v.alloc(24).unwrap();
+        let x9 = v.alloc(26).unwrap();
+        let x10 = v.alloc(41).unwrap();
+        let x11 = v.alloc(4).unwrap();
+        let x12 = v.alloc(10).unwrap();
+        let x13 = v.alloc(200).unwrap();
+
+        v.dealloc(x11);
+        v.assert(TestAlloc::STRIDE * 160, 42);
+        v.dealloc(x3);
+        v.assert(TestAlloc::STRIDE * 160, 47);
+        v.dealloc(x2);
+        v.assert(TestAlloc::STRIDE * 160, 48);
+        v.dealloc(x12);
+        v.assert(TestAlloc::STRIDE * 160, 51);
+        v.dealloc(x13);
+        v.assert(TestAlloc::STRIDE * 160, 101);
+        v.dealloc(x1);
+        v.assert(TestAlloc::STRIDE * 160, 102);
+        v.dealloc(x5);
+        v.assert(TestAlloc::STRIDE * 160, 103);
+        v.dealloc(x9);
+        v.assert(TestAlloc::STRIDE * 160, 110);
+        v.dealloc(x7);
+        v.assert(TestAlloc::STRIDE * 160, 117);
+        v.dealloc(x10);
+        v.assert(TestAlloc::STRIDE * 160, 128);
+        v.dealloc(x4);
+        v.assert(TestAlloc::STRIDE * 160, 153);
+        v.dealloc(x6);
+        v.assert(TestAlloc::STRIDE * 160, 154);
+        v.dealloc(x8);
+        v.assert(TestAlloc::STRIDE * 160, 160);
+    }
+
+    #[test]
+    fn alloc_dealloc() {
+        let mut v = VarBuf::new(TestAlloc(vec![0; TestAlloc::STRIDE * 2 * 32]));
+
+        let x1 = v.alloc(2).unwrap();
+        let x2 = v.alloc(1).unwrap();
+        let x3 = v.alloc(20).unwrap();
+        let x4 = v.alloc(100).unwrap();
+        let x5 = v.alloc(4).unwrap();
+        let x6 = v.alloc(3).unwrap();
+        let x7 = v.alloc(25).unwrap();
+        let x8 = v.alloc(24).unwrap();
+        let x9 = v.alloc(26).unwrap();
+        let x10 = v.alloc(41).unwrap();
+        let x11 = v.alloc(4).unwrap();
+        let x12 = v.alloc(10).unwrap();
+        let x13 = v.alloc(200).unwrap();
+
+        v.dealloc(x11);
+        v.assert(TestAlloc::STRIDE * 160, 42);
+        v.dealloc(x3);
+        v.assert(TestAlloc::STRIDE * 160, 47);
+        v.dealloc(x2);
+        v.assert(TestAlloc::STRIDE * 160, 48);
+        v.dealloc(x12);
+        v.assert(TestAlloc::STRIDE * 160, 51);
+        v.dealloc(x13);
+        v.assert(TestAlloc::STRIDE * 160, 101);
+
+        let x13 = v.alloc(4).unwrap();
+        v.assert(TestAlloc::STRIDE * 160, 100);
+        v.dealloc(x13);
+        v.assert(TestAlloc::STRIDE * 160, 101);
+        v.dealloc(x1);
+        v.assert(TestAlloc::STRIDE * 160, 102);
+        v.dealloc(x5);
+        v.assert(TestAlloc::STRIDE * 160, 103);
+
+        let x5 = v.alloc(10).unwrap();
+        v.assert(TestAlloc::STRIDE * 160, 100);
+        let x1 = v.alloc(6).unwrap();
+        v.assert(TestAlloc::STRIDE * 160, 98);
+
+        v.dealloc(x9);
+        v.assert(TestAlloc::STRIDE * 160, 105);
+        v.dealloc(x7);
+        v.assert(TestAlloc::STRIDE * 160, 112);
+        v.dealloc(x1);
+        v.assert(TestAlloc::STRIDE * 160, 114);
+        v.dealloc(x5);
+        v.assert(TestAlloc::STRIDE * 160, 117);
+
+        let x1 = v.alloc(21).unwrap();
+        v.assert(TestAlloc::STRIDE * 160, 111);
+
+        v.dealloc(x10);
+        v.assert(TestAlloc::STRIDE * 160, 122);
+        v.dealloc(x4);
+        v.assert(TestAlloc::STRIDE * 160, 147);
+        v.dealloc(x6);
+        v.assert(TestAlloc::STRIDE * 160, 148);
+        v.dealloc(x8);
+        v.assert(TestAlloc::STRIDE * 160, 154);
+        v.dealloc(x1);
+        v.assert(TestAlloc::STRIDE * 160, 160);
+
+        let x1 = v.alloc(1024).unwrap();
+        v.assert(TestAlloc::STRIDE * (160 + 256), 160);
+        let x2 = v.alloc(15).unwrap();
+        v.assert(TestAlloc::STRIDE * 416, 156);
+        let x3 = v.alloc(4).unwrap();
+        v.assert(TestAlloc::STRIDE * 416, 155);
+
+        v.dealloc(x2);
+        v.assert(TestAlloc::STRIDE * 416, 159);
+        v.dealloc(x1);
+        v.assert(TestAlloc::STRIDE * 416, 415);
+        v.dealloc(x3);
+        v.assert(TestAlloc::STRIDE * 416, 416);
+    }
+}
