@@ -104,18 +104,30 @@ pub struct VarBuf<T: VarAlloc> {
 
 impl<T: VarAlloc> VarBuf<T> {
     /// Creates a new [`VarBuf`] using a given allocation.
-    ///
-    /// The caller must ensure that `alloc.size()` is either `0`
-    /// or a multiple of `T::STRIDE`.
     pub fn new(mut alloc: T) -> Self {
-        debug_assert_eq!(alloc.size() % T::STRIDE, 0);
         let size = alloc.size();
-        let n = (size / T::STRIDE + 31) / 32;
-        Self {
-            ptr: alloc.grow(size).unwrap(),
-            alloc,
-            bits: BitVec::with_count_words(n),
-        }
+        let (ptr, bits) = if size > 0 {
+            if size % (T::STRIDE * 32) != 0 {
+                let size = (size + T::STRIDE - 1) & !(T::STRIDE - 1);
+                let n = (size / T::STRIDE + 31) / 32;
+                let size = n * 32 * T::STRIDE;
+                if let Ok(ptr) = alloc.grow(size) {
+                    (ptr, BitVec::with_count_words(n))
+                } else if let Ok(ptr) = alloc.shrink(0) {
+                    (ptr, BitVec::new())
+                } else {
+                    panic!("failed to set VarAlloc");
+                }
+            } else {
+                (
+                    alloc.grow(size).unwrap(),
+                    BitVec::with_count_words(size / T::STRIDE / 32),
+                )
+            }
+        } else {
+            (NonNull::dangling(), BitVec::new())
+        };
+        Self { ptr, alloc, bits }
     }
 
     /// Allocates an entry.
