@@ -214,14 +214,10 @@ pub struct Primitive {
     semantics: [Option<DataEntry>; SEMANTIC_N],
     indices: Option<DataEntry>,
     // Number of vertices to draw.
-    // How to interpret them depends on whether
-    // the primitive has `indices`.
+    // How to interpret this field depends on
+    // whether the primitive has `indices`.
     count: usize,
     material: Arc<Material>,
-    // TODO: Do we really need `DataType` here?
-    // Can we limit this to a subset of `Semantic`s?
-    displacements: Vec<[Option<DisplaceData>; SEMANTIC_N]>,
-    weights: Vec<f32>,
     topology: Topology,
 }
 
@@ -252,17 +248,6 @@ impl Primitive {
         } else {
             None
         }
-    }
-
-    /// Returns a vector containing references to [`DisplaceData`]
-    /// that represent the displacements of `sem`, alongside
-    /// the displacement slots which they refer.
-    pub(crate) fn displacement_data(&self, sem: Semantic) -> Vec<(&DisplaceData, usize)> {
-        self.displacements
-            .iter()
-            .enumerate()
-            .filter_map(|(i, x)| x[sem as usize].as_ref().map(|x| (x, i)))
-            .collect()
     }
 
     /// Returns the [`DataType`] used to store a given semantic,
@@ -299,34 +284,6 @@ impl Primitive {
     /// Returns a reference to the reference-counted [`Material`].
     pub fn material(&self) -> &Arc<Material> {
         &self.material
-    }
-
-    /// Returns the number of displacement slots in this primitive.
-    pub fn displacement_slots(&self) -> usize {
-        self.displacements.len()
-    }
-
-    /// Returns a vector containing the [`DataType`]s used to
-    /// store displacements for `sem`, alongside the displacement
-    /// slots which they refer.
-    pub fn displacement_data_type(&self, sem: Semantic) -> Vec<(DataType, usize)> {
-        self.displacements
-            .iter()
-            .enumerate()
-            .filter_map(|(i, x)| {
-                if let Some(DisplaceData { data_type, .. }) = x[sem as usize] {
-                    Some((data_type, i))
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
-
-    /// Returns a reference to a slice containing the default weight
-    /// of each displacement slot.
-    pub fn weights(&self) -> &[f32] {
-        &self.weights
     }
 
     /// Returns the [`Topology`] used to draw this primitive.
@@ -372,38 +329,6 @@ impl DataEntry {
     }
 }
 
-/// Displacement data.
-#[derive(Debug)]
-pub(crate) struct DisplaceData {
-    data_type: DataType,
-    // This data uses `f32` for alignment.
-    // Its actual type depends on `data_type`.
-    displacements: Vec<f32>,
-    // This data is always `u32`.
-    indices: Option<Vec<u32>>,
-}
-
-impl DisplaceData {
-    /// Returns the [`DataType`].
-    pub fn data_type(&self) -> DataType {
-        self.data_type
-    }
-
-    /// Returns a reference to a slice containing the
-    /// displacement values.
-    // TODO: Cast based on data type.
-    pub fn displacements(&self) -> &[f32] {
-        &self.displacements
-    }
-
-    /// Returns a reference to a slice containing the
-    /// indices of displaced vertices, or `None` if
-    /// `displacements` matches the vertex count.
-    pub fn indices(&self) -> Option<&[u32]> {
-        self.indices.as_ref().map(|x| x.as_slice())
-    }
-}
-
 /// Data types.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum DataType {
@@ -438,7 +363,7 @@ pub enum DataType {
 }
 
 impl DataType {
-    /// Returns the `[Layout]` of the [`DataType`].
+    /// Returns the [`DataType`]'s [`Layout`].
     pub const fn layout(&self) -> Layout {
         match self {
             DataType::F32 | DataType::I32 | DataType::U32 => Layout::new::<f32>(),
@@ -507,8 +432,6 @@ pub struct Builder {
     vert_count: usize,
     idx_count: usize,
     material: Option<Arc<Material>>,
-    displacements: Vec<[Option<DisplaceData>; SEMANTIC_N]>,
-    weights: Vec<f32>,
     // Pushed primitives.
     // Each new element pushed here consumes
     // the per-primitive fields above.
@@ -530,8 +453,6 @@ impl Builder {
             vert_count: 0,
             idx_count: 0,
             material: None,
-            displacements: vec![],
-            weights: vec![],
             // The (expected) common case.
             primitives: Vec::with_capacity(1),
             mask: 0,
@@ -542,8 +463,8 @@ impl Builder {
     ///
     /// This value indicates the number of data elements to fetch
     /// when reading semantic input.
-    /// All semantics (including displacements) must have the same
-    /// vertex count.
+    ///
+    /// All semantics must have the same vertex count.
     ///
     /// Panics if `count` is zero or if setting it would invalidate
     /// the ongoing primitive.
@@ -669,55 +590,6 @@ impl Builder {
         self
     }
 
-    /// Sets displacement indices.
-    ///
-    /// This method sets the given semantic of the given displacement
-    /// slot to contain `count` `data_type` vertex indices fetched
-    /// from `reader`.
-    /// The data is assumed to be tightly packed.
-    /// It must not be called after the given slot/semantic has been
-    /// filled by `set_displacement`.
-    #[allow(unused_variables, unused_mut)] // TODO
-    pub fn set_displacement_sparse<T: Read>(
-        &mut self,
-        mut reader: T,
-        slot: usize,
-        semantic: Semantic,
-        count: usize,
-        data_type: DataType,
-    ) -> io::Result<&mut Self> {
-        todo!();
-    }
-
-    /// Sets displacement data.
-    ///
-    /// This method sets the given semantic of the given displacement
-    /// slot to contain `data_type` elements, each of which is
-    /// fetched `stride` bytes apart from `reader`.
-    /// The number of [`DataType`] elements to read is defined by
-    /// either a previous call to `set_displacement_sparse` with the
-    /// same slot/semantic, or `set_vertex_count`.
-    #[allow(unused_variables, unused_mut)] // TODO
-    pub fn set_displacement<T: Read>(
-        &mut self,
-        mut reader: T,
-        slot: usize,
-        semantic: Semantic,
-        data_type: DataType,
-        stride: usize,
-    ) -> io::Result<&mut Self> {
-        todo!();
-    }
-
-    /// Sets the default displacement weights.
-    ///
-    /// NOTE: The length of this vector must match the number of
-    /// displacement slots used.
-    pub fn set_weights(&mut self, weights: Vec<f32>) -> &mut Self {
-        self.weights = weights;
-        self
-    }
-
     /// Consumes the current state to create a [`Primitive`].
     ///
     /// If this method fails, the state is left untouched.
@@ -727,12 +599,6 @@ impl Builder {
         let err = io::Error::from(io::ErrorKind::InvalidInput);
         if self.mask & Self::POSITION == 0 {
             eprintln!("[!] mesh::Builder: primitives must have position semantic");
-            return Err(err);
-        }
-        if self.displacements.len() != self.weights.len() {
-            eprintln!(
-                "[!] mesh::Builder: primitives must have a weight for each displacement slot"
-            );
             return Err(err);
         }
         let count = if self.idx_count > 0 {
@@ -783,16 +649,12 @@ impl Builder {
         self.idx_count = 0;
         // TODO: Default material.
         let material = self.material.take().expect("no default material yet");
-        let displacements = mem::take(&mut self.displacements);
-        let weights = mem::take(&mut self.weights);
         self.primitives.push(Primitive {
             vert_buf: Arc::clone(&self.vert_buf),
             semantics,
             indices,
             count,
             material,
-            displacements,
-            weights,
             topology,
         });
         self.mask = 0;
@@ -815,8 +677,6 @@ impl Builder {
         self.vert_count = 0;
         self.idx_count = 0;
         self.material = None;
-        self.displacements = vec![];
-        self.weights = vec![];
         self.mask = 0;
         drop(vb);
         self
