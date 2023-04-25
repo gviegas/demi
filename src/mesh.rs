@@ -690,3 +690,259 @@ impl Drop for Builder {
         // will handle any unconsumed primitives.
     }
 }
+
+#[cfg(test)]
+// TODO: Test further (vertex buffer in particular).
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_mesh() {
+        crate::init();
+        let mut bld = Builder::new();
+
+        let mesh = bld
+            .set_vertex_count(3)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .unwrap()
+            .push_primitive(Topology::Triangle)
+            .unwrap()
+            .create()
+            .unwrap();
+
+        assert_eq!(mesh.primitives().len(), 1);
+        let p0 = &mesh.primitives()[0];
+        assert_eq!(p0.vertex_count(), 3);
+        assert_eq!(
+            p0.semantic_data(Semantic::Position).unwrap().data_type,
+            DataType::F32x3
+        );
+        assert!(p0.semantic_data(Semantic::Normal).is_none());
+        assert!(p0.semantic_data(Semantic::Tangent).is_none());
+        assert!(p0.semantic_data(Semantic::TexCoord0).is_none());
+        assert!(p0.semantic_data(Semantic::TexCoord1).is_none());
+        assert!(p0.semantic_data(Semantic::Color0).is_none());
+        assert!(p0.semantic_data(Semantic::Joints0).is_none());
+        assert!(p0.semantic_data(Semantic::Weights0).is_none());
+        assert!(p0.index_data().is_none());
+        assert!(p0.material().is_none());
+        assert_eq!(p0.topology(), Topology::Triangle);
+
+        let mesh = bld
+            .set_vertex_count(4)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .unwrap()
+            .set_indexed(io::repeat(2), 6, DataType::U16)
+            .unwrap()
+            .push_primitive(Topology::Triangle)
+            .unwrap()
+            .create()
+            .unwrap();
+
+        assert_eq!(mesh.primitives().len(), 1);
+        let p0 = &mesh.primitives()[0];
+        assert_eq!(p0.vertex_count(), 6);
+        assert_eq!(
+            p0.semantic_data(Semantic::Position).unwrap().data_type,
+            DataType::F32x3
+        );
+        assert!(p0.semantic_data(Semantic::Normal).is_none());
+        assert!(p0.semantic_data(Semantic::Tangent).is_none());
+        assert!(p0.semantic_data(Semantic::TexCoord0).is_none());
+        assert!(p0.semantic_data(Semantic::TexCoord1).is_none());
+        assert!(p0.semantic_data(Semantic::Color0).is_none());
+        assert!(p0.semantic_data(Semantic::Joints0).is_none());
+        assert!(p0.semantic_data(Semantic::Weights0).is_none());
+        assert_eq!(p0.index_data().unwrap().data_type, DataType::U16);
+        assert!(p0.material().is_none());
+        assert_eq!(p0.topology(), Topology::Triangle);
+
+        let mesh = bld
+            .set_vertex_count(500)
+            .set_semantic(io::repeat(1), Semantic::Color0, DataType::F32x4, 16)
+            .unwrap()
+            .set_semantic(io::repeat(2), Semantic::Position, DataType::F32x3, 12)
+            .unwrap()
+            .push_primitive(Topology::Point)
+            .unwrap()
+            .create()
+            .unwrap();
+
+        assert_eq!(mesh.primitives().len(), 1);
+        let p0 = &mesh.primitives()[0];
+        assert_eq!(p0.vertex_count(), 500);
+        assert_eq!(
+            p0.semantic_data(Semantic::Position).unwrap().data_type,
+            DataType::F32x3
+        );
+        assert!(p0.semantic_data(Semantic::Normal).is_none());
+        assert!(p0.semantic_data(Semantic::Tangent).is_none());
+        assert!(p0.semantic_data(Semantic::TexCoord0).is_none());
+        assert!(p0.semantic_data(Semantic::TexCoord1).is_none());
+        assert_eq!(
+            p0.semantic_data(Semantic::Color0).unwrap().data_type,
+            DataType::F32x4
+        );
+        assert!(p0.semantic_data(Semantic::Joints0).is_none());
+        assert!(p0.semantic_data(Semantic::Weights0).is_none());
+        assert!(p0.index_data().is_none());
+        assert!(p0.material().is_none());
+        assert_eq!(p0.topology(), Topology::Point);
+
+        let mesh = bld
+            .set_vertex_count(20)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x4, 16)
+            .unwrap()
+            .set_semantic(io::repeat(2), Semantic::Normal, DataType::F32x3, 12)
+            .unwrap()
+            .set_semantic(io::repeat(3), Semantic::TexCoord0, DataType::F32x2, 8)
+            .unwrap()
+            .set_indexed(io::repeat(4), 30, DataType::U16)
+            .unwrap()
+            .push_primitive(Topology::Triangle)
+            .unwrap()
+            .create()
+            .unwrap();
+
+        assert_eq!(mesh.primitives().len(), 1);
+        let p0 = &mesh.primitives()[0];
+        assert_eq!(p0.vertex_count(), 30);
+        assert_eq!(
+            p0.semantic_data(Semantic::Position).unwrap().data_type,
+            DataType::F32x4
+        );
+        assert_eq!(
+            p0.semantic_data(Semantic::Normal).unwrap().data_type,
+            DataType::F32x3
+        );
+        assert!(p0.semantic_data(Semantic::Tangent).is_none());
+        assert_eq!(
+            p0.semantic_data(Semantic::TexCoord0).unwrap().data_type,
+            DataType::F32x2
+        );
+        assert!(p0.semantic_data(Semantic::TexCoord1).is_none());
+        assert!(p0.semantic_data(Semantic::Color0).is_none());
+        assert!(p0.semantic_data(Semantic::Joints0).is_none());
+        assert!(p0.semantic_data(Semantic::Weights0).is_none());
+        assert_eq!(p0.index_data().unwrap().data_type, DataType::U16);
+        assert!(p0.material().is_none());
+        assert_eq!(p0.topology(), Topology::Triangle);
+
+        let mesh = bld
+            .set_vertex_count(10)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .unwrap()
+            .set_indexed(io::repeat(2), 21, DataType::U16)
+            .unwrap()
+            .push_primitive(Topology::Triangle)
+            .unwrap()
+            .set_vertex_count(1000)
+            .set_semantic(io::repeat(3), Semantic::TexCoord1, DataType::F32x2, 8)
+            .unwrap()
+            .set_semantic(io::repeat(4), Semantic::Position, DataType::F32x3, 12)
+            .unwrap()
+            .push_primitive(Topology::Point)
+            .unwrap()
+            .create()
+            .unwrap();
+
+        assert_eq!(mesh.primitives().len(), 2);
+        let [p0, p1] = &mesh.primitives()[..] else { unreachable!() };
+        assert_eq!(p0.vertex_count(), 21);
+        assert_eq!(
+            p0.semantic_data(Semantic::Position).unwrap().data_type,
+            DataType::F32x3
+        );
+        assert!(p0.semantic_data(Semantic::Normal).is_none());
+        assert!(p0.semantic_data(Semantic::Tangent).is_none());
+        assert!(p0.semantic_data(Semantic::TexCoord0).is_none());
+        assert!(p0.semantic_data(Semantic::TexCoord1).is_none());
+        assert!(p0.semantic_data(Semantic::Color0).is_none());
+        assert!(p0.semantic_data(Semantic::Joints0).is_none());
+        assert!(p0.semantic_data(Semantic::Weights0).is_none());
+        assert_eq!(p0.index_data().unwrap().data_type, DataType::U16);
+        assert!(p0.material().is_none());
+        assert_eq!(p0.topology(), Topology::Triangle);
+        assert_eq!(p1.vertex_count(), 1000);
+        assert_eq!(
+            p1.semantic_data(Semantic::Position).unwrap().data_type,
+            DataType::F32x3
+        );
+        assert!(p1.semantic_data(Semantic::Normal).is_none());
+        assert!(p1.semantic_data(Semantic::Tangent).is_none());
+        assert!(p1.semantic_data(Semantic::TexCoord0).is_none());
+        assert_eq!(
+            p1.semantic_data(Semantic::TexCoord1).unwrap().data_type,
+            DataType::F32x2
+        );
+        assert!(p1.semantic_data(Semantic::Color0).is_none());
+        assert!(p1.semantic_data(Semantic::Joints0).is_none());
+        assert!(p1.semantic_data(Semantic::Weights0).is_none());
+        assert!(p1.index_data().is_none());
+        assert!(p1.material().is_none());
+        assert_eq!(p1.topology(), Topology::Point);
+    }
+
+    #[test]
+    fn create_mesh_no_primitive() {
+        crate::init();
+        let mut bld = Builder::new();
+        assert!(bld.create().is_err());
+    }
+
+    #[test]
+    fn push_primitive_no_state() {
+        crate::init();
+        let mut bld = Builder::new();
+        assert!(bld.push_primitive(Topology::Triangle).is_err());
+    }
+
+    #[test]
+    fn push_primitive_no_position() {
+        crate::init();
+        let mut bld = Builder::new();
+
+        bld.set_vertex_count(66)
+            .set_semantic(io::repeat(1), Semantic::Normal, DataType::F32x3, 12)
+            .unwrap();
+
+        assert!(bld.push_primitive(Topology::Triangle).is_err());
+
+        bld.set_semantic(io::repeat(1), Semantic::TexCoord0, DataType::F32x2, 8)
+            .unwrap();
+
+        assert!(bld.push_primitive(Topology::Triangle).is_err());
+
+        let mesh = bld
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .unwrap()
+            .push_primitive(Topology::Triangle)
+            .unwrap()
+            .create()
+            .unwrap();
+
+        assert_eq!(mesh.primitives().len(), 1);
+        let p0 = &mesh.primitives()[0];
+        assert_eq!(p0.vertex_count(), 66);
+        assert_eq!(
+            p0.semantic_data(Semantic::Position).unwrap().data_type,
+            DataType::F32x3
+        );
+        assert_eq!(
+            p0.semantic_data(Semantic::Normal).unwrap().data_type,
+            DataType::F32x3
+        );
+        assert!(p0.semantic_data(Semantic::Tangent).is_none());
+        assert_eq!(
+            p0.semantic_data(Semantic::TexCoord0).unwrap().data_type,
+            DataType::F32x2
+        );
+        assert!(p0.semantic_data(Semantic::TexCoord1).is_none());
+        assert!(p0.semantic_data(Semantic::Color0).is_none());
+        assert!(p0.semantic_data(Semantic::Joints0).is_none());
+        assert!(p0.semantic_data(Semantic::Weights0).is_none());
+        assert!(p0.index_data().is_none());
+        assert!(p0.material().is_none());
+        assert_eq!(p0.topology(), Topology::Triangle);
+    }
+}
