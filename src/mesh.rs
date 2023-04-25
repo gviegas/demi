@@ -232,44 +232,28 @@ impl Primitive {
     /// semantic in memory, or [`None`] if such semantic is not
     /// present in this primitive.
     pub(crate) fn semantic_data(&self, sem: Semantic) -> Option<&DataEntry> {
-        if let Some(ref x) = self.semantics[sem as usize] {
-            Some(x)
-        } else {
-            None
-        }
+        self.semantics[sem as usize].as_ref()
     }
 
     /// Returns a reference to [`DataEntry`] representing the
     /// indices in memory, or [`None`] if this primitive
     /// does not use an index buffer.
     pub(crate) fn index_data(&self) -> Option<&DataEntry> {
-        if let Some(ref x) = self.indices {
-            Some(x)
-        } else {
-            None
-        }
+        self.indices.as_ref()
     }
 
     /// Returns the [`DataType`] used to store a given semantic,
     /// or [`None`] if such semantic is not present in this
     /// primitive.
     pub fn semantic_data_type(&self, sem: Semantic) -> Option<DataType> {
-        if let Some(DataEntry { data_type, .. }) = self.semantics[sem as usize] {
-            Some(data_type)
-        } else {
-            None
-        }
+        self.semantics[sem as usize].as_ref().map(|x| x.data_type)
     }
 
     /// Returns the [`DataType`] used to store vertex indices,
     /// or [`None`] if this primitive does not use an
     /// index buffer.
     pub fn index_data_type(&self) -> Option<DataType> {
-        if let Some(DataEntry { data_type, .. }) = self.indices {
-            Some(data_type)
-        } else {
-            None
-        }
+        self.indices.as_ref().map(|x| x.data_type)
     }
 
     /// Returns the number of vertices that are draw when drawing
@@ -296,13 +280,12 @@ impl Primitive {
 impl Drop for Primitive {
     fn drop(&mut self) {
         for i in &mut self.semantics {
-            if let Some(DataEntry { entry, .. }) = i.take() {
-                self.vert_buf.write().unwrap().dealloc(entry);
-            }
+            i.take()
+                .map(|x| self.vert_buf.write().unwrap().dealloc(x.entry));
         }
-        if let Some(DataEntry { entry, .. }) = self.indices.take() {
-            self.vert_buf.write().unwrap().dealloc(entry);
-        }
+        self.indices
+            .take()
+            .map(|x| self.vert_buf.write().unwrap().dealloc(x.entry));
     }
 }
 
@@ -500,16 +483,16 @@ impl Builder {
         // This should not happen in practice, but we guard
         // against it anyway. We will not try anything
         // fancy like reusing the entry though.
-        if let Some(DataEntry { entry, .. }) = self.semantics[semantic as usize].take() {
+        self.semantics[semantic as usize].take().map(|x| {
             eprintln!(
                 "[!] mesh::Builder: set_semantic called twice for {:?}",
                 semantic
             );
-            self.vert_buf.write().unwrap().dealloc(entry);
+            self.vert_buf.write().unwrap().dealloc(x.entry);
             if semantic == Semantic::Position {
                 self.mask &= !Self::POSITION;
             }
-        }
+        });
         // No padding between `data_type` elements.
         let size = layout.size() * self.vert_count;
         let entry = self.vert_buf.write().unwrap().alloc(size)?;
@@ -560,11 +543,11 @@ impl Builder {
             _ => return Err(io::Error::from(io::ErrorKind::InvalidInput)),
         };
         debug_assert!(stride <= VertAlloc::STRIDE);
-        if let Some(DataEntry { entry, .. }) = self.indices.take() {
+        self.indices.take().map(|x| {
             eprintln!("[!] mesh::Builder: set_indexed called twice");
-            self.vert_buf.write().unwrap().dealloc(entry);
+            self.vert_buf.write().unwrap().dealloc(x.entry);
             self.idx_count = 0;
-        }
+        });
         let size = stride * count;
         let entry = self.vert_buf.write().unwrap().alloc(size)?;
         let mut buf = vec![0u8; size];
@@ -667,13 +650,9 @@ impl Builder {
         // call sites.
         let mut vb = self.vert_buf.write().unwrap();
         for i in &mut self.semantics {
-            if let Some(DataEntry { entry, .. }) = i.take() {
-                vb.dealloc(entry);
-            }
+            i.take().map(|x| vb.dealloc(x.entry));
         }
-        if let Some(DataEntry { entry, .. }) = self.indices.take() {
-            vb.dealloc(entry);
-        }
+        self.indices.take().map(|x| vb.dealloc(x.entry));
         self.vert_count = 0;
         self.idx_count = 0;
         self.material = None;
