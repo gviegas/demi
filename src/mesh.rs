@@ -217,7 +217,7 @@ pub struct Primitive {
     // How to interpret this field depends on
     // whether the primitive has `indices`.
     count: usize,
-    material: Arc<Material>,
+    material: Option<Arc<Material>>,
     topology: Topology,
 }
 
@@ -281,9 +281,10 @@ impl Primitive {
         self.count
     }
 
-    /// Returns a reference to the reference-counted [`Material`].
-    pub fn material(&self) -> &Arc<Material> {
-        &self.material
+    /// Returns a reference to the reference-counted [`Material`],
+    /// or [`None`] if this primitive has no material assigned.
+    pub fn material(&self) -> Option<&Arc<Material>> {
+        self.material.as_ref()
     }
 
     /// Returns the [`Topology`] used to draw this primitive.
@@ -647,8 +648,7 @@ impl Builder {
         let indices = mem::take(&mut self.indices);
         self.vert_count = 0;
         self.idx_count = 0;
-        // TODO: Default material.
-        let material = self.material.take().expect("no default material yet");
+        let material = self.material.take();
         self.primitives.push(Primitive {
             vert_buf: Arc::clone(&self.vert_buf),
             semantics,
