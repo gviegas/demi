@@ -103,14 +103,16 @@ pub struct VarBuf<T: VarAlloc> {
 }
 
 impl<T: VarAlloc> VarBuf<T> {
+    const BIT_N: usize = 32;
+
     /// Creates a new [`VarBuf`] using a given allocation.
     pub fn new(mut alloc: T) -> Self {
         let size = alloc.size();
         let (ptr, bits) = if size > 0 {
-            if size % (T::STRIDE * 32) != 0 {
+            if size % (T::STRIDE * Self::BIT_N) != 0 {
                 let size = (size + T::STRIDE - 1) & !(T::STRIDE - 1);
-                let n = (size / T::STRIDE + 31) / 32;
-                let size = n * 32 * T::STRIDE;
+                let n = (size / T::STRIDE + Self::BIT_N - 1) / Self::BIT_N;
+                let size = n * Self::BIT_N * T::STRIDE;
                 if let Ok(ptr) = alloc.grow(size) {
                     (ptr, BitVec::with_count_words(n))
                 } else if let Ok(ptr) = alloc.shrink(0) {
@@ -121,7 +123,7 @@ impl<T: VarAlloc> VarBuf<T> {
             } else {
                 (
                     alloc.grow(size).unwrap(),
-                    BitVec::with_count_words(size / T::STRIDE / 32),
+                    BitVec::with_count_words(size / T::STRIDE / Self::BIT_N),
                 )
             }
         } else {
@@ -138,15 +140,37 @@ impl<T: VarAlloc> VarBuf<T> {
         // Enforce alignment at entries' boundaries.
         let size = (size + T::STRIDE - 1) & !(T::STRIDE - 1);
         let n = size / T::STRIDE;
+
         let idx = if let Some(x) = self.bits.find_contiguous(n) {
             x
         } else {
-            // TODO: Grow exponentially.
-            let n = (n + 31) / 32;
-            let size = n * 32 * T::STRIDE;
-            self.ptr = self.alloc.grow(self.alloc.size() + size)?;
-            self.bits.grow(n).unwrap()
+            let needed_n = (n + Self::BIT_N - 1) & !(Self::BIT_N - 1);
+            let needed_size = needed_n * T::STRIDE;
+            let cur_n = self.bits.len();
+            let cur_size = cur_n * T::STRIDE;
+
+            let min_size = cur_size + needed_size;
+            let max_size = std::cmp::max(min_size, cur_size * 2);
+
+            'done: {
+                if max_size > min_size {
+                    let size = max_size;
+                    if let Ok(ptr) = self.alloc.grow(size) {
+                        self.ptr = ptr;
+                        break 'done self
+                            .bits
+                            .grow((size - cur_size) / T::STRIDE / Self::BIT_N)
+                            .unwrap();
+                    }
+                }
+                // We either failed to allocate `max_size` bytes,
+                // or this value is no greater than `min_size`.
+                // In any case, try to allocate the minimum.
+                self.ptr = self.alloc.grow(min_size)?;
+                self.bits.grow(needed_n / Self::BIT_N).unwrap()
+            }
         };
+
         for i in 0..n {
             self.bits.set(idx + i);
         }
@@ -207,6 +231,7 @@ impl<T: VarAlloc> Drop for VarBuf<T> {
     }
 }
 
+// TODO: These tests assume that `VarBuf::BIT_N` is equal to 32.
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -221,7 +246,6 @@ mod tests {
             if new_size > self.0.len() {
                 self.0.resize(new_size, 0);
             }
-            println!("grow {new_size:#?}");
             Ok(NonNull::new(self.0.as_mut_ptr().cast()).unwrap())
         }
 
@@ -346,19 +370,61 @@ mod tests {
         x.assert(&v);
 
         let x = v.alloc(41).unwrap();
-        v.assert(TestAlloc::STRIDE * 96, 31);
+        v.assert(TestAlloc::STRIDE * 128, 63);
         x.assert(&v);
 
         let x = v.alloc(4).unwrap();
-        v.assert(TestAlloc::STRIDE * 96, 30);
+        v.assert(TestAlloc::STRIDE * 128, 62);
         x.assert(&v);
 
         let x = v.alloc(10).unwrap();
-        v.assert(TestAlloc::STRIDE * 96, 27);
+        v.assert(TestAlloc::STRIDE * 128, 59);
         x.assert(&v);
 
         let x = v.alloc(200).unwrap();
-        v.assert(TestAlloc::STRIDE * 160, 27 + 56 / 4);
+        v.assert(TestAlloc::STRIDE * 128, 9);
+        x.assert(&v);
+
+        let x = v
+            .alloc(TestAlloc::STRIDE * VarBuf::<TestAlloc>::BIT_N * 3)
+            .unwrap();
+        v.assert(TestAlloc::STRIDE * 256, 9 + 32);
+        x.assert(&v);
+
+        let x = v.alloc(v.alloc.size()).unwrap();
+        v.assert(TestAlloc::STRIDE * 512, 41);
+        x.assert(&v);
+
+        let x = v.alloc(v.alloc.size() + 1).unwrap();
+        v.assert(TestAlloc::STRIDE * (512 + 512 + 32), 41 + 31);
+        x.assert(&v);
+
+        let x = v.alloc(1).unwrap();
+        v.assert(TestAlloc::STRIDE * 1056, 71);
+        x.assert(&v);
+
+        let x = v.alloc(4).unwrap();
+        v.assert(TestAlloc::STRIDE * 1056, 70);
+        x.assert(&v);
+
+        let x = v.alloc(15).unwrap();
+        v.assert(TestAlloc::STRIDE * 1056, 66);
+        x.assert(&v);
+
+        let x = v.alloc(v.alloc.size() - TestAlloc::STRIDE).unwrap();
+        v.assert(TestAlloc::STRIDE * (1056 * 2), 67);
+        x.assert(&v);
+
+        let x = v.alloc(v.alloc.size() + v.alloc.size() / 2).unwrap();
+        v.assert(TestAlloc::STRIDE * (2112 + 2112 + 1056), 67);
+        x.assert(&v);
+
+        let x = v.alloc(3).unwrap();
+        v.assert(TestAlloc::STRIDE * 5280, 66);
+        x.assert(&v);
+
+        let x = v.alloc(16).unwrap();
+        v.assert(TestAlloc::STRIDE * 5280, 62);
         x.assert(&v);
     }
 
@@ -372,6 +438,7 @@ mod tests {
         let x4 = v.alloc(1).unwrap();
         let x5 = v.alloc(3).unwrap();
 
+        v.assert(TestAlloc::STRIDE * 64, 31);
         v.dealloc(x1);
         v.assert(TestAlloc::STRIDE * 64, 32);
         v.dealloc(x3);
@@ -402,32 +469,33 @@ mod tests {
         let x12 = v.alloc(10).unwrap();
         let x13 = v.alloc(200).unwrap();
 
+        v.assert(TestAlloc::STRIDE * 128, 9);
         v.dealloc(x11);
-        v.assert(TestAlloc::STRIDE * 160, 42);
+        v.assert(TestAlloc::STRIDE * 128, 10);
         v.dealloc(x3);
-        v.assert(TestAlloc::STRIDE * 160, 47);
+        v.assert(TestAlloc::STRIDE * 128, 15);
         v.dealloc(x2);
-        v.assert(TestAlloc::STRIDE * 160, 48);
+        v.assert(TestAlloc::STRIDE * 128, 16);
         v.dealloc(x12);
-        v.assert(TestAlloc::STRIDE * 160, 51);
+        v.assert(TestAlloc::STRIDE * 128, 19);
         v.dealloc(x13);
-        v.assert(TestAlloc::STRIDE * 160, 101);
+        v.assert(TestAlloc::STRIDE * 128, 69);
         v.dealloc(x1);
-        v.assert(TestAlloc::STRIDE * 160, 102);
+        v.assert(TestAlloc::STRIDE * 128, 70);
         v.dealloc(x5);
-        v.assert(TestAlloc::STRIDE * 160, 103);
+        v.assert(TestAlloc::STRIDE * 128, 71);
         v.dealloc(x9);
-        v.assert(TestAlloc::STRIDE * 160, 110);
+        v.assert(TestAlloc::STRIDE * 128, 78);
         v.dealloc(x7);
-        v.assert(TestAlloc::STRIDE * 160, 117);
+        v.assert(TestAlloc::STRIDE * 128, 85);
         v.dealloc(x10);
-        v.assert(TestAlloc::STRIDE * 160, 128);
+        v.assert(TestAlloc::STRIDE * 128, 96);
         v.dealloc(x4);
-        v.assert(TestAlloc::STRIDE * 160, 153);
+        v.assert(TestAlloc::STRIDE * 128, 121);
         v.dealloc(x6);
-        v.assert(TestAlloc::STRIDE * 160, 154);
+        v.assert(TestAlloc::STRIDE * 128, 122);
         v.dealloc(x8);
-        v.assert(TestAlloc::STRIDE * 160, 160);
+        v.assert(TestAlloc::STRIDE * 128, 128);
     }
 
     #[test]
@@ -448,66 +516,67 @@ mod tests {
         let x12 = v.alloc(10).unwrap();
         let x13 = v.alloc(200).unwrap();
 
+        v.assert(TestAlloc::STRIDE * 128, 9);
         v.dealloc(x11);
-        v.assert(TestAlloc::STRIDE * 160, 42);
+        v.assert(TestAlloc::STRIDE * 128, 10);
         v.dealloc(x3);
-        v.assert(TestAlloc::STRIDE * 160, 47);
+        v.assert(TestAlloc::STRIDE * 128, 15);
         v.dealloc(x2);
-        v.assert(TestAlloc::STRIDE * 160, 48);
+        v.assert(TestAlloc::STRIDE * 128, 16);
         v.dealloc(x12);
-        v.assert(TestAlloc::STRIDE * 160, 51);
+        v.assert(TestAlloc::STRIDE * 128, 19);
         v.dealloc(x13);
-        v.assert(TestAlloc::STRIDE * 160, 101);
+        v.assert(TestAlloc::STRIDE * 128, 69);
 
         let x13 = v.alloc(4).unwrap();
-        v.assert(TestAlloc::STRIDE * 160, 100);
+        v.assert(TestAlloc::STRIDE * 128, 68);
         v.dealloc(x13);
-        v.assert(TestAlloc::STRIDE * 160, 101);
+        v.assert(TestAlloc::STRIDE * 128, 69);
         v.dealloc(x1);
-        v.assert(TestAlloc::STRIDE * 160, 102);
+        v.assert(TestAlloc::STRIDE * 128, 70);
         v.dealloc(x5);
-        v.assert(TestAlloc::STRIDE * 160, 103);
+        v.assert(TestAlloc::STRIDE * 128, 71);
 
         let x5 = v.alloc(10).unwrap();
-        v.assert(TestAlloc::STRIDE * 160, 100);
+        v.assert(TestAlloc::STRIDE * 128, 68);
         let x1 = v.alloc(6).unwrap();
-        v.assert(TestAlloc::STRIDE * 160, 98);
+        v.assert(TestAlloc::STRIDE * 128, 66);
 
         v.dealloc(x9);
-        v.assert(TestAlloc::STRIDE * 160, 105);
+        v.assert(TestAlloc::STRIDE * 128, 73);
         v.dealloc(x7);
-        v.assert(TestAlloc::STRIDE * 160, 112);
+        v.assert(TestAlloc::STRIDE * 128, 80);
         v.dealloc(x1);
-        v.assert(TestAlloc::STRIDE * 160, 114);
+        v.assert(TestAlloc::STRIDE * 128, 82);
         v.dealloc(x5);
-        v.assert(TestAlloc::STRIDE * 160, 117);
+        v.assert(TestAlloc::STRIDE * 128, 85);
 
         let x1 = v.alloc(21).unwrap();
-        v.assert(TestAlloc::STRIDE * 160, 111);
+        v.assert(TestAlloc::STRIDE * 128, 79);
 
         v.dealloc(x10);
-        v.assert(TestAlloc::STRIDE * 160, 122);
+        v.assert(TestAlloc::STRIDE * 128, 90);
         v.dealloc(x4);
-        v.assert(TestAlloc::STRIDE * 160, 147);
+        v.assert(TestAlloc::STRIDE * 128, 115);
         v.dealloc(x6);
-        v.assert(TestAlloc::STRIDE * 160, 148);
+        v.assert(TestAlloc::STRIDE * 128, 116);
         v.dealloc(x8);
-        v.assert(TestAlloc::STRIDE * 160, 154);
+        v.assert(TestAlloc::STRIDE * 128, 122);
         v.dealloc(x1);
-        v.assert(TestAlloc::STRIDE * 160, 160);
+        v.assert(TestAlloc::STRIDE * 128, 128);
 
         let x1 = v.alloc(1024).unwrap();
-        v.assert(TestAlloc::STRIDE * (160 + 256), 160);
+        v.assert(TestAlloc::STRIDE * (128 + 256), 128);
         let x2 = v.alloc(15).unwrap();
-        v.assert(TestAlloc::STRIDE * 416, 156);
+        v.assert(TestAlloc::STRIDE * 384, 124);
         let x3 = v.alloc(4).unwrap();
-        v.assert(TestAlloc::STRIDE * 416, 155);
+        v.assert(TestAlloc::STRIDE * 384, 123);
 
         v.dealloc(x2);
-        v.assert(TestAlloc::STRIDE * 416, 159);
+        v.assert(TestAlloc::STRIDE * 384, 127);
         v.dealloc(x1);
-        v.assert(TestAlloc::STRIDE * 416, 415);
+        v.assert(TestAlloc::STRIDE * 384, 383);
         v.dealloc(x3);
-        v.assert(TestAlloc::STRIDE * 416, 416);
+        v.assert(TestAlloc::STRIDE * 384, 384);
     }
 }
