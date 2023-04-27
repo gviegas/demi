@@ -121,6 +121,32 @@ impl<T: Unsigned> BitVec<T> {
         }
     }
 
+    /// Trims the vector to the minimum possible length.
+    /// This method pops `T`s from the vector until an
+    /// element with a bit set is found.
+    /// It returns the number of `T`s popped.
+    pub fn trim(&mut self) -> usize {
+        let vec_len = self.vec.len();
+        let bit_len = self.len();
+        // This first condition makes the `else` unreachable.
+        if bit_len == self.rem {
+            self.vec.clear();
+            self.rem = 0;
+            vec_len
+        } else if self.rem < T::BITS {
+            0
+        } else if let Some(i) = self.vec.iter().rposition(|&x| x != T::ZERO) {
+            let n = vec_len - (i + 1);
+            if n != 0 {
+                self.vec.truncate(i + 1);
+                self.rem -= n * T::BITS;
+            }
+            n
+        } else {
+            unreachable!();
+        }
+    }
+
     /// Sets a given bit.
     pub fn set(&mut self, bit_idx: usize) {
         let idx = bit_idx / T::BITS;
@@ -608,6 +634,114 @@ mod tests {
         v.assert(64, 63, &[(0, 0b10), (1, 0)]);
         v.shrink(2);
         v.assert(0, 0, &[]);
+    }
+
+    #[test]
+    fn trim() {
+        let mut v = BitVec::<u8>::new();
+        assert_eq!(v.trim(), 0);
+        v.assert(0, 0, &[]);
+        v.grow(1);
+        assert_eq!(v.trim(), 1);
+        v.assert(0, 0, &[]);
+        v.grow(1);
+        v.set(0);
+        assert_eq!(v.trim(), 0);
+        v.assert(8, 7, &[(0, 0b1)]);
+        v.grow(1);
+        assert_eq!(v.trim(), 1);
+        v.assert(8, 7, &[(0, 0b1)]);
+        v.grow(1);
+        (1..8).for_each(|i| v.set(i));
+        assert_eq!(v.trim(), 1);
+        v.assert(8, 0, &[(0, 0xff)]);
+        v.grow(1);
+        v.set(10);
+        assert_eq!(v.trim(), 0);
+        v.assert(16, 7, &[(0, 0xff), (1, 0b100)]);
+        v.grow(2);
+        v.set(15);
+        assert_eq!(v.trim(), 2);
+        v.assert(16, 6, &[(0, 0xff), (1, 0b10000100)]);
+        v.grow(2);
+        v.set(29);
+        assert_eq!(v.trim(), 0);
+        v.assert(32, 21, &[(0, 0xff), (1, 0x84), (2, 0), (3, 0x20)]);
+        v.grow(3);
+        v.set(24);
+        assert_eq!(v.trim(), 3);
+        v.assert(32, 20, &[(0, 0xff), (1, 0x84), (2, 0), (3, 0x21)]);
+        v.grow(3);
+        v.unset(29);
+        assert_eq!(v.trim(), 3);
+        v.assert(32, 21, &[(0, 0xff), (1, 0x84), (2, 0), (3, 0b1)]);
+        v.unset(24);
+        v.grow(3);
+        assert_eq!(v.trim(), 5);
+        v.assert(16, 6, &[(0, 0xff), (1, 0x84)]);
+        (0..15).for_each(|i| v.unset(i));
+        assert_eq!(v.trim(), 0);
+        v.assert(16, 15, &[(0, 0), (1, 0x80)]);
+        v.unset(15);
+        assert_eq!(v.trim(), 2);
+        v.assert(0, 0, &[]);
+
+        let mut v = BitVec::<u16>::default();
+        v.grow(10);
+        assert_eq!(v.trim(), 10);
+        v.assert(0, 0, &[]);
+        v.grow(10);
+        v.set(75);
+        assert_eq!(v.trim(), 5);
+        v.assert(80, 79, &[(4, 0x0800)]);
+        assert_eq!(v.trim(), 0);
+        v.assert(80, 79, &[(4, 0x0800)]);
+        v.unset(75);
+        assert_eq!(v.trim(), 5);
+        v.assert(0, 0, &[]);
+
+        let mut v = BitVec::<u32>::default();
+        v.grow(9);
+        v.set(287);
+        v.set(272);
+        v.set(271);
+        v.set(256);
+        v.set(193);
+        assert_eq!(v.trim(), 0);
+        v.assert(288, 283, &[(8, 0x80018001), (6, 0b10)]);
+        v.unset(287);
+        assert_eq!(v.trim(), 0);
+        v.assert(288, 284, &[(8, 0x00018001), (6, 0b10)]);
+        v.unset(256);
+        assert_eq!(v.trim(), 0);
+        v.assert(288, 285, &[(8, 0x00018000), (6, 0b10)]);
+        v.unset(271);
+        assert_eq!(v.trim(), 0);
+        v.assert(288, 286, &[(8, 0x00010000), (6, 0b10)]);
+        v.unset(272);
+        assert_eq!(v.trim(), 2);
+        v.assert(224, 223, &[(6, 0b10)]);
+        v.unset(193);
+        assert_eq!(v.trim(), 7);
+        v.assert(0, 0, &[]);
+
+        let mut v = BitVec::<u64>::new();
+        v.grow(50);
+        v.set(31);
+        v.set(640);
+        v.set(2047);
+        assert_eq!(v.trim(), (3200 - 2048) / 64);
+        v.assert(2048, 2045, &[(0, 1 << 31), (10, 1), (31, 1 << 63)]);
+        v.unset(640);
+        assert_eq!(v.trim(), 0);
+        v.assert(2048, 2046, &[(0, 1 << 31), (10, 0), (31, 1 << 63)]);
+        v.unset(2047);
+        assert_eq!(v.trim(), (2048 - 64) / 64);
+        v.assert(64, 63, &[(0, 1 << 31)]);
+        v.unset(31);
+        assert_eq!(v.trim(), 1);
+        v.assert(0, 0, &[]);
+        assert_eq!(v.trim(), 0);
     }
 
     #[test]
