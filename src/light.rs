@@ -57,8 +57,7 @@ impl Light {
                 light_type: light,
                 intensity,
                 range,
-                // TODO: Implement this conversion for vectors.
-                color: [color[0], color[1], color[2]],
+                color: color.into(),
                 angular_scale: scale,
                 position: [0.0; 3],
                 angular_offset: offset,

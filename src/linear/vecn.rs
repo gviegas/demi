@@ -403,6 +403,20 @@ macro_rules! conv_impl {
                 Self(array)
             }
         }
+
+        impl<T: Copy> From<&$v> for [T; $n] {
+            /// Converts a vector into an array.
+            fn from(v: &$v) -> Self {
+                v.0
+            }
+        }
+
+        impl<T> From<$v> for [T; $n] {
+            /// Converts a vector into an array.
+            fn from(v: $v) -> Self {
+                v.0
+            }
+        }
     };
 }
 

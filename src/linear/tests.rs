@@ -636,6 +636,13 @@ fn vec_conv() {
         assert_eq!(u[i], v[i]);
     }
 
+    let a: [i32; 4] = v.into();
+    let b: [i32; 4] = (&u).into();
+    for i in 0..4 {
+        assert_eq!(a[i], v[i]);
+        assert_eq!(b[i], v[i]);
+    }
+
     let m = Mat4::scale(2f32, 3.0, 4.0);
     let v = Vec4::from(m);
     for i in 0..4 {
