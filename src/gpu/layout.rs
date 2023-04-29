@@ -45,6 +45,34 @@ pub struct LightU {
     pub _pad: f32,
 }
 
+impl LightU {
+    /// [`LightU::light_type`] value identifying a
+    /// directional light.
+    pub const DIRECTIONAL: u32 = 0;
+
+    /// [`LightU::light_type`] value identifying a
+    /// point light.
+    pub const POINT: u32 = 1;
+
+    /// [`LightU::light_type`] value identifying a
+    /// spot light.
+    pub const SPOT: u32 = 2;
+}
+
+/// Shadow uniforms.
+///
+/// The actual uniform is an array of [`ShadowU`].
+///
+/// These values may differ between frames.
+#[derive(Copy, Clone, Debug)]
+#[repr(C, align(16))]
+pub struct ShadowU {
+    pub is_set: u32,
+    // TODO
+    pub _pad: [f32; 15],
+    pub shadow: [[f32; 4]; 4],
+}
+
 /// Drawable uniforms.
 ///
 /// These values may differ between draw calls.
@@ -128,6 +156,9 @@ mod tests {
 
         assert_eq!(mem::size_of::<LightU>(), 64);
         assert_eq!(mem::align_of::<LightU>(), 16);
+
+        assert_eq!(mem::size_of::<ShadowU>(), 128);
+        assert_eq!(mem::align_of::<ShadowU>(), 16);
 
         assert_eq!(mem::size_of::<DrawableU>(), 256);
         assert_eq!(mem::align_of::<DrawableU>(), 16);
