@@ -2,14 +2,14 @@
 
 //! Punctual lights.
 
+use crate::gpu::layout::LightU;
 use crate::linear::Vec3;
 
 /// Punctual light source.
 #[derive(Debug)]
 pub struct Light {
     light_type: LightType,
-    intensity: f32,
-    color: Vec3<f32>,
+    unif: LightU,
     // TODO: Shadows.
 }
 
@@ -30,10 +30,41 @@ pub enum LightType {
 impl Light {
     /// Creates a new punctual light.
     pub fn new(light_type: LightType, intensity: f32, color: Vec3<f32>) -> Self {
+        // TODO: Validate arguments.
+        let (light, range, scale, offset) = match light_type {
+            LightType::Directional => (LightU::DIRECTIONAL, 0.0, 0.0, 0.0),
+            LightType::Point { range } => (LightU::POINT, range, 0.0, 0.0),
+            LightType::Spot {
+                range,
+                inner_angle,
+                outer_angle,
+            } => {
+                let inner_cos = inner_angle.cos();
+                let outer_cos = outer_angle.cos();
+                let cos_diff = inner_cos - outer_cos;
+                let scale = if cos_diff < 1.0e-6 {
+                    1.0e6
+                } else {
+                    1.0 / cos_diff
+                };
+                (LightU::SPOT, range, scale, scale * -outer_cos)
+            }
+        };
         Self {
             light_type,
-            intensity,
-            color,
+            unif: LightU {
+                is_set: 1,
+                light_type: light,
+                intensity,
+                range,
+                // TODO: Implement this conversion for vectors.
+                color: [color[0], color[1], color[2]],
+                angular_scale: scale,
+                position: [0.0; 3],
+                angular_offset: offset,
+                direction: [0.0, 0.0, -1.0],
+                _pad: 0.0,
+            },
         }
     }
 
@@ -51,11 +82,11 @@ impl Light {
 
     /// Returns the intensity.
     pub fn intensity(&self) -> f32 {
-        self.intensity
+        self.unif.intensity
     }
 
     /// Returns the color.
     pub fn color(&self) -> Vec3<f32> {
-        self.color
+        Vec3::from(self.unif.color)
     }
 }
