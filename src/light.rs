@@ -14,7 +14,7 @@ pub struct Light {
 }
 
 /// Types of punctual lights.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum LightType {
     Directional,
     Point {
@@ -29,16 +29,29 @@ pub enum LightType {
 
 impl Light {
     /// Creates a new punctual light.
-    pub fn new(light_type: LightType, intensity: f32, color: Vec3<f32>) -> Self {
-        // TODO: Validate arguments.
+    pub fn new(mut light_type: LightType, intensity: f32, color: Vec3<f32>) -> Self {
         let (light, range, scale, offset) = match light_type {
             LightType::Directional => (LightU::DIRECTIONAL, 0.0, 0.0, 0.0),
-            LightType::Point { range } => (LightU::POINT, range, 0.0, 0.0),
+
+            LightType::Point { mut range } => {
+                range = range.clamp(1.0e-6, f32::MAX);
+                light_type = LightType::Point { range };
+                (LightU::POINT, range, 0.0, 0.0)
+            }
+
             LightType::Spot {
-                range,
-                inner_angle,
-                outer_angle,
+                mut range,
+                mut inner_angle,
+                mut outer_angle,
             } => {
+                range = range.clamp(1.0e-6, f32::MAX);
+                outer_angle = outer_angle.clamp(1.0e-6, std::f32::consts::FRAC_PI_2);
+                inner_angle = inner_angle.clamp(0.0, outer_angle - 1.0e-6);
+                light_type = LightType::Spot {
+                    range,
+                    inner_angle,
+                    outer_angle,
+                };
                 let inner_cos = inner_angle.cos();
                 let outer_cos = outer_angle.cos();
                 let cos_diff = inner_cos - outer_cos;
@@ -50,6 +63,7 @@ impl Light {
                 (LightU::SPOT, range, scale, scale * -outer_cos)
             }
         };
+        // TODO: Consider clamping `intensity` and `color`.
         Self {
             light_type,
             unif: LightU {
@@ -71,8 +85,6 @@ impl Light {
     pub fn new_white(light_type: LightType, intensity: f32) -> Self {
         Self::new(light_type, intensity, Vec3::from(1.0))
     }
-
-    // TODO: Setters.
 
     /// Returns the `LightType`.
     pub fn light_type(&self) -> LightType {
