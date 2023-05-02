@@ -82,6 +82,7 @@ impl Builder {
     /// This method will fail if the total number of joints
     /// exceeds [`u16::MAX`] across all `push_joints`
     /// calls for a single skin.
+    // TODO: Consider changing `name`'s type to `&[String]`.
     pub fn push_joints(
         &mut self,
         name: &[&str],
@@ -127,25 +128,53 @@ impl Builder {
         }
     }
 
-    /// Returns a vector of `self.joints` indices where every
-    /// joint is at a lower index than its descendants.
-    // TODO: Improve this.
+    /// Creates the joint hierarchy such that every joint
+    /// comes before any of its decendants.
+    ///
+    /// This must be called before consuming `self.0`.
     fn make_hier(&self) -> Vec<u16> {
-        let mut map = vec![(0u16, 0u16); self.0.len()];
+        #[derive(Copy, Clone)]
+        struct Map {
+            weight: u16,
+            index: u16,
+        }
+        // `Map.weight == 0` means not yet seen.
+        let mut map = vec![
+            Map {
+                weight: 0,
+                index: 0
+            };
+            self.0.len()
+        ];
+        // Use an auxiliar stack to prevent deep,
+        // reverse-sorted hierarchies from
+        // degenerating the algorithm.
+        let mut stack = vec![];
+
         for (i, x) in self.0.iter().enumerate() {
-            map[i].0 = i as u16;
             let mut weight = 1u16;
             let mut prev_slot = x.prev_slot;
             while let Some(prev) = prev_slot {
                 let prev = prev as usize;
-                map[prev].1 = std::cmp::max(map[prev].1, weight);
+                if map[prev].weight != 0 {
+                    weight += map[prev].weight;
+                    break;
+                }
+                stack.push(prev as u16);
                 prev_slot = self.0[prev].prev_slot;
                 weight += 1;
             }
+            map[i].weight = weight;
+            map[i].index = i as u16;
+            for &i in &stack {
+                weight -= 1;
+                map[i as usize].weight = weight;
+            }
+            stack.clear();
         }
-        // Note that the order here is reversed.
-        map.sort_unstable_by(|&a, &b| b.1.cmp(&a.1));
-        map.into_iter().map(|(i, _)| i).collect()
+
+        map.sort_unstable_by(|&a, &b| a.weight.cmp(&b.weight));
+        map.into_iter().map(|Map { index, .. }| index).collect()
     }
 }
 
@@ -176,6 +205,11 @@ mod tests {
                 assert_eq!(x.inverse_bind_matrix(), ibm[i].as_ref());
                 assert_eq!(x.prev_slot(), prev_slot[i]);
             }
+            self.check_hier()
+        }
+
+        // NOTE: `check` calls this.
+        fn check_hier(&self) {
             let mut seen = vec![false; self.joints.len()];
             for &i in &self.jnt_hier {
                 assert!(match self.joints[i as usize].prev_slot {
@@ -390,6 +424,74 @@ mod tests {
                 .unwrap();
 
             skin.check(N, &i.name, &jm, &ibm, &i.prev_slot);
+        }
+    }
+
+    impl Builder {
+        fn push_sorted_joints(&mut self, mut depth: u16) -> &mut Self {
+            depth = depth.clamp(1, u16::MAX);
+
+            let mut name = Vec::with_capacity(depth as usize);
+            let mut jm = Vec::with_capacity(depth as usize);
+            let mut ibm = Vec::with_capacity(depth as usize);
+            let mut prev_slot = Vec::with_capacity(depth as usize);
+
+            name.push("");
+            jm.push(Mat4::from(1.0));
+            ibm.push(None);
+            prev_slot.push(None);
+
+            for i in 1..depth {
+                name.push("");
+                jm.push(Mat4::from(1.0));
+                ibm.push(None);
+                prev_slot.push(Some(i - 1));
+            }
+
+            self.push_joints(&name, &jm, &ibm, &prev_slot).unwrap()
+        }
+
+        fn push_reversed_joints(&mut self, mut depth: u16) -> &mut Self {
+            depth = depth.clamp(1, u16::MAX);
+
+            let mut name = Vec::with_capacity(depth as usize);
+            let mut jm = Vec::with_capacity(depth as usize);
+            let mut ibm = Vec::with_capacity(depth as usize);
+            let mut prev_slot = Vec::with_capacity(depth as usize);
+
+            for i in 0..depth - 1 {
+                name.push("");
+                jm.push(Mat4::from(1.0));
+                ibm.push(None);
+                prev_slot.push(Some(i + 1));
+            }
+
+            name.push("");
+            jm.push(Mat4::from(1.0));
+            ibm.push(None);
+            prev_slot.push(None);
+
+            self.push_joints(&name, &jm, &ibm, &prev_slot).unwrap()
+        }
+    }
+
+    #[test]
+    fn create_skin_sorted() {
+        for i in [
+            1, 2, 3, 4, 15, 31, 64, 127, 255, 256, 999, 2048, 32767, 65534,
+        ] {
+            let skin = Builder::new().push_sorted_joints(i).create().unwrap();
+            skin.check_hier();
+        }
+    }
+
+    #[test]
+    fn create_skin_reversed() {
+        for i in [
+            1, 2, 3, 4, 15, 31, 64, 127, 255, 256, 999, 2048, 32767, 65534,
+        ] {
+            let skin = Builder::new().push_reversed_joints(i).create().unwrap();
+            skin.check_hier();
         }
     }
 }
