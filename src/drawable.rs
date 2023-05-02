@@ -2,7 +2,7 @@
 
 //! Drawable entity.
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::mesh::Mesh;
 use crate::shape::{Bbox, Sphere};
@@ -11,11 +11,10 @@ use crate::skin::Skin;
 /// Drawable.
 #[derive(Debug)]
 pub struct Drawable {
-    // TODO: These resources will likely need to use `Arc`.
-    mesh: Rc<Mesh>,
+    mesh: Arc<Mesh>,
     shape: Shape,
-    skin: Option<Rc<Skin>>,
-    // TODO...
+    // TODO: Skin instancing.
+    skin: Option<Arc<Skin>>,
 }
 
 /// Shape of a `Drawable`.
@@ -28,32 +27,36 @@ pub enum Shape {
 
 impl Drawable {
     /// Creates a new drawable.
-    #[allow(unused_variables)] // TODO
-    pub fn new(mesh: Rc<Mesh>, shape: Shape) -> Self {
-        todo!();
+    pub fn new(mesh: Arc<Mesh>, shape: Shape) -> Self {
+        Self {
+            mesh,
+            shape,
+            skin: None,
+        }
     }
 
-    /// Creates a new drawable with a `Skin`.
-    #[allow(unused_variables)] // TODO
-    pub fn new_skinned(mesh: Rc<Mesh>, shape: Shape, skin: Rc<Skin>) -> Self {
-        todo!();
+    /// Creates a new drawable with a [`Skin`].
+    pub fn new_skinned(mesh: Arc<Mesh>, shape: Shape, skin: Arc<Skin>) -> Self {
+        Self {
+            mesh,
+            shape,
+            skin: Some(skin),
+        }
     }
 
-    // TODO: Setters.
-
-    /// Returns a reference to the reference-counted `Mesh`.
-    pub fn mesh(&self) -> &Rc<Mesh> {
+    /// Returns a reference to the reference-counted [`Mesh`].
+    pub fn mesh(&self) -> &Arc<Mesh> {
         &self.mesh
     }
 
-    /// Returns the `Shape`.
+    /// Returns the [`Shape`].
     pub fn shape(&self) -> Shape {
         self.shape
     }
 
-    /// Returns a reference to the reference-counted `Skin`, or `None`
-    /// if the drawable has no skin.
-    pub fn skin(&self) -> Option<&Rc<Skin>> {
+    /// Returns a reference to the reference-counted [`Skin`],
+    /// or `None` if the drawable has no skin.
+    pub fn skin(&self) -> Option<&Arc<Skin>> {
         self.skin.as_ref()
     }
 }
