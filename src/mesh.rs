@@ -569,8 +569,8 @@ impl Builder {
     }
 
     /// Sets the material.
-    pub fn set_material(&mut self, material: &Arc<Material>) -> &mut Self {
-        self.material = Some(Arc::clone(material));
+    pub fn set_material(&mut self, material: Option<Arc<Material>>) -> &mut Self {
+        self.material = material;
         self
     }
 
@@ -686,13 +686,11 @@ impl Default for Builder {
 impl Drop for Builder {
     fn drop(&mut self) {
         self.clear_primitive();
-        // The `Primitive`'s `drop` implementation
-        // will handle any unconsumed primitives.
     }
 }
 
-#[cfg(test)]
 // TODO: Test further (vertex buffer in particular).
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -799,6 +797,7 @@ mod tests {
             .unwrap()
             .set_indexed(io::repeat(4), 30, DataType::U16)
             .unwrap()
+            .set_material(None)
             .push_primitive(Topology::Triangle)
             .unwrap()
             .create()
