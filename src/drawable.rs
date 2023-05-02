@@ -84,7 +84,7 @@ mod tests {
         crate::init();
         mesh::Builder::new()
             .set_vertex_count(3)
-            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, None)
             .unwrap()
             .push_primitive(Topology::Triangle)
             .unwrap()

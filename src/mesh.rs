@@ -466,6 +466,10 @@ impl Builder {
     /// This method sets the given semantic to contain `data_type`
     /// elements, each of which is fetched `stride` bytes apart from
     /// `reader`.
+    ///
+    /// If `stride` is `None`, then data elements are assumed to be
+    /// tightly packed.
+    ///
     /// The number of [`DataType`] elements to read is defined by
     /// `set_vertex_count`.
     pub fn set_semantic<T: Read>(
@@ -473,7 +477,7 @@ impl Builder {
         mut reader: T,
         semantic: Semantic,
         data_type: DataType,
-        stride: usize,
+        stride: Option<usize>,
     ) -> io::Result<&mut Self> {
         let layout = data_type.layout();
         debug_assert!(VertAlloc::STRIDE >= layout.align());
@@ -493,11 +497,12 @@ impl Builder {
                 self.mask &= !Self::POSITION;
             }
         });
-        // No padding between `data_type` elements.
+        // In the vertex buffer, we store the data
+        // tightly packed.
         let size = layout.size() * self.vert_count;
         let entry = self.vert_buf.write().unwrap().alloc(size)?;
         let mut buf = vec![0u8; size];
-        if stride == 0 || stride == layout.size() {
+        if stride.is_none() || stride.unwrap() == layout.size() {
             match reader.read_exact(&mut buf) {
                 Ok(_) => (),
                 Err(e) => {
@@ -508,6 +513,8 @@ impl Builder {
         } else {
             todo!();
         }
+        // TODO: Provide a way to read the data directly
+        // into `gpu` memory.
         self.vert_buf.write().unwrap().copy(&buf, &entry);
         self.semantics[semantic as usize] = Some(DataEntry { data_type, entry });
         // Do not allow the vertex count to change
@@ -524,6 +531,7 @@ impl Builder {
     ///
     /// This method sets the index buffer to contain `count`
     /// `data_type` elements fetched from `reader`.
+    ///
     /// The data is assumed to be tightly packed.
     pub fn set_indexed<T: Read>(
         &mut self,
@@ -562,6 +570,8 @@ impl Builder {
         } else {
             todo!();
         }
+        // TODO: Provide a way to read the data directly
+        // into `gpu` memory.
         self.vert_buf.write().unwrap().copy(&buf, &entry);
         self.indices = Some(DataEntry { data_type, entry });
         self.idx_count = count;
@@ -701,7 +711,7 @@ mod tests {
 
         let mesh = bld
             .set_vertex_count(3)
-            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, None)
             .unwrap()
             .push_primitive(Topology::Triangle)
             .unwrap()
@@ -728,7 +738,7 @@ mod tests {
 
         let mesh = bld
             .set_vertex_count(4)
-            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, None)
             .unwrap()
             .set_indexed(io::repeat(2), 6, DataType::U16)
             .unwrap()
@@ -757,9 +767,9 @@ mod tests {
 
         let mesh = bld
             .set_vertex_count(500)
-            .set_semantic(io::repeat(1), Semantic::Color0, DataType::F32x4, 16)
+            .set_semantic(io::repeat(1), Semantic::Color0, DataType::F32x4, Some(16))
             .unwrap()
-            .set_semantic(io::repeat(2), Semantic::Position, DataType::F32x3, 12)
+            .set_semantic(io::repeat(2), Semantic::Position, DataType::F32x3, Some(12))
             .unwrap()
             .push_primitive(Topology::Point)
             .unwrap()
@@ -789,11 +799,16 @@ mod tests {
 
         let mesh = bld
             .set_vertex_count(20)
-            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x4, 16)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x4, None)
             .unwrap()
-            .set_semantic(io::repeat(2), Semantic::Normal, DataType::F32x3, 12)
+            .set_semantic(
+                io::repeat(2),
+                Semantic::Normal,
+                DataType::F32x3,
+                None, /*Some(16),*/ // TODO: 'not yet implemented'
+            )
             .unwrap()
-            .set_semantic(io::repeat(3), Semantic::TexCoord0, DataType::F32x2, 8)
+            .set_semantic(io::repeat(3), Semantic::TexCoord0, DataType::F32x2, None)
             .unwrap()
             .set_indexed(io::repeat(4), 30, DataType::U16)
             .unwrap()
@@ -829,16 +844,16 @@ mod tests {
 
         let mesh = bld
             .set_vertex_count(10)
-            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, None)
             .unwrap()
             .set_indexed(io::repeat(2), 21, DataType::U16)
             .unwrap()
             .push_primitive(Topology::Triangle)
             .unwrap()
             .set_vertex_count(1000)
-            .set_semantic(io::repeat(3), Semantic::TexCoord1, DataType::F32x2, 8)
+            .set_semantic(io::repeat(3), Semantic::TexCoord1, DataType::F32x2, None)
             .unwrap()
-            .set_semantic(io::repeat(4), Semantic::Position, DataType::F32x3, 12)
+            .set_semantic(io::repeat(4), Semantic::Position, DataType::F32x3, None)
             .unwrap()
             .push_primitive(Topology::Point)
             .unwrap()
@@ -902,18 +917,18 @@ mod tests {
         let mut bld = Builder::new();
 
         bld.set_vertex_count(66)
-            .set_semantic(io::repeat(1), Semantic::Normal, DataType::F32x3, 12)
+            .set_semantic(io::repeat(1), Semantic::Normal, DataType::F32x3, None)
             .unwrap();
 
         assert!(bld.push_primitive(Topology::Triangle).is_err());
 
-        bld.set_semantic(io::repeat(1), Semantic::TexCoord0, DataType::F32x2, 8)
+        bld.set_semantic(io::repeat(1), Semantic::TexCoord0, DataType::F32x2, None)
             .unwrap();
 
         assert!(bld.push_primitive(Topology::Triangle).is_err());
 
         let mesh = bld
-            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, 12)
+            .set_semantic(io::repeat(1), Semantic::Position, DataType::F32x3, None)
             .unwrap()
             .push_primitive(Topology::Triangle)
             .unwrap()
