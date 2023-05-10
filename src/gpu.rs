@@ -21,7 +21,17 @@ mod vk;
 #[cfg(all(not(target_os = "linux"), not(windows)))]
 compile_error!("platform not supported");
 
-static mut IMPL: Option<Box<dyn Gpu>> = None;
+#[cfg(any(target_os = "linux", windows))]
+type GpuImpl = vk::Impl;
+
+#[cfg(all(not(target_os = "linux"), not(windows)))]
+type GpuImpl = dyn Gpu;
+
+/// [`Gpu`] must be object safe so we can turn [`IMPL`] into a
+/// trait object if necessary.
+const __IMPL: Option<Box<dyn Gpu>> = None;
+
+static mut IMPL: Option<Box<GpuImpl>> = None;
 
 /// Initializes the underlying implementation.
 ///
@@ -182,7 +192,7 @@ trait Gpu: fmt::Display + fmt::Debug {
 /// to be valid if retrieved after a call to [`init`] and before
 /// a call to [`shutdown`]. Attempts to use the `Gpu` outside of
 /// this scope will lead to undefined behavior.
-fn get<'a>() -> &'a dyn Gpu {
+fn get<'a>() -> &'a GpuImpl {
     unsafe {
         debug_assert!(IMPL.is_some());
         &**IMPL.as_ref().unwrap_unchecked()
