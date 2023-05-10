@@ -176,6 +176,15 @@ impl BufImpl {
         self.data
     }
 
+    /// Flushes the underlying memory.
+    // TODO: Memory ranges parameter.
+    pub fn flush(&self) -> io::Result<()> {
+        if self.cpu_visible {
+            // Currently, memory is always coherent.
+        }
+        Ok(())
+    }
+
     /// Drops the [`BufImpl`].
     pub fn drop_with(self, imp: &Impl) {
         Self::destroy_buffer(imp, self.buf);

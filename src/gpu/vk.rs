@@ -242,6 +242,11 @@ impl Gpu for Impl {
         }
     }
 
+    fn flush_buffer(&self, buf_id: &BufId) -> io::Result<()> {
+        let buf_imp: &BufImpl = From::from(buf_id);
+        buf_imp.flush()
+    }
+
     fn drop_buffer(&self, buf_id: BufId) {
         let buf_imp: Box<BufImpl> = Box::from(buf_id);
         buf_imp.drop_with(self);

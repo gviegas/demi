@@ -165,6 +165,10 @@ trait Gpu: fmt::Display + fmt::Debug {
     /// CPU-visible.
     fn buffer_ptr(&self, buf_id: &BufId) -> io::Result<NonNull<()>>;
 
+    /// Flushes buffer memory.
+    // TODO: Allow selecting which ranges to flush.
+    fn flush_buffer(&self, buf_id: &BufId) -> io::Result<()>;
+
     /// Notifies that `buf_id` will no longer be used.
     ///
     /// The implementation is free to discard or reuse its
@@ -235,6 +239,11 @@ pub fn create_ub(options: &BufOptions) -> io::Result<BufId> {
 /// Gets a pointer to buffer memory.
 pub fn buffer_ptr(buf_id: &BufId) -> io::Result<NonNull<()>> {
     get().buffer_ptr(buf_id)
+}
+
+/// Flushes buffer memory.
+pub fn flush_buffer(buf_id: &BufId) -> io::Result<()> {
+    get().flush_buffer(buf_id)
 }
 
 /// Notifies that `buf_id` will no longer be used.
