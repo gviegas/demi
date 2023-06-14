@@ -31,7 +31,7 @@ impl Texture {
 
     /// Returns either the number of array layers (non-3D textures),
     /// or the depth in pixels.
-    pub fn depth(&self) -> u32 {
+    pub fn depth_or_layers(&self) -> u32 {
         self.options.depth
     }
 
@@ -109,17 +109,19 @@ impl Builder {
 
     /// Sets the dimensions of the texture.
     ///
-    /// For non-3D textures, the `depth` value is interpreted as
-    /// the number of array layers.
+    /// For non-3D textures, the `depth_or_layers` value is
+    /// interpreted as the number of array layers instead of
+    /// depth (i.e., it defines an arrayed texture).
     ///
-    /// `width`, `height` and `depth` must be greater than zero.
-    pub fn set_size(&mut self, width: u32, height: u32, depth: u32) -> &mut Self {
+    /// `width`, `height` and `depth_or_layers` must be
+    /// greater than zero.
+    pub fn set_size(&mut self, width: u32, height: u32, depth_or_layers: u32) -> &mut Self {
         assert!(width > 0);
         assert!(height > 0);
-        assert!(depth > 0);
+        assert!(depth_or_layers > 0);
         self.options.width = width;
         self.options.height = height;
-        self.options.depth = depth;
+        self.options.depth = depth_or_layers;
         self.mask |= Self::SIZE;
         self
     }
