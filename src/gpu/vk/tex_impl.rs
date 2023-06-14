@@ -92,7 +92,7 @@ impl TexImpl {
                 depth: 1,
             },
             mip_levels: options.levels, // TODO: May be incorrect.
-            array_layers: options.depth,
+            array_layers: options.depth_or_layers,
             samples: conv::from_sample_count(options.samples), // TODO: May be unsupported.
             tiling: IMAGE_TILING_OPTIMAL,
             usage: IMAGE_USAGE_SAMPLED_BIT
@@ -126,7 +126,7 @@ impl TexImpl {
             extent: Extent3d {
                 width: options.width,
                 height: options.height,
-                depth: options.depth,
+                depth: options.depth_or_layers,
             },
             mip_levels: options.levels, // TODO: May be incorrect.
             array_layers: 1,
@@ -166,8 +166,8 @@ impl TexImpl {
                 height: options.height,
                 depth: 1,
             },
-            mip_levels: options.levels,  // TODO: May be incorrect.
-            array_layers: options.depth, // TODO: May be incorrect.
+            mip_levels: options.levels, // TODO: May be incorrect.
+            array_layers: options.depth_or_layers, // TODO: May be incorrect.
             samples: SAMPLE_COUNT_1_BIT,
             tiling: IMAGE_TILING_OPTIMAL,
             usage: IMAGE_USAGE_SAMPLED_BIT
@@ -219,7 +219,7 @@ impl TexImpl {
                 depth: 1,
             },
             mip_levels: 1,
-            array_layers: options.depth,
+            array_layers: options.depth_or_layers,
             samples: conv::from_sample_count(options.samples), // TODO: May not be supported.
             tiling: IMAGE_TILING_OPTIMAL,
             usage,
@@ -297,7 +297,7 @@ mod tests {
             format: texture::Format::Rgba8888,
             width: 1024,
             height: 1024,
-            depth: 1,
+            depth_or_layers: 1,
             levels: 1,
             samples: 1,
         };
@@ -310,7 +310,7 @@ mod tests {
             format: texture::Format::Xrgb8888,
             width: 1024,
             height: 1024,
-            depth: 16,
+            depth_or_layers: 16,
             levels: 1,
             samples: 1,
         };
@@ -323,7 +323,7 @@ mod tests {
             format: texture::Format::Bgra8888,
             width: 512,
             height: 512,
-            depth: 3,
+            depth_or_layers: 3,
             levels: 10,
             samples: 1,
         };
@@ -336,7 +336,7 @@ mod tests {
             format: texture::Format::Rgba8888,
             width: 512,
             height: 512,
-            depth: 64,
+            depth_or_layers: 64,
             levels: 1,
             samples: 1,
         };
@@ -349,7 +349,7 @@ mod tests {
             format: texture::Format::Argb8888,
             width: 640,
             height: 640,
-            depth: 6,
+            depth_or_layers: 6,
             levels: 1,
             samples: 1,
         };
@@ -362,7 +362,7 @@ mod tests {
             format: texture::Format::GenericLdr,
             width: 1280,
             height: 720,
-            depth: 1,
+            depth_or_layers: 1,
             levels: 1,
             samples: 4,
         };
@@ -375,7 +375,7 @@ mod tests {
             format: texture::Format::GenericHdr,
             width: 1920,
             height: 1080,
-            depth: 1,
+            depth_or_layers: 1,
             levels: 1,
             samples: 4,
         };
@@ -388,7 +388,7 @@ mod tests {
             format: texture::Format::GenericDepth,
             width: 1600,
             height: 900,
-            depth: 1,
+            depth_or_layers: 1,
             levels: 1,
             samples: 4,
         };
@@ -401,7 +401,7 @@ mod tests {
             format: texture::Format::GenericDepthStencil,
             width: 1280,
             height: 800,
-            depth: 1,
+            depth_or_layers: 1,
             levels: 1,
             samples: 4,
         };

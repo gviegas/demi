@@ -78,7 +78,7 @@ pub struct TexOptions {
     pub format: Format,
     pub width: u32,
     pub height: u32,
-    pub depth: u32,
+    pub depth_or_layers: u32,
     pub levels: u32,
     pub samples: u32,
 }

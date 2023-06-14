@@ -32,7 +32,7 @@ impl Texture {
     /// Returns either the number of array layers (non-3D textures),
     /// or the depth in pixels.
     pub fn depth_or_layers(&self) -> u32 {
-        self.options.depth
+        self.options.depth_or_layers
     }
 
     /// Returns the number of mip levels.
@@ -92,7 +92,7 @@ impl Builder {
                 format: Format::Rgba8888,
                 width: 0,
                 height: 0,
-                depth: 0,
+                depth_or_layers: 0,
                 levels: 1,
                 samples: 1,
             },
@@ -121,7 +121,7 @@ impl Builder {
         assert!(depth_or_layers > 0);
         self.options.width = width;
         self.options.height = height;
-        self.options.depth = depth_or_layers;
+        self.options.depth_or_layers = depth_or_layers;
         self.mask |= Self::SIZE;
         self
     }
