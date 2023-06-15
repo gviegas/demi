@@ -192,6 +192,8 @@ trait Gpu: fmt::Display + fmt::Debug {
 fn get<'a>() -> &'a GpuImpl {
     unsafe {
         debug_assert!(IMPL.is_some());
+        // Deref needs to be explicit for `dyn Gpu`.
+        #[allow(clippy::explicit_auto_deref)]
         &**IMPL.as_ref().unwrap_unchecked()
     }
 }
