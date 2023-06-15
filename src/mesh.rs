@@ -280,12 +280,13 @@ impl Primitive {
 impl Drop for Primitive {
     fn drop(&mut self) {
         for i in &mut self.semantics {
-            i.take()
-                .map(|x| self.vert_buf.write().unwrap().dealloc(x.entry));
+            if let Some(x) = i.take() {
+                self.vert_buf.write().unwrap().dealloc(x.entry);
+            }
         }
-        self.indices
-            .take()
-            .map(|x| self.vert_buf.write().unwrap().dealloc(x.entry));
+        if let Some(x) = self.indices.take() {
+            self.vert_buf.write().unwrap().dealloc(x.entry);
+        }
     }
 }
 
@@ -487,7 +488,7 @@ impl Builder {
         // This should not happen in practice, but we guard
         // against it anyway. We will not try anything
         // fancy like reusing the entry though.
-        self.semantics[semantic as usize].take().map(|x| {
+        if let Some(x) = self.semantics[semantic as usize].take() {
             eprintln!(
                 "[!] mesh::Builder: set_semantic called twice for {:?}",
                 semantic
@@ -496,7 +497,7 @@ impl Builder {
             if semantic == Semantic::Position {
                 self.mask &= !Self::POSITION;
             }
-        });
+        }
         // In the vertex buffer, we store the data
         // tightly packed.
         let size = layout.size() * self.vert_count;
@@ -551,11 +552,11 @@ impl Builder {
             _ => return Err(io::Error::from(io::ErrorKind::InvalidInput)),
         };
         debug_assert!(stride <= VertAlloc::STRIDE);
-        self.indices.take().map(|x| {
+        if let Some(x) = self.indices.take() {
             eprintln!("[!] mesh::Builder: set_indexed called twice");
             self.vert_buf.write().unwrap().dealloc(x.entry);
             self.idx_count = 0;
-        });
+        }
         let size = stride * count;
         let entry = self.vert_buf.write().unwrap().alloc(size)?;
         let mut buf = vec![0u8; size];
@@ -660,9 +661,13 @@ impl Builder {
         // call sites.
         let mut vb = self.vert_buf.write().unwrap();
         for i in &mut self.semantics {
-            i.take().map(|x| vb.dealloc(x.entry));
+            if let Some(x) = i.take() {
+                vb.dealloc(x.entry);
+            }
         }
-        self.indices.take().map(|x| vb.dealloc(x.entry));
+        if let Some(x) = self.indices.take() {
+            vb.dealloc(x.entry);
+        }
         self.vert_count = 0;
         self.idx_count = 0;
         self.material = None;
