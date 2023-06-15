@@ -308,7 +308,7 @@ impl<T: Unsigned + fmt::Binary> fmt::Display for BitVec<T> {
     /// Formats the bit vector to display the bits themselves.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bits = T::BITS;
-        write!(f, "{bits}-bit BitVec\n")?;
+        writeln!(f, "{bits}-bit BitVec")?;
 
         let wdt10 = {
             let mut n = self.len() as isize - T::BITS as isize;
@@ -323,11 +323,11 @@ impl<T: Unsigned + fmt::Binary> fmt::Display for BitVec<T> {
         for (i, x) in self.vec.iter().enumerate() {
             let beg = i * T::BITS;
             let end = beg + T::BITS - 1;
-            write!(f, "    {x:0bits$b} {beg:wdt10$} ..= {end}\n")?;
+            writeln!(f, "    {x:0bits$b} {beg:wdt10$} ..= {end}")?;
         }
 
-        write!(f, "Number of bits: {}\n", self.len())?;
-        write!(f, "Remaining bits: {}\n", self.rem())
+        writeln!(f, "Number of bits: {}", self.len())?;
+        writeln!(f, "Remaining bits: {}", self.rem())
     }
 }
 
