@@ -310,7 +310,7 @@ impl<T: Unsigned + fmt::Binary> fmt::Display for BitVec<T> {
         let bits = T::BITS;
         write!(f, "{bits}-bit BitVec\n")?;
 
-        let wdt10 = (|| {
+        let wdt10 = {
             let mut n = self.len() as isize - T::BITS as isize;
             let mut w = 1;
             while n >= 10 {
@@ -318,7 +318,7 @@ impl<T: Unsigned + fmt::Binary> fmt::Display for BitVec<T> {
                 w += 1;
             }
             w
-        })();
+        };
 
         for (i, x) in self.vec.iter().enumerate() {
             let beg = i * T::BITS;
