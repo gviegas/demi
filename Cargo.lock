@@ -34,3 +34,11 @@ version = "0.1.0"
 dependencies = [
  "dl",
 ]
+
+[[package]]
+name = "xgpu"
+version = "0.1.0"
+dependencies = [
+ "vk-sys",
+ "wlc-sys",
+]

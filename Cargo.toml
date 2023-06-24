@@ -7,7 +7,7 @@ edition = "2021"
 vk-sys.workspace = true
 
 [workspace]
-members = ["platform/vk-sys"]
+members = ["xgpu"]
 
 [workspace.dependencies]
 dl-sys = { path = "platform/dl-sys" }
