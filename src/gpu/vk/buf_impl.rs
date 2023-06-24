@@ -1,5 +1,3 @@
-// Copyright 2023 Gustavo C. Viegas. All rights reserved.
-
 use std::ffi::c_void;
 use std::io;
 use std::mem;

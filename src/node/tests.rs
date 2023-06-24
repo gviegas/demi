@@ -1,5 +1,3 @@
-// Copyright 2023 Gustavo C. Viegas. All rights reserved.
-
 use crate::light::LightType;
 
 use super::*;

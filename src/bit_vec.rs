@@ -1,5 +1,3 @@
-// Copyright 2023 Gustavo C. Viegas. All rights reserved.
-
 //! Vector of bits.
 
 use std::fmt;

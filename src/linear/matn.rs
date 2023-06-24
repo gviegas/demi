@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 use std::mem;
 use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 

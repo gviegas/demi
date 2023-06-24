@@ -1,5 +1,3 @@
-// Copyright 2023 Gustavo C. Viegas. All rights reserved.
-
 //! Data as presented to the GPU.
 //!
 //! NOTE: These layouts are ongoing work and may change at any time.

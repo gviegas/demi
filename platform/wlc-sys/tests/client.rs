@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 #![cfg(unix)]
 
 use std::ffi::{c_char, c_void, CStr};

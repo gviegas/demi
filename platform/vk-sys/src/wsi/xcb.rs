@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 #![cfg(all(
     unix,
     not(target_os = "android"),

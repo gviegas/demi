@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 //! demi.
 
 #![allow(dead_code)] // TODO

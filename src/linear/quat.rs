@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 use std::ops::{Add, Mul, MulAssign, Sub};
 
 use crate::linear::{Float, Mat3, Vec3, Vec4};

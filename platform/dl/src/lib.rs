@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 //! Wrapper exposing basic functionality of the dlopen API.
 
 #![cfg(unix)]

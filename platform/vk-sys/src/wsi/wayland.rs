@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 #![cfg(target_os = "linux")]
 
 use std::ffi::c_void;

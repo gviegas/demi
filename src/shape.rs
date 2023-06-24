@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 //! Bounding shapes.
 
 use crate::linear::{Mat3, Mat4, Vec3, Vec4};

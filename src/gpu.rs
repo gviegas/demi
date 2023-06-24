@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 //! Interface to the graphics back-end.
 
 use std::fmt;

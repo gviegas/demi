@@ -1,5 +1,3 @@
-// Copyright 2023 Gustavo C. Viegas. All rights reserved.
-
 use std::io;
 use std::ptr::{self, NonNull};
 

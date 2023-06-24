@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 def_ids!(
     StructureType,
     STRUCTURE_TYPE_APPLICATION_INFO = 0,

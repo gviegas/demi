@@ -1,5 +1,3 @@
-// Copyright 2022 Gustavo C. Viegas. All rights reserved.
-
 //! Punctual lights.
 
 use crate::gpu::layout::LightU;

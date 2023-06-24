@@ -1,5 +1,3 @@
-// Copyright 2023 Gustavo C. Viegas. All rights reserved.
-
 //! Storage of variable-size data.
 
 use std::cmp::Ordering;
