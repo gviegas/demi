@@ -55,7 +55,17 @@ mod tests {
                 | TextureUsage::RenderAttachment,
             view_formats: &[TextureFormat::R8Unorm, TextureFormat::Rg16Float],
         });
-        _ = dev.create_sampler(/*...*/);
+        _ = dev.create_sampler(&SamplerDescriptor {
+            address_mode_u: AddressMode::ClampToEdge,
+            address_mode_v: AddressMode::Repeat,
+            address_mode_w: AddressMode::MirrorRepeat,
+            mag_filter: FilterMode::Linear,
+            min_filter: FilterMode::Linear,
+            mipmap_filter: FilterMode::Nearest,
+            lod_clamp: ..32.0,
+            compare: CompareFunction::Never,
+            max_anisotropy: 8,
+        });
         _ = dev.create_bind_group_layout(/*...*/);
         _ = dev.create_pipeline_layout(/*...*/);
         _ = dev.create_bind_group(/*...*/);
@@ -96,5 +106,6 @@ mod tests {
             level_range: ..,
             layer_range: 4..,
         });
+        _ = Sampler {};
     }
 }

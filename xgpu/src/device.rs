@@ -1,8 +1,10 @@
 //! GPU device.
 
+use std::ops::RangeBounds;
+
 use crate::{
-    Buffer, BufferDescriptor, Result, SupportedFeatures, SupportedLimits, Texture,
-    TextureDescriptor,
+    Buffer, BufferDescriptor, Result, Sampler, SamplerDescriptor, SupportedFeatures,
+    SupportedLimits, Texture, TextureDescriptor,
 };
 
 pub struct Device {
@@ -33,7 +35,9 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_sampler(&mut self /*, desc: SamplerDescriptor */) /* -> Sampler */
+    pub fn create_sampler<T>(&mut self, _desc: &SamplerDescriptor<T>) -> Result<Sampler>
+    where
+        T: RangeBounds<f32>,
     {
         panic!("not yet implemented");
     }
