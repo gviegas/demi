@@ -4,8 +4,8 @@ use std::ops::RangeBounds;
 
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
-    BufferDescriptor, Result, Sampler, SamplerDescriptor, SupportedFeatures, SupportedLimits,
-    Texture, TextureDescriptor,
+    BufferDescriptor, PipelineLayout, PipelineLayoutDescriptor, Result, Sampler, SamplerDescriptor,
+    SupportedFeatures, SupportedLimits, Texture, TextureDescriptor,
 };
 
 pub struct Device {
@@ -50,9 +50,10 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_pipeline_layout(&mut self /*, desc: PipelineLayoutDescriptor */)
-    /* -> PipelineLayout */
-    {
+    pub fn create_pipeline_layout(
+        &mut self,
+        _desc: &PipelineLayoutDescriptor,
+    ) -> Result<PipelineLayout> {
         panic!("not yet implemented");
     }
 

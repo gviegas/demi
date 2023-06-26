@@ -115,7 +115,9 @@ mod tests {
             })
             .unwrap();
 
-        _ = dev.create_pipeline_layout(/*...*/);
+        _ = dev.create_pipeline_layout(&PipelineLayoutDescriptor {
+            bind_group_layouts: &[&BindGroupLayout {}, &BindGroupLayout {}],
+        });
 
         _ = dev.create_bind_group(&BindGroupDescriptor {
             layout: &BindGroupLayout {},

@@ -133,3 +133,11 @@ pub enum BindingResource<'a> {
     Texture(&'a TextureView),
     StorageTexture(&'a TextureView),
 }
+
+pub struct PipelineLayout {
+    // TODO
+}
+
+pub struct PipelineLayoutDescriptor<'a, 'b: 'a> {
+    pub bind_group_layouts: &'a [&'b BindGroupLayout],
+}
