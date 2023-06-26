@@ -1,6 +1,9 @@
 //! GPU device.
 
-use crate::{Buffer, BufferDescriptor, Result, SupportedFeatures, SupportedLimits};
+use crate::{
+    Buffer, BufferDescriptor, Result, SupportedFeatures, SupportedLimits, Texture,
+    TextureDescriptor,
+};
 
 pub struct Device {
     // TODO
@@ -26,8 +29,7 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_texture(&mut self /*, desc: TextureDescriptor */) /* -> Texture */
-    {
+    pub fn create_texture(&mut self, _desc: &TextureDescriptor) -> Result<Texture> {
         panic!("not yet implemented");
     }
 

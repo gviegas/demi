@@ -13,6 +13,9 @@ pub use device::*;
 mod buffer;
 pub use buffer::*;
 
+mod texture;
+pub use texture::*;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -37,7 +40,21 @@ mod tests {
             usage: BufferUsage::CopyDst | BufferUsage::QueryResolve | BufferUsage::Storage,
             mapped_at_creation: false,
         });
-        _ = dev.create_texture(/*...*/);
+        _ = dev.create_texture(&TextureDescriptor {
+            size: Extent3d {
+                width: 1024,
+                height: 1024,
+                depth_or_layers: 1,
+            },
+            level_count: 11,
+            sample_count: 1,
+            dimension: TextureDimension::Two,
+            format: TextureFormat::Rgba8Unorm,
+            usage: TextureUsage::CopyDst
+                | TextureUsage::TextureBinding
+                | TextureUsage::RenderAttachment,
+            view_formats: &[TextureFormat::R8Unorm, TextureFormat::Rg16Float],
+        });
         _ = dev.create_sampler(/*...*/);
         _ = dev.create_bind_group_layout(/*...*/);
         _ = dev.create_pipeline_layout(/*...*/);
@@ -59,5 +76,19 @@ mod tests {
         _ = buf.map(MapMode::Read, ..);
         _ = buf.get_mapped_range(256..512);
         _ = buf.unmap();
+    }
+
+    #[test]
+    fn texture() {
+        let mut tex = Texture {};
+        _ = tex.width();
+        _ = tex.height();
+        _ = tex.depth_or_layers();
+        _ = tex.level_count();
+        _ = tex.sample_count();
+        _ = tex.dimension();
+        _ = tex.format();
+        _ = tex.usage();
+        _ = tex.create_view(/*...*/);
     }
 }
