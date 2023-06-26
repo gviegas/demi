@@ -1,5 +1,9 @@
 //! xgpu.
 
+use std::io;
+// TODO
+pub type Result<T> = io::Result<T>;
+
 mod adapter;
 pub use adapter::*;
 

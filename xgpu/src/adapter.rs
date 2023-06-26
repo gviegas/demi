@@ -1,6 +1,6 @@
 //! GPU adapter.
 
-use crate::{Device, DeviceDescriptor};
+use crate::{Device, DeviceDescriptor, Result};
 
 pub struct Adapter {
     // TODO
@@ -20,7 +20,7 @@ impl Adapter {
     }
 
     // async
-    pub fn request_device(self, _desc: &DeviceDescriptor) -> Device {
+    pub fn request_device(self, _desc: &DeviceDescriptor) -> Result<Device> {
         panic!("not yet implemented");
     }
 }

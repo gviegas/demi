@@ -1,7 +1,6 @@
 //! GPU device.
 
-use crate::adapter::{SupportedFeatures, SupportedLimits};
-use crate::buffer::{Buffer, BufferDescriptor};
+use crate::{Buffer, BufferDescriptor, Result, SupportedFeatures, SupportedLimits};
 
 pub struct Device {
     // TODO
@@ -23,7 +22,7 @@ impl Device {
 
     // TODO: Maybe use interior mutability for the following
 
-    pub fn create_buffer(&mut self, _desc: &BufferDescriptor) -> Buffer {
+    pub fn create_buffer(&mut self, _desc: &BufferDescriptor) -> Result<Buffer> {
         panic!("not yet implemented");
     }
 
