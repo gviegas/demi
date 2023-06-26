@@ -3,8 +3,9 @@
 use std::ops::RangeBounds;
 
 use crate::{
-    Buffer, BufferDescriptor, Result, Sampler, SamplerDescriptor, SupportedFeatures,
-    SupportedLimits, Texture, TextureDescriptor,
+    BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
+    BufferDescriptor, Result, Sampler, SamplerDescriptor, SupportedFeatures, SupportedLimits,
+    Texture, TextureDescriptor,
 };
 
 pub struct Device {
@@ -42,9 +43,10 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_bind_group_layout(&mut self /*, desc: BindGroupLayoutDescriptor */)
-    /* -> BindGroupLayout */
-    {
+    pub fn create_bind_group_layout(
+        &mut self,
+        _desc: &BindGroupLayoutDescriptor,
+    ) -> Result<BindGroupLayout> {
         panic!("not yet implemented");
     }
 
@@ -54,8 +56,7 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_bind_group(&mut self /*, desc: BindGroupDescriptor */) /* -> BindGroup */
-    {
+    pub fn create_bind_group(&mut self, _desc: &BindGroupDescriptor) -> Result<BindGroup> {
         panic!("not yet implemented");
     }
 
