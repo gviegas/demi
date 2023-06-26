@@ -1,6 +1,8 @@
 //! GPU texture.
 
-use std::ops::BitOr;
+use std::ops::{BitOr, RangeBounds};
+
+use crate::Result;
 
 pub struct Texture {
     // TODO
@@ -39,7 +41,10 @@ impl Texture {
         panic!("not yet implemented");
     }
 
-    pub fn create_view(&mut self /*, desc: &TextureViewDescriptor */) /* -> Result<TextureView, ?> */
+    pub fn create_view<T, U>(&mut self, _desc: &TextureViewDescriptor<T, U>) -> Result<TextureView>
+    where
+        T: RangeBounds<u32>,
+        U: RangeBounds<u32>,
     {
         panic!("not yet implemented");
     }
@@ -174,4 +179,37 @@ impl From<TextureUsage> for TextureUsageFlags {
     fn from(value: TextureUsage) -> Self {
         Self(value as u16)
     }
+}
+
+pub struct TextureView {
+    // TODO
+}
+
+pub struct TextureViewDescriptor<T, U>
+where
+    T: RangeBounds<u32>,
+    U: RangeBounds<u32>,
+{
+    pub format: TextureFormat,
+    pub dimension: TextureViewDimension,
+    pub aspect: TextureAspect,
+    pub level_range: T,
+    pub layer_range: U,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum TextureViewDimension {
+    One,
+    Two,
+    TwoArray,
+    Cube,
+    CubeArray,
+    Three,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum TextureAspect {
+    All,
+    Stencil,
+    Depth,
 }

@@ -89,6 +89,12 @@ mod tests {
         _ = tex.dimension();
         _ = tex.format();
         _ = tex.usage();
-        _ = tex.create_view(/*...*/);
+        _ = tex.create_view(&TextureViewDescriptor {
+            format: TextureFormat::Rgba8UnormSrgb,
+            dimension: TextureViewDimension::TwoArray,
+            aspect: TextureAspect::All,
+            level_range: ..,
+            layer_range: 4..,
+        });
     }
 }
