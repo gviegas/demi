@@ -3,8 +3,8 @@
 use std::ops::RangeBounds;
 
 use crate::{
-    BindGroup, Buffer, ComputePipeline, Extent3d, IndexFormat, QuerySet, RenderPipeline, Result,
-    TextureFormat, TextureView,
+    BindGroup, Buffer, ComputePipeline, Extent3d, ImageCopyBuffer, ImageCopyTexture, IndexFormat,
+    QuerySet, RenderPipeline, Result, TextureFormat, TextureView,
 };
 
 pub struct CommandEncoder {
@@ -395,7 +395,3 @@ pub struct RenderBundle {
 }
 
 pub struct RenderBundleDescriptor;
-
-// TODO
-pub struct ImageCopyBuffer;
-pub struct ImageCopyTexture;

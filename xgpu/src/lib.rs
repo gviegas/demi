@@ -10,6 +10,9 @@ pub use adapter::*;
 mod device;
 pub use device::*;
 
+mod queue;
+pub use queue::*;
+
 mod buffer;
 pub use buffer::*;
 

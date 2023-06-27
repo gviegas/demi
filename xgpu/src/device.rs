@@ -6,7 +6,7 @@ use crate::{
     BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
     BufferDescriptor, CommandEncoder, CommandEncoderDescriptor, ComputePipeline,
     ComputePipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QuerySet,
-    QuerySetDescriptor, RenderBundleEncoder, RenderBundleEncoderDescriptor, RenderPipeline,
+    QuerySetDescriptor, Queue, RenderBundleEncoder, RenderBundleEncoderDescriptor, RenderPipeline,
     RenderPipelineDescriptor, Result, Sampler, SamplerDescriptor, ShaderModule,
     ShaderModuleDescriptor, SupportedFeatures, SupportedLimits, Texture, TextureDescriptor,
 };
@@ -24,8 +24,7 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn queue(&self) /* -> ?Queue */
-    {
+    pub fn queue(&self) -> &Queue {
         panic!("not yet implemented");
     }
 
