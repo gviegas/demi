@@ -5,9 +5,9 @@ use std::ops::RangeBounds;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
     BufferDescriptor, ComputePipeline, ComputePipelineDescriptor, PipelineLayout,
-    PipelineLayoutDescriptor, RenderPipeline, RenderPipelineDescriptor, Result, Sampler,
-    SamplerDescriptor, ShaderModule, ShaderModuleDescriptor, SupportedFeatures, SupportedLimits,
-    Texture, TextureDescriptor,
+    PipelineLayoutDescriptor, QuerySet, QuerySetDescriptor, RenderPipeline,
+    RenderPipelineDescriptor, Result, Sampler, SamplerDescriptor, ShaderModule,
+    ShaderModuleDescriptor, SupportedFeatures, SupportedLimits, Texture, TextureDescriptor,
 };
 
 pub struct Device {
@@ -95,8 +95,7 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_query_set(&mut self /*, desc: QuerySetDescriptor */) /* -> QuerySet */
-    {
+    pub fn create_query_set(&mut self, _desc: &QuerySetDescriptor) -> Result<QuerySet> {
         panic!("not yet implemented");
     }
 }

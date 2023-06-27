@@ -22,6 +22,9 @@ pub use binding::*;
 mod pipeline;
 pub use pipeline::*;
 
+mod query;
+pub use query::*;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -247,7 +250,11 @@ mod tests {
 
         _ = dev.create_command_encoder(/*...*/);
         _ = dev.create_render_bundle_encoder(/*...*/);
-        _ = dev.create_query_set(/*...*/);
+
+        _ = dev.create_query_set(&QuerySetDescriptor {
+            kind: QueryKind::Occlusion,
+            count: 16,
+        });
     }
 
     #[test]
