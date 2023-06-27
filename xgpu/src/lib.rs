@@ -253,7 +253,15 @@ mod tests {
 
         _ = dev.create_command_encoder(None);
 
-        _ = dev.create_render_bundle_encoder(/*...*/);
+        _ = dev.create_render_bundle_encoder(&RenderBundleEncoderDescriptor {
+            layout: RenderPassLayout {
+                color_formats: vec![TextureFormat::Rgba8Unorm, TextureFormat::Rg11b10Ufloat],
+                depth_stencil_format: Some(TextureFormat::Depth32Float),
+                sample_count: 1,
+            },
+            depth_read_only: false,
+            stencil_read_only: true,
+        });
 
         _ = dev.create_query_set(&QuerySetDescriptor {
             kind: QueryKind::Occlusion,

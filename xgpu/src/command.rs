@@ -4,14 +4,8 @@ use std::ops::RangeBounds;
 
 use crate::{
     BindGroup, Buffer, ComputePipeline, Extent3d, IndexFormat, QuerySet, RenderPipeline, Result,
-    TextureView,
+    TextureFormat, TextureView,
 };
-
-pub struct CommandBuffer {
-    // TODO
-}
-
-pub struct CommandBufferDescriptor;
 
 pub struct CommandEncoder {
     // TODO
@@ -306,7 +300,102 @@ pub enum Color {
     Uint(u32, u32, u32, u32),
 }
 
+pub struct CommandBuffer {
+    // TODO
+}
+
+pub struct CommandBufferDescriptor;
+
+pub struct RenderBundleEncoder {
+    // TODO
+}
+
+impl RenderBundleEncoder {
+    pub fn set_bind_group(
+        &mut self,
+        _index: u32,
+        _bind_group: Option<&BindGroup>,
+        _dynamic_offsets: &[u32],
+    ) {
+        panic!("not yet implemented");
+    }
+
+    pub fn set_pipeline(&mut self, _pipeline: &RenderPipeline) {
+        panic!("not yet implemented");
+    }
+
+    pub fn set_index_buffer(
+        &mut self,
+        _buffer: &Buffer,
+        _index_format: IndexFormat,
+        _range: impl RangeBounds<u64>,
+    ) {
+        panic!("not yet implemented");
+    }
+
+    pub fn set_vertex_buffer(
+        &mut self,
+        _slot: u32,
+        _buffer: &Buffer,
+        _range: impl RangeBounds<u64>,
+    ) {
+        panic!("not yet implemented");
+    }
+
+    pub fn draw(
+        &mut self,
+        _vertex_count: u32,
+        _instance_count: u32,
+        _first_vertex: u32,
+        _first_instance: u32,
+    ) {
+        panic!("not yet implemented");
+    }
+
+    pub fn draw_indexed(
+        &mut self,
+        _index_count: u32,
+        _instance_count: u32,
+        _first_index: u32,
+        _base_vertex: i32,
+        _first_instance: u32,
+    ) {
+        panic!("not yet implemented");
+    }
+
+    pub fn draw_indirect(&mut self, _indirect_buffer: &Buffer, _indirect_offset: u64) {
+        panic!("not yet implemented");
+    }
+
+    pub fn draw_indexed_indirect(&mut self, _indirect_buffer: &Buffer, _indirect_offset: u64) {
+        panic!("not yet implemented");
+    }
+
+    pub fn finish(self, _desc: Option<&RenderBundleDescriptor>) -> Result<RenderBundle> {
+        panic!("not yet implemented");
+    }
+
+    // TODO: Debug markers.
+}
+
+pub struct RenderBundleEncoderDescriptor {
+    pub layout: RenderPassLayout,
+    pub depth_read_only: bool,
+    pub stencil_read_only: bool,
+}
+
+pub struct RenderPassLayout {
+    pub color_formats: Vec<TextureFormat>,
+    pub depth_stencil_format: Option<TextureFormat>,
+    pub sample_count: u32,
+}
+
+pub struct RenderBundle {
+    // TODO
+}
+
+pub struct RenderBundleDescriptor;
+
 // TODO
-pub struct RenderBundle;
 pub struct ImageCopyBuffer;
 pub struct ImageCopyTexture;

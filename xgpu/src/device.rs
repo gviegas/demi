@@ -6,9 +6,9 @@ use crate::{
     BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
     BufferDescriptor, CommandEncoder, CommandEncoderDescriptor, ComputePipeline,
     ComputePipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QuerySet,
-    QuerySetDescriptor, RenderPipeline, RenderPipelineDescriptor, Result, Sampler,
-    SamplerDescriptor, ShaderModule, ShaderModuleDescriptor, SupportedFeatures, SupportedLimits,
-    Texture, TextureDescriptor,
+    QuerySetDescriptor, RenderBundleEncoder, RenderBundleEncoderDescriptor, RenderPipeline,
+    RenderPipelineDescriptor, Result, Sampler, SamplerDescriptor, ShaderModule,
+    ShaderModuleDescriptor, SupportedFeatures, SupportedLimits, Texture, TextureDescriptor,
 };
 
 pub struct Device {
@@ -91,9 +91,10 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_render_bundle_encoder(&mut self /*, desc: RenderBundleEncoderDescriptor */)
-    /* -> RenderBundleEncoder */
-    {
+    pub fn create_render_bundle_encoder(
+        &mut self,
+        _desc: &RenderBundleEncoderDescriptor,
+    ) -> Result<RenderBundleEncoder> {
         panic!("not yet implemented");
     }
 
