@@ -19,6 +19,9 @@ pub use texture::*;
 mod binding;
 pub use binding::*;
 
+mod pipeline;
+pub use pipeline::*;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -144,9 +147,104 @@ mod tests {
             ],
         });
 
-        _ = dev.create_shader_module(/*...*/);
-        _ = dev.create_compute_pipeline(/*...*/);
-        _ = dev.create_render_pipeline(/*...*/);
+        _ = dev.create_shader_module(&ShaderModuleDescriptor { code: &[] });
+
+        _ = dev.create_compute_pipeline(&ComputePipelineDescriptor {
+            layout: &PipelineLayout {},
+            compute: ProgrammableStage {
+                module: &ShaderModule {},
+                entry_point: "main".to_string(),
+                constants: vec![PipelineConstant {
+                    id: 0,
+                    value: PipelineConstantValue::Float32(-1.0),
+                }],
+            },
+        });
+
+        _ = dev.create_render_pipeline(&RenderPipelineDescriptor {
+            layout: &PipelineLayout {},
+            vertex: VertexState {
+                vertex: ProgrammableStage {
+                    module: &ShaderModule {},
+                    entry_point: "main".to_string(),
+                    constants: vec![],
+                },
+                buffers: vec![VertexBufferLayout {
+                    array_stride: 0,
+                    step_mode: VertexStepMode::Vertex,
+                    attributes: vec![
+                        VertexAttribute {
+                            format: VertexFormat::Float32x3,
+                            offset: 0,
+                            shader_location: 0,
+                        },
+                        VertexAttribute {
+                            format: VertexFormat::Float32x2,
+                            offset: 12,
+                            shader_location: 1,
+                        },
+                    ],
+                }],
+            },
+            primitive: PrimitiveState {
+                topology: PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: FrontFace::Ccw,
+                cull_mode: CullMode::Back,
+                unclipped_depth: true,
+            },
+            depth_stencil: DepthStencilState {
+                format: TextureFormat::Depth24PlusStencil8,
+                depth_write_enabled: true,
+                depth_compare: CompareFunction::Less,
+                stencil_front: StencilFaceState {
+                    compare: CompareFunction::Greater,
+                    fail_op: StencilOperation::Keep,
+                    depth_fail_op: StencilOperation::DecrementClamp,
+                    pass_op: StencilOperation::Replace,
+                },
+                stencil_back: StencilFaceState {
+                    compare: CompareFunction::Equal,
+                    fail_op: StencilOperation::Zero,
+                    depth_fail_op: StencilOperation::Invert,
+                    pass_op: StencilOperation::IncrementWrap,
+                },
+                stencil_read_mask: 0xFF,
+                stencil_write_mask: 0xFF,
+                depth_bias: 0,
+                depth_bias_slope_scale: 0.0,
+                depth_bias_clamp: 0.0,
+            },
+            multisample: MultisampleState {
+                count: 1,
+                mask: 0x1,
+                alpha_to_coverage_enabled: false,
+            },
+            fragment: FragmentState {
+                fragment: ProgrammableStage {
+                    module: &ShaderModule {},
+                    entry_point: "main".to_string(),
+                    constants: vec![],
+                },
+                targets: vec![ColorTargetState {
+                    format: TextureFormat::Rgba8Unorm,
+                    blend: BlendState {
+                        color: BlendComponent {
+                            operation: BlendOperation::Add,
+                            src_factor: BlendFactor::One,
+                            dst_factor: BlendFactor::Zero,
+                        },
+                        alpha: BlendComponent {
+                            operation: BlendOperation::Add,
+                            src_factor: BlendFactor::One,
+                            dst_factor: BlendFactor::Zero,
+                        },
+                    },
+                    write_mask: ColorWrite::All.into(),
+                }],
+            },
+        });
+
         _ = dev.create_command_encoder(/*...*/);
         _ = dev.create_render_bundle_encoder(/*...*/);
         _ = dev.create_query_set(/*...*/);

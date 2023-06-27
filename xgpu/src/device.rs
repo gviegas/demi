@@ -4,8 +4,10 @@ use std::ops::RangeBounds;
 
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
-    BufferDescriptor, PipelineLayout, PipelineLayoutDescriptor, Result, Sampler, SamplerDescriptor,
-    SupportedFeatures, SupportedLimits, Texture, TextureDescriptor,
+    BufferDescriptor, ComputePipeline, ComputePipelineDescriptor, PipelineLayout,
+    PipelineLayoutDescriptor, RenderPipeline, RenderPipelineDescriptor, Result, Sampler,
+    SamplerDescriptor, ShaderModule, ShaderModuleDescriptor, SupportedFeatures, SupportedLimits,
+    Texture, TextureDescriptor,
 };
 
 pub struct Device {
@@ -61,22 +63,23 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_shader_module(&mut self /*, desc: ShaderModuleDescriptor */) /* -> ShaderModule */
-    {
+    pub fn create_shader_module(&mut self, _desc: &ShaderModuleDescriptor) -> Result<ShaderModule> {
         panic!("not yet implemented");
     }
 
     // async
-    pub fn create_compute_pipeline(&mut self /*, desc: ComputePipelineDescriptor */)
-    /* -> ComputePipeline */
-    {
+    pub fn create_compute_pipeline(
+        &mut self,
+        _desc: &ComputePipelineDescriptor,
+    ) -> Result<ComputePipeline> {
         panic!("not yet implemented");
     }
 
     // async
-    pub fn create_render_pipeline(&mut self /*, desc: RenderPipelineDescriptor */)
-    /* -> RenderPipeline */
-    {
+    pub fn create_render_pipeline(
+        &mut self,
+        _desc: &RenderPipelineDescriptor,
+    ) -> Result<RenderPipeline> {
         panic!("not yet implemented");
     }
 
