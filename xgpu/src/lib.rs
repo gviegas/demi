@@ -25,6 +25,9 @@ pub use pipeline::*;
 mod query;
 pub use query::*;
 
+mod command;
+pub use command::*;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -248,7 +251,8 @@ mod tests {
             },
         });
 
-        _ = dev.create_command_encoder(/*...*/);
+        _ = dev.create_command_encoder(None);
+
         _ = dev.create_render_bundle_encoder(/*...*/);
 
         _ = dev.create_query_set(&QuerySetDescriptor {

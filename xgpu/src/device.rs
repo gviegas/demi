@@ -4,10 +4,11 @@ use std::ops::RangeBounds;
 
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
-    BufferDescriptor, ComputePipeline, ComputePipelineDescriptor, PipelineLayout,
-    PipelineLayoutDescriptor, QuerySet, QuerySetDescriptor, RenderPipeline,
-    RenderPipelineDescriptor, Result, Sampler, SamplerDescriptor, ShaderModule,
-    ShaderModuleDescriptor, SupportedFeatures, SupportedLimits, Texture, TextureDescriptor,
+    BufferDescriptor, CommandEncoder, CommandEncoderDescriptor, ComputePipeline,
+    ComputePipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QuerySet,
+    QuerySetDescriptor, RenderPipeline, RenderPipelineDescriptor, Result, Sampler,
+    SamplerDescriptor, ShaderModule, ShaderModuleDescriptor, SupportedFeatures, SupportedLimits,
+    Texture, TextureDescriptor,
 };
 
 pub struct Device {
@@ -83,9 +84,10 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    pub fn create_command_encoder(&mut self /*, desc: CommandEncoderDescriptor */)
-    /* -> CommandEncoder */
-    {
+    pub fn create_command_encoder(
+        &mut self,
+        _desc: Option<&CommandEncoderDescriptor>,
+    ) -> Result<CommandEncoder> {
         panic!("not yet implemented");
     }
 
