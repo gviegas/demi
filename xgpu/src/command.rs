@@ -2,7 +2,7 @@
 
 use std::ops::RangeBounds;
 
-use crate::{Buffer, Extent3d, QuerySet, Result};
+use crate::{BindGroup, Buffer, ComputePipeline, Extent3d, QuerySet, Result};
 
 pub struct CommandBuffer {
     // TODO
@@ -84,13 +84,65 @@ impl CommandEncoder {
     pub fn finish(&mut self, _desc: Option<&CommandBufferDescriptor>) -> Result<CommandBuffer> {
         panic!("not yet implemented");
     }
+
+    // TODO: Debug markers.
 }
 
 pub struct CommandEncoderDescriptor;
 
+pub struct ComputePassEncoder {
+    // TODO
+}
+
+impl ComputePassEncoder {
+    pub fn set_bind_group(
+        &mut self,
+        _index: u32,
+        _bind_group: Option<&BindGroup>,
+        _dynamic_offsets: &[u32],
+    ) {
+        panic!("not yet implemented");
+    }
+
+    pub fn set_pipeline(&mut self, _pipeline: &ComputePipeline) {
+        panic!("not yet implemented");
+    }
+
+    pub fn dispatch_workgroups(
+        &mut self,
+        _workgroup_count_x: u32,
+        _workgroup_count_y: u32,
+        _workgroup_count_z: u32,
+    ) {
+        panic!("not yet implemented");
+    }
+
+    pub fn dispatch_workgroups_indirect(
+        &mut self,
+        _indirect_buffer: &Buffer,
+        _indirect_offset: u64,
+    ) {
+        panic!("not yet implemented");
+    }
+
+    pub fn end(self) {
+        panic!("not yet implemented");
+    }
+
+    // TODO: Debug markers.
+}
+
+pub struct ComputePassDescriptor<'a> {
+    pub timestamp_writes: Vec<ComputePassTimestampWrites<'a>>,
+}
+
+pub struct ComputePassTimestampWrites<'a> {
+    pub query_set: &'a QuerySet,
+    pub beginning_of_pass_write_index: u32,
+    pub end_of_pass_write_index: u32,
+}
+
 // TODO
-pub struct ComputePassEncoder;
-pub struct ComputePassDescriptor;
 pub struct RenderPassEncoder;
 pub struct RenderPassDescriptor;
 pub struct ImageCopyBuffer;
