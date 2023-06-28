@@ -48,7 +48,16 @@ mod tests {
         _ = adap.limits();
         _ = adap.info();
         _ = adap.request_device(&DeviceDescriptor {
-            required_features: &[Feature::TextureCompressionBc],
+            required_features: &[
+                Feature::TextureCompressionBc,
+                Feature::Depth32FloatStencil8,
+                Feature::TimestampQuery,
+            ],
+            required_limits: &[
+                Limit::MaxBindingsPerBindGroup(60),
+                Limit::MaxVertexBuffers(14),
+                Limit::MaxColorAttachments(10),
+            ],
         });
     }
 
