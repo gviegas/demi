@@ -25,6 +25,9 @@ pub use sampler::*;
 mod binding;
 pub use binding::*;
 
+mod shader;
+pub use shader::*;
+
 mod pipeline;
 pub use pipeline::*;
 

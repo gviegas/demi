@@ -1,8 +1,8 @@
 //! GPU resource binding.
 
-use std::ops::{BitOr, Range};
+use std::ops::Range;
 
-use crate::{Buffer, Sampler, TextureFormat, TextureView, TextureViewDimension};
+use crate::{Buffer, Sampler, ShaderStageFlags, TextureFormat, TextureView, TextureViewDimension};
 
 pub struct BindGroupLayout {
     // TODO
@@ -16,45 +16,6 @@ pub struct BindGroupLayoutEntry {
     pub binding: u32,
     pub visibility: ShaderStageFlags,
     pub resource: BindingResourceLayout,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(u16)]
-pub enum ShaderStage {
-    Vertex = 0x1,
-    Fragment = 0x2,
-    Compute = 0x4,
-}
-
-impl BitOr for ShaderStage {
-    type Output = ShaderStageFlags;
-
-    fn bitor(self, rhs: Self) -> Self::Output {
-        ShaderStageFlags(self as u16 | rhs as u16)
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct ShaderStageFlags(u16);
-
-impl ShaderStageFlags {
-    pub fn is_set(self, stage: ShaderStage) -> bool {
-        self.0 & stage as u16 != 0
-    }
-}
-
-impl BitOr<ShaderStage> for ShaderStageFlags {
-    type Output = Self;
-
-    fn bitor(self, rhs: ShaderStage) -> Self::Output {
-        Self(self.0 | rhs as u16)
-    }
-}
-
-impl From<ShaderStage> for ShaderStageFlags {
-    fn from(value: ShaderStage) -> Self {
-        Self(value as u16)
-    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

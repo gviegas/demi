@@ -1,36 +1,10 @@
-//! GPU shader/pipelines.
+//! GPU pipelines.
 
 use std::ops::BitOr;
 
-use crate::{BindGroupLayout, CompareFunction, PipelineLayout, Result, TextureFormat};
-
-pub struct ShaderModule {
-    // TODO
-}
-
-pub struct ShaderModuleDescriptor<'a> {
-    pub code: &'a [u8],
-}
-
-pub struct ProgrammableStage<'a> {
-    pub module: &'a ShaderModule,
-    pub entry_point: String,
-    pub constants: Vec<PipelineConstant>,
-}
-
-#[derive(Clone, Copy, PartialEq)]
-pub struct PipelineConstant {
-    pub id: u32,
-    pub value: PipelineConstantValue,
-}
-
-#[derive(Clone, Copy, PartialEq)]
-pub enum PipelineConstantValue {
-    Uint32(u32),
-    Sint32(i32),
-    Float32(f32),
-    // TODO
-}
+use crate::{
+    BindGroupLayout, CompareFunction, PipelineLayout, ProgrammableStage, Result, TextureFormat,
+};
 
 pub struct ComputePipeline {
     // TODO
