@@ -47,7 +47,9 @@ mod tests {
         _ = adap.features();
         _ = adap.limits();
         _ = adap.info();
-        _ = adap.request_device(&DeviceDescriptor {});
+        _ = adap.request_device(&DeviceDescriptor {
+            required_features: &[Feature::TextureCompressionBc],
+        });
     }
 
     #[test]

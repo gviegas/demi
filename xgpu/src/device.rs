@@ -5,7 +5,7 @@ use std::ops::RangeBounds;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
     BufferDescriptor, CommandEncoder, CommandEncoderDescriptor, ComputePipeline,
-    ComputePipelineDescriptor, PipelineLayout, PipelineLayoutDescriptor, QuerySet,
+    ComputePipelineDescriptor, Feature, PipelineLayout, PipelineLayoutDescriptor, QuerySet,
     QuerySetDescriptor, Queue, RenderBundleEncoder, RenderBundleEncoderDescriptor, RenderPipeline,
     RenderPipelineDescriptor, Result, Sampler, SamplerDescriptor, ShaderModule,
     ShaderModuleDescriptor, SupportedFeatures, SupportedLimits, Texture, TextureDescriptor,
@@ -103,8 +103,8 @@ impl Device {
 }
 
 // TODO
-pub struct DeviceDescriptor {
-    // required_features: ...,
+pub struct DeviceDescriptor<'a> {
+    pub required_features: &'a [Feature],
     // required_limits: ...,
     // queue_descriptor: ...,
 }
