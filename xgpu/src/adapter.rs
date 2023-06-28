@@ -15,6 +15,10 @@ impl Adapter {
         panic!("not yet implemented");
     }
 
+    pub fn is_fallback_adapter(&self) -> bool {
+        panic!("not yet implemented");
+    }
+
     // async
     pub fn request_adapter_info(&self) -> AdapterInfo {
         panic!("not yet implemented");

@@ -80,6 +80,7 @@ mod tests {
         let adap = Adapter {};
         _ = adap.features();
         _ = adap.limits();
+        _ = adap.is_fallback_adapter();
         _ = adap.request_adapter_info();
         _ = adap.request_device(&DeviceDescriptor {
             required_features: &[
