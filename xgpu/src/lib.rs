@@ -37,9 +37,43 @@ pub use query::*;
 mod command;
 pub use command::*;
 
+// async
+pub fn request_adapter(_options: &RequestAdapterOptions) -> Result<Adapter> {
+    panic!("not yet implemented");
+}
+
+pub struct RequestAdapterOptions {
+    pub power_preference: PowerPreference,
+    pub force_fallback_adapter: bool,
+}
+
+impl Default for RequestAdapterOptions {
+    fn default() -> Self {
+        Self {
+            power_preference: PowerPreference::LowPower,
+            force_fallback_adapter: false,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum PowerPreference {
+    LowPower,
+    HighPerformance,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn initialization() {
+        _ = request_adapter(&RequestAdapterOptions {
+            power_preference: PowerPreference::HighPerformance,
+            force_fallback_adapter: false,
+        });
+        _ = request_adapter(&Default::default());
+    }
 
     #[test]
     fn adapter() {
