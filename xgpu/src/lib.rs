@@ -19,6 +19,9 @@ pub use buffer::*;
 mod texture;
 pub use texture::*;
 
+mod sampler;
+pub use sampler::*;
+
 mod binding;
 pub use binding::*;
 
