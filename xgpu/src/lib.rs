@@ -46,7 +46,7 @@ mod tests {
         let adap = Adapter {};
         _ = adap.features();
         _ = adap.limits();
-        _ = adap.info();
+        _ = adap.request_adapter_info();
         _ = adap.request_device(&DeviceDescriptor {
             required_features: &[
                 Feature::TextureCompressionBc,

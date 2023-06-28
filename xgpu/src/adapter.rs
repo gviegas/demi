@@ -15,7 +15,8 @@ impl Adapter {
         panic!("not yet implemented");
     }
 
-    pub fn info(&self) -> &AdapterInfo {
+    // async
+    pub fn request_adapter_info(&self) -> AdapterInfo {
         panic!("not yet implemented");
     }
 
@@ -299,5 +300,10 @@ impl Default for SupportedLimits {
     }
 }
 
-// TODO
-pub struct AdapterInfo;
+#[derive(Clone)]
+pub struct AdapterInfo {
+    pub vendor: String,
+    pub architecture: String,
+    pub device: String,
+    pub description: String,
+}
