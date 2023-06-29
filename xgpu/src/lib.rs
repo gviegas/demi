@@ -1,41 +1,30 @@
 //! xgpu.
 
-use std::io;
-// TODO
-pub type Result<T> = io::Result<T>;
-
 mod adapter;
-pub use adapter::*;
-
-mod device;
-pub use device::*;
-
-mod queue;
-pub use queue::*;
-
-mod buffer;
-pub use buffer::*;
-
-mod texture;
-pub use texture::*;
-
-mod sampler;
-pub use sampler::*;
-
 mod binding;
-pub use binding::*;
-
-mod shader;
-pub use shader::*;
-
-mod pipeline;
-pub use pipeline::*;
-
-mod query;
-pub use query::*;
-
+mod buffer;
 mod command;
+mod device;
+mod error;
+mod pipeline;
+mod query;
+mod queue;
+mod sampler;
+mod shader;
+mod texture;
+
+pub use adapter::*;
+pub use binding::*;
+pub use buffer::*;
 pub use command::*;
+pub use device::*;
+pub use error::*;
+pub use pipeline::*;
+pub use query::*;
+pub use queue::*;
+pub use sampler::*;
+pub use shader::*;
+pub use texture::*;
 
 // async
 pub fn request_adapter(_options: &RequestAdapterOptions) -> Result<Adapter> {
