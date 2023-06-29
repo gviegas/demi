@@ -136,8 +136,66 @@ pub enum TextureFormat {
     Depth24PlusStencil8,
     Depth32Float,
 
+    // `Feature::Depth32FloatStencil8`
     Depth32FloatStencil8,
-    // TODO: Compressed formats.
+
+    // `Feature::TextureCompressionBc`
+    Bc1RgbaUnorm,
+    Bc1RgbaUnormSrgb,
+    Bc2RgbaUnorm,
+    Bc2RgbaUnormSrgb,
+    Bc3RgbaUnorm,
+    Bc3RgbaUnormSrgb,
+    Bc4RUnorm,
+    Bc4RSnorm,
+    Bc5RgUnorm,
+    Bc5RgSnorm,
+    Bc6hRgbUfloat,
+    Bc6hRgbFloat,
+    Bc7RgbaUnorm,
+    Bc7RgbaUnormSrgb,
+
+    // `Feature::TextureCompressionEtc2`
+    Etc2Rgb8Unorm,
+    Etc2Rgb8UnormSrgb,
+    Etc2Rgb8a1Unorm,
+    Etc2Rgb8a1UnormSrgb,
+    Etc2Rgba8Unorm,
+    Etc2Rgba8UnormSrgb,
+    EacR11Unorm,
+    EacR11Snorm,
+    EacRg11Unorm,
+    EacRg11Snorm,
+
+    // `Feature::TextureCompressionAstc`
+    Astc4x4Unorm,
+    Astc4x4UnormSrgb,
+    Astc5x4Unorm,
+    Astc5x4UnormSrgb,
+    Astc5x5Unorm,
+    Astc5x5UnormSrgb,
+    Astc6x5Unorm,
+    Astc6x5UnormSrgb,
+    Astc6x6Unorm,
+    Astc6x6UnormSrgb,
+    Astc8x5Unorm,
+    Astc8x5UnormSrgb,
+    Astc8x6Unorm,
+    Astc8x6UnormSrgb,
+    Astc8x8Unorm,
+    Astc8x8UnormSrgb,
+    Astc10x5Unorm,
+    Astc10x5UnormSrgb,
+    Astc10x6Unorm,
+    Astc10x6UnormSrgb,
+    Astc10x8Unorm,
+    Astc10x8UnormSrgb,
+    Astc10x10Unorm,
+    Astc10x10UnormSrgb,
+    Astc12x10Unorm,
+    Astc12x10UnormSrgb,
+    Astc12x12Unorm,
+    Astc12x12UnormSrgb,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
