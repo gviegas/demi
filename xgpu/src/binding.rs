@@ -23,7 +23,7 @@ pub enum BindingResourceLayout {
     Buffer {
         kind: BufferBindingKind,
         has_dynamic_offset: bool,
-        //min_binding_size: u64,
+        min_binding_size: u64,
     },
     Sampler {
         kind: SamplerBindingKind,

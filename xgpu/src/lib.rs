@@ -165,6 +165,7 @@ mod tests {
                         resource: BindingResourceLayout::Buffer {
                             kind: BufferBindingKind::Uniform,
                             has_dynamic_offset: true,
+                            min_binding_size: 256,
                         },
                     },
                 ],
