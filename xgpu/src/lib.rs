@@ -127,7 +127,7 @@ mod tests {
             min_filter: FilterMode::Linear,
             mipmap_filter: FilterMode::Nearest,
             lod_clamp: ..32.0,
-            compare: CompareFunction::Never,
+            compare: None,
             max_anisotropy: 8,
         });
 

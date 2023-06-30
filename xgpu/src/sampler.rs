@@ -17,7 +17,7 @@ where
     pub min_filter: FilterMode,
     pub mipmap_filter: FilterMode,
     pub lod_clamp: T,
-    pub compare: CompareFunction,
+    pub compare: Option<CompareFunction>,
     pub max_anisotropy: u16,
 }
 
