@@ -130,6 +130,7 @@ mod tests {
             compare: None,
             max_anisotropy: 8,
         });
+        _ = dev.create_sampler(&Default::default());
 
         _ = dev
             .create_bind_group_layout(&BindGroupLayoutDescriptor {
