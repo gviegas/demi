@@ -107,3 +107,13 @@ pub struct DeviceDescriptor<'a, 'b> {
     pub required_limits: &'b [Limit],
     pub default_queue: QueueDescriptor,
 }
+
+impl Default for DeviceDescriptor<'_, '_> {
+    fn default() -> Self {
+        Self {
+            required_features: &[],
+            required_limits: &[],
+            default_queue: QueueDescriptor {},
+        }
+    }
+}

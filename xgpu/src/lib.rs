@@ -84,6 +84,8 @@ mod tests {
             ],
             default_queue: QueueDescriptor {},
         });
+        let adap = Adapter {};
+        _ = adap.request_device(&Default::default());
     }
 
     #[test]
