@@ -6,8 +6,8 @@ use crate::{
     BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, Buffer,
     BufferDescriptor, CommandEncoder, CommandEncoderDescriptor, ComputePipeline,
     ComputePipelineDescriptor, Feature, Limit, PipelineLayout, PipelineLayoutDescriptor, QuerySet,
-    QuerySetDescriptor, Queue, RenderBundleEncoder, RenderBundleEncoderDescriptor, RenderPipeline,
-    RenderPipelineDescriptor, Result, Sampler, SamplerDescriptor, ShaderModule,
+    QuerySetDescriptor, Queue, QueueDescriptor, RenderBundleEncoder, RenderBundleEncoderDescriptor,
+    RenderPipeline, RenderPipelineDescriptor, Result, Sampler, SamplerDescriptor, ShaderModule,
     ShaderModuleDescriptor, SupportedFeatures, SupportedLimits, Texture, TextureDescriptor,
 };
 
@@ -102,9 +102,8 @@ impl Device {
     }
 }
 
-// TODO
 pub struct DeviceDescriptor<'a, 'b> {
     pub required_features: &'a [Feature],
     pub required_limits: &'b [Limit],
-    // queue_descriptor: ...,
+    pub default_queue: QueueDescriptor,
 }

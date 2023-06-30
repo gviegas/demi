@@ -82,6 +82,7 @@ mod tests {
                 Limit::MaxVertexBuffers(14),
                 Limit::MaxColorAttachments(10),
             ],
+            default_queue: QueueDescriptor {},
         });
     }
 
