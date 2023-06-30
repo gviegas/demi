@@ -125,7 +125,7 @@ mod tests {
             address_mode_w: AddressMode::MirrorRepeat,
             mag_filter: FilterMode::Linear,
             min_filter: FilterMode::Linear,
-            mipmap_filter: FilterMode::Nearest,
+            mipmap_filter: MipmapFilterMode::Nearest,
             lod_clamp: ..32.0,
             compare: None,
             max_anisotropy: 8,

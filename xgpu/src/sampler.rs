@@ -15,7 +15,7 @@ where
     pub address_mode_w: AddressMode,
     pub mag_filter: FilterMode,
     pub min_filter: FilterMode,
-    pub mipmap_filter: FilterMode,
+    pub mipmap_filter: MipmapFilterMode,
     pub lod_clamp: T,
     pub compare: Option<CompareFunction>,
     pub max_anisotropy: u16,
@@ -30,6 +30,12 @@ pub enum AddressMode {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum FilterMode {
+    Nearest,
+    Linear,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum MipmapFilterMode {
     Nearest,
     Linear,
 }
