@@ -2,6 +2,8 @@
 
 use std::ops::{BitOr, RangeBounds};
 
+use crate::Result;
+
 pub struct Buffer {
     // TODO
 }
@@ -24,8 +26,7 @@ impl Buffer {
         panic!("not yet implemented");
     }
 
-    pub fn get_mapped_range(&mut self, _range: impl RangeBounds<u64>) /* -> Result<??> */
-    {
+    pub fn get_mapped_range(&self, _range: impl RangeBounds<u64>) -> Result<MappedRange> {
         panic!("not yet implemented");
     }
 
@@ -98,4 +99,10 @@ pub enum MapMode {
     Read,
     Write,
     //ReadWrite,
+}
+
+// TODO
+pub struct MappedRange<'a> {
+    _buffer: &'a Buffer,
+    // ...
 }
