@@ -85,7 +85,19 @@ impl CommandEncoder {
         panic!("not yet implemented");
     }
 
-    // TODO: Debug markers.
+    // Debug markers.
+
+    pub fn push_debug_group(&mut self, _group_label: String) {
+        panic!("not yet implemented");
+    }
+
+    pub fn pop_debug_group(&mut self) {
+        panic!("not yet implemented");
+    }
+
+    pub fn insert_debug_marker(&mut self, _marker_label: String) {
+        panic!("not yet implemented");
+    }
 }
 
 pub struct CommandEncoderDescriptor;
@@ -129,7 +141,19 @@ impl ComputePassEncoder {
         panic!("not yet implemented");
     }
 
-    // TODO: Debug markers.
+    // Debug markers.
+
+    pub fn push_debug_group(&mut self, _group_label: String) {
+        panic!("not yet implemented");
+    }
+
+    pub fn pop_debug_group(&mut self) {
+        panic!("not yet implemented");
+    }
+
+    pub fn insert_debug_marker(&mut self, _marker_label: String) {
+        panic!("not yet implemented");
+    }
 }
 
 pub struct ComputePassDescriptor<'a> {
@@ -247,7 +271,19 @@ impl RenderPassEncoder {
         panic!("not yet implemented");
     }
 
-    // TODO: Debug markers.
+    // Debug markers.
+
+    pub fn push_debug_group(&mut self, _group_label: String) {
+        panic!("not yet implemented");
+    }
+
+    pub fn pop_debug_group(&mut self) {
+        panic!("not yet implemented");
+    }
+
+    pub fn insert_debug_marker(&mut self, _marker_label: String) {
+        panic!("not yet implemented");
+    }
 }
 
 pub struct RenderPassDescriptor<'a, 'b, 'c, 'd, 'e> {
@@ -378,7 +414,19 @@ impl RenderBundleEncoder {
         panic!("not yet implemented");
     }
 
-    // TODO: Debug markers.
+    // Debug markers.
+
+    pub fn push_debug_group(&mut self, _group_label: String) {
+        panic!("not yet implemented");
+    }
+
+    pub fn pop_debug_group(&mut self) {
+        panic!("not yet implemented");
+    }
+
+    pub fn insert_debug_marker(&mut self, _marker_label: String) {
+        panic!("not yet implemented");
+    }
 }
 
 pub struct RenderBundleEncoderDescriptor {

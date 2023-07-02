@@ -393,6 +393,7 @@ mod tests {
     fn command() {
         let mut enc = CommandEncoder {};
 
+        enc.push_debug_group("dbg1".to_string());
         let mut pass = enc.begin_compute_pass(Some(&ComputePassDescriptor {
             timestamp_writes: vec![],
         }));
@@ -401,7 +402,9 @@ mod tests {
         pass.dispatch_workgroups(32, 32, 1);
         pass.dispatch_workgroups_indirect(&Buffer {}, 0);
         _ = pass.end();
+        enc.pop_debug_group();
 
+        enc.insert_debug_marker("dbg2".to_string());
         let mut pass = enc.begin_render_pass(&RenderPassDescriptor {
             color_attachments: vec![Some(RenderPassColorAttachment {
                 view: &TextureView {},
@@ -516,6 +519,7 @@ mod tests {
         _ = enc.finish(None);
 
         let mut enc = RenderBundleEncoder {};
+        enc.insert_debug_marker("dbg3".to_string());
         enc.set_bind_group(0, Some(&BindGroup {}), &[]);
         enc.set_pipeline(&RenderPipeline {});
         enc.set_index_buffer(&Buffer {}, IndexFormat::Uint32, ..280_000);
