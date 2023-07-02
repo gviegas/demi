@@ -14,7 +14,10 @@ pub struct CommandEncoder {
 impl CommandEncoder {
     // TODO: Will need `Arc` or similar for these resources.
 
-    pub fn begin_compute_pass(&mut self, _desc: &ComputePassDescriptor) -> ComputePassEncoder {
+    pub fn begin_compute_pass(
+        &mut self,
+        _desc: Option<&ComputePassDescriptor>,
+    ) -> ComputePassEncoder {
         panic!("not yet implemented");
     }
 

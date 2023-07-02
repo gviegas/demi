@@ -388,9 +388,9 @@ mod tests {
     fn command() {
         let mut enc = CommandEncoder {};
 
-        let mut pass = enc.begin_compute_pass(&ComputePassDescriptor {
+        let mut pass = enc.begin_compute_pass(Some(&ComputePassDescriptor {
             timestamp_writes: vec![],
-        });
+        }));
         pass.set_bind_group(0, Some(&BindGroup {}), &[]);
         pass.set_pipeline(&ComputePipeline {});
         pass.dispatch_workgroups(32, 32, 1);
