@@ -277,6 +277,16 @@ pub struct BlendComponent {
     pub dst_factor: BlendFactor,
 }
 
+impl Default for BlendComponent {
+    fn default() -> Self {
+        Self {
+            operation: BlendOperation::Add,
+            src_factor: BlendFactor::One,
+            dst_factor: BlendFactor::Zero,
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BlendOperation {
     Add,
