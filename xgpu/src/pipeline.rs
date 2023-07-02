@@ -174,6 +174,17 @@ pub struct StencilFaceState {
     pub pass_op: StencilOperation,
 }
 
+impl Default for StencilFaceState {
+    fn default() -> Self {
+        Self {
+            compare: CompareFunction::Always,
+            fail_op: StencilOperation::Keep,
+            depth_fail_op: StencilOperation::Keep,
+            pass_op: StencilOperation::Keep,
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum StencilOperation {
     Keep,
