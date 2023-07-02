@@ -192,6 +192,16 @@ pub struct MultisampleState {
     pub alpha_to_coverage_enabled: bool,
 }
 
+impl Default for MultisampleState {
+    fn default() -> Self {
+        Self {
+            count: 1,
+            mask: !0,
+            alpha_to_coverage_enabled: false,
+        }
+    }
+}
+
 pub struct FragmentState<'a> {
     pub fragment: ProgrammableStage<'a>,
     // TODO: The length should be constant.
