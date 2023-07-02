@@ -304,7 +304,12 @@ mod tests {
 
         _ = dev.create_render_bundle_encoder(&RenderBundleEncoderDescriptor {
             layout: RenderPassLayout {
-                color_formats: vec![TextureFormat::Rgba8Unorm, TextureFormat::Rg11b10Ufloat],
+                color_formats: vec![
+                    Some(TextureFormat::Rgba8Unorm),
+                    None,
+                    Some(TextureFormat::Rg11b10Ufloat),
+                    Some(TextureFormat::Bgra8UnormSrgb),
+                ],
                 depth_stencil_format: Some(TextureFormat::Depth32Float),
                 sample_count: 1,
             },

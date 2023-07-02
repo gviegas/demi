@@ -388,7 +388,7 @@ pub struct RenderBundleEncoderDescriptor {
 }
 
 pub struct RenderPassLayout {
-    pub color_formats: Vec<TextureFormat>,
+    pub color_formats: Vec<Option<TextureFormat>>,
     pub depth_stencil_format: Option<TextureFormat>,
     pub sample_count: u32,
 }
