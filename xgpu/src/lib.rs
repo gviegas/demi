@@ -379,9 +379,9 @@ mod tests {
     #[test]
     fn pipeline() {
         let comp = ComputePipeline {};
-        _ = comp.bind_group_layout(0);
         let rend = RenderPipeline {};
-        _ = rend.bind_group_layout(0);
+        _ = comp.get_bind_group_layout(0);
+        _ = rend.get_bind_group_layout(1);
     }
 
     #[test]

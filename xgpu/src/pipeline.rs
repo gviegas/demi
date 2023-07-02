@@ -11,8 +11,7 @@ pub struct ComputePipeline {
 }
 
 impl ComputePipeline {
-    // TODO: Maybe return a slice instead since it can't fail.
-    pub fn bind_group_layout(&self, _index: u32) -> Result<&BindGroupLayout> {
+    pub fn get_bind_group_layout(&self, _index: u32) -> Result<&BindGroupLayout> {
         panic!("not yet implemented");
     }
 }
@@ -29,8 +28,7 @@ pub struct RenderPipeline {
 }
 
 impl RenderPipeline {
-    // TODO: <see compute pipeline>
-    pub fn bind_group_layout(&self, _index: u32) -> Result<&BindGroupLayout> {
+    pub fn get_bind_group_layout(&self, _index: u32) -> Result<&BindGroupLayout> {
         panic!("not yet implemented");
     }
 }
