@@ -281,7 +281,7 @@ mod tests {
                     entry_point: "main".to_string(),
                     constants: vec![],
                 },
-                targets: vec![ColorTargetState {
+                targets: vec![Some(ColorTargetState {
                     format: TextureFormat::Rgba8Unorm,
                     blend: BlendState {
                         color: BlendComponent {
@@ -296,7 +296,7 @@ mod tests {
                         },
                     },
                     write_mask: ColorWrite::All.into(),
-                }],
+                })],
             },
         });
 

@@ -216,7 +216,7 @@ impl Default for MultisampleState {
 pub struct FragmentState<'a> {
     pub fragment: ProgrammableStage<'a>,
     // TODO: The length should be constant.
-    pub targets: Vec<ColorTargetState>,
+    pub targets: Vec<Option<ColorTargetState>>,
 }
 
 pub struct ColorTargetState {
