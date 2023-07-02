@@ -110,7 +110,20 @@ pub struct PrimitiveState {
     pub strip_index_format: Option<IndexFormat>,
     pub front_face: FrontFace,
     pub cull_mode: CullMode,
+    // `Feature::DepthClipControl`
     pub unclipped_depth: bool,
+}
+
+impl Default for PrimitiveState {
+    fn default() -> Self {
+        Self {
+            topology: PrimitiveTopology::TriangleList,
+            strip_index_format: None,
+            front_face: FrontFace::Ccw,
+            cull_mode: CullMode::None,
+            unclipped_depth: false,
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
