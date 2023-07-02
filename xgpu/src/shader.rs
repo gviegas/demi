@@ -57,14 +57,16 @@ pub struct ProgrammableStage<'a> {
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct PipelineConstant {
+    // TODO: Should allow string IDs too.
     pub id: u32,
     pub value: PipelineConstantValue,
 }
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum PipelineConstantValue {
+    // TODO: `Float16`.
     Float32(f32),
     Sint32(i32),
     Uint32(u32),
-    // TODO
+    Bool(bool),
 }
