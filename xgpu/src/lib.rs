@@ -464,7 +464,7 @@ mod tests {
             &ImageCopyTexture {
                 texture: &Texture {},
                 level: 0,
-                origin: Origin3d { x: 0, y: 0, z: 0 },
+                origin: Origin3d::default(),
                 aspect: TextureAspect::All,
             },
             Extent3d {
@@ -477,7 +477,7 @@ mod tests {
             &ImageCopyTexture {
                 texture: &Texture {},
                 level: 1,
-                origin: Origin3d { x: 0, y: 0, z: 0 },
+                origin: Origin3d::default(),
                 aspect: TextureAspect::All,
             },
             &ImageCopyBuffer {

@@ -60,13 +60,13 @@ pub struct TextureDescriptor<'a> {
     pub view_formats: &'a [TextureFormat],
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct Origin2d {
     pub x: u32,
     pub y: u32,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct Origin3d {
     pub x: u32,
     pub y: u32,
