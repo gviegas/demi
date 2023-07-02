@@ -251,11 +251,11 @@ impl RenderPassEncoder {
 }
 
 pub struct RenderPassDescriptor<'a, 'b, 'c, 'd, 'e> {
-    pub color_attachments: Vec<RenderPassColorAttachment<'a, 'b>>,
+    pub color_attachments: Vec<Option<RenderPassColorAttachment<'a, 'b>>>,
     pub depth_stencil_attachment: Option<RenderPassDepthStencilAttachment<'c>>,
-    pub occlusion_query_set: &'d QuerySet,
-    pub timestamp_writes: RenderPassTimestampWrites<'e>,
-    pub max_draw_count: u64,
+    pub occlusion_query_set: Option<&'d QuerySet>,
+    pub timestamp_writes: Option<RenderPassTimestampWrites<'e>>,
+    pub max_draw_count: Option<u64>,
 }
 
 pub struct RenderPassColorAttachment<'a, 'b> {

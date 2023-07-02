@@ -398,14 +398,13 @@ mod tests {
         _ = pass.end();
 
         let mut pass = enc.begin_render_pass(&RenderPassDescriptor {
-            // TODO: Many things here should be optional.
-            color_attachments: vec![RenderPassColorAttachment {
+            color_attachments: vec![Some(RenderPassColorAttachment {
                 view: &TextureView {},
                 resolve_target: None,
                 clear_value: Color::Float(0.0, 0.0, 0.0, 1.0),
                 load_op: LoadOp::Load,
                 store_op: StoreOp::Store,
-            }],
+            })],
             depth_stencil_attachment: Some(RenderPassDepthStencilAttachment {
                 view: &TextureView {},
                 depth_clear_value: 1.0,
@@ -417,13 +416,13 @@ mod tests {
                 stencil_store_op: StoreOp::Discard,
                 stencil_read_only: false,
             }),
-            occlusion_query_set: &QuerySet {},
-            timestamp_writes: RenderPassTimestampWrites {
+            occlusion_query_set: Some(&QuerySet {}),
+            timestamp_writes: Some(RenderPassTimestampWrites {
                 query_set: &QuerySet {},
                 beginning_of_pass_write_index: 0,
                 end_of_pass_write_index: 64,
-            },
-            max_draw_count: 1 << 20,
+            }),
+            max_draw_count: Some(1 << 20),
         });
         pass.set_viewport(0.0, 0.0, 480.0, 270.0, 0.0, 1.0);
         pass.set_scissor_rect(0, 0, 480, 270);
