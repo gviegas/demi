@@ -401,7 +401,7 @@ mod tests {
             color_attachments: vec![Some(RenderPassColorAttachment {
                 view: &TextureView {},
                 resolve_target: None,
-                clear_value: Color::Float(0.0, 0.0, 0.0, 1.0),
+                clear_value: Some(Color::Float(0.0, 0.0, 0.0, 1.0)),
                 load_op: LoadOp::Load,
                 store_op: StoreOp::Store,
             })],

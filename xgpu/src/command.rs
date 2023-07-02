@@ -261,7 +261,7 @@ pub struct RenderPassDescriptor<'a, 'b, 'c, 'd, 'e> {
 pub struct RenderPassColorAttachment<'a, 'b> {
     pub view: &'a TextureView,
     pub resolve_target: Option<&'b TextureView>,
-    pub clear_value: Color,
+    pub clear_value: Option<Color>,
     pub load_op: LoadOp,
     pub store_op: StoreOp,
 }
