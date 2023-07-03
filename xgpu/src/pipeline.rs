@@ -225,6 +225,7 @@ pub struct ColorTargetState {
     pub write_mask: ColorWriteFlags,
 }
 
+#[derive(Default)]
 pub struct BlendState {
     pub color: BlendComponent,
     pub alpha: BlendComponent,
