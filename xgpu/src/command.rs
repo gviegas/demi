@@ -81,7 +81,7 @@ impl CommandEncoder {
         panic!("not yet implemented");
     }
 
-    pub fn finish(&mut self, _desc: Option<&CommandBufferDescriptor>) -> Result<CommandBuffer> {
+    pub fn finish(self, _desc: Option<&CommandBufferDescriptor>) -> Result<CommandBuffer> {
         panic!("not yet implemented");
     }
 
