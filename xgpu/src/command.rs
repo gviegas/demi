@@ -137,7 +137,7 @@ impl ComputePassEncoder {
         panic!("not yet implemented");
     }
 
-    pub fn end(self) -> Result<()> {
+    pub fn end(self) {
         panic!("not yet implemented");
     }
 
@@ -267,7 +267,7 @@ impl RenderPassEncoder {
         panic!("not yet implemented");
     }
 
-    pub fn end(self) -> Result<()> {
+    pub fn end(self) {
         panic!("not yet implemented");
     }
 

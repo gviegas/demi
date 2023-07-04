@@ -401,7 +401,7 @@ mod tests {
         pass.set_pipeline(&ComputePipeline {});
         pass.dispatch_workgroups(32, 32, 1);
         pass.dispatch_workgroups_indirect(&Buffer {}, 0);
-        _ = pass.end();
+        pass.end();
         enc.pop_debug_group();
 
         enc.insert_debug_marker("dbg2".to_string());
@@ -449,7 +449,7 @@ mod tests {
         pass.draw_indexed(24, 1, 0, -2, 0);
         pass.draw_indirect(&Buffer {}, 0);
         pass.draw_indexed_indirect(&Buffer {}, 1 << 24);
-        _ = pass.end();
+        pass.end();
 
         enc.copy_buffer_to_buffer(&Buffer {}, 0, &Buffer {}, 0, 4096);
         enc.copy_buffer_to_texture(
