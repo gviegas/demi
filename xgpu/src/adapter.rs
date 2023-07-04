@@ -3,20 +3,24 @@
 use crate::{Device, DeviceDescriptor, Result};
 
 pub struct Adapter {
-    // TODO
+    features: SupportedFeatures,
+    limits: SupportedLimits,
+    fallback: bool,
+    _info: Option<AdapterInfo>,
+    // TODO: Backend.
 }
 
 impl Adapter {
     pub fn features(&self) -> &SupportedFeatures {
-        panic!("not yet implemented");
+        &self.features
     }
 
     pub fn limits(&self) -> &SupportedLimits {
-        panic!("not yet implemented");
+        &self.limits
     }
 
     pub fn is_fallback_adapter(&self) -> bool {
-        panic!("not yet implemented");
+        self.fallback
     }
 
     // async
