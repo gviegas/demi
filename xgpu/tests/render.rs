@@ -34,7 +34,7 @@ fn request_adapter() -> Adapter {
 
 fn request_device(adapter: Adapter) -> Device {
     // TODO: Should be asynchronous.
-    adapter.request_device(&Default::default()).unwrap()
+    adapter.request_device(None).unwrap()
 }
 
 fn create_staging_buffer(device: &mut Device) -> Buffer {

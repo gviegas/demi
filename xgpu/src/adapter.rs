@@ -29,7 +29,7 @@ impl Adapter {
     }
 
     // async
-    pub fn request_device(self, _desc: &DeviceDescriptor) -> Result<Device> {
+    pub fn request_device(self, _desc: Option<&DeviceDescriptor>) -> Result<Device> {
         panic!("not yet implemented");
     }
 }
@@ -319,7 +319,6 @@ pub struct AdapterInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::QueueDescriptor;
 
     #[test]
     fn adapter() {
@@ -341,19 +340,11 @@ mod tests {
         _ = adap.limits();
         _ = adap.is_fallback_adapter();
         _ = adap.request_adapter_info();
-        _ = adap.request_device(&DeviceDescriptor {
-            required_features: &[
-                Feature::TextureCompressionBc,
-                Feature::Depth32FloatStencil8,
-                Feature::TimestampQuery,
-            ],
-            required_limits: &[
-                Limit::MaxBindingsPerBindGroup(60),
-                Limit::MaxVertexBuffers(14),
-                Limit::MaxColorAttachments(10),
-            ],
-            default_queue: QueueDescriptor {},
-        });
+        _ = adap.request_device(Some(&DeviceDescriptor {
+            required_features: &[Feature::TextureCompressionBc, Feature::TimestampQuery],
+            required_limits: &[Limit::MaxColorAttachments(10)],
+            ..Default::default()
+        }));
 
         // TODO: `Adapter::new`.
         let adap = Adapter {
@@ -362,6 +353,6 @@ mod tests {
             fallback: false,
             _info: Some(info),
         };
-        _ = adap.request_device(&Default::default());
+        _ = adap.request_device(None);
     }
 }
