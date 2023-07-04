@@ -106,3 +106,13 @@ pub struct MappedRange<'a> {
     _buffer: &'a Buffer,
     // ...
 }
+
+impl MappedRange<'_> {
+    pub fn get(&self) -> &[u8] {
+        panic!("not yet implemented");
+    }
+
+    pub fn get_mut(&mut self) -> &mut [u8] {
+        panic!("not yet implemented");
+    }
+}
