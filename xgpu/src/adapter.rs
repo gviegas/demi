@@ -315,3 +315,53 @@ pub struct AdapterInfo {
     pub device: String,
     pub description: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::QueueDescriptor;
+
+    #[test]
+    fn adapter() {
+        let info = AdapterInfo {
+            vendor: "unknown".to_string(),
+            architecture: "unknown".to_string(),
+            device: "unknown".to_string(),
+            description: Default::default(),
+        };
+
+        // TODO: `Adapter::new`.
+        let adap = Adapter {
+            features: SupportedFeatures([false; MAX_FEATURE]), // NOTE: This is invalid.
+            limits: Default::default(),
+            fallback: false,
+            _info: Some(info.clone()),
+        };
+        _ = adap.features();
+        _ = adap.limits();
+        _ = adap.is_fallback_adapter();
+        _ = adap.request_adapter_info();
+        _ = adap.request_device(&DeviceDescriptor {
+            required_features: &[
+                Feature::TextureCompressionBc,
+                Feature::Depth32FloatStencil8,
+                Feature::TimestampQuery,
+            ],
+            required_limits: &[
+                Limit::MaxBindingsPerBindGroup(60),
+                Limit::MaxVertexBuffers(14),
+                Limit::MaxColorAttachments(10),
+            ],
+            default_queue: QueueDescriptor {},
+        });
+
+        // TODO: `Adapter::new`.
+        let adap = Adapter {
+            features: SupportedFeatures([false; MAX_FEATURE]), // NOTE: This is invalid.
+            limits: Default::default(),
+            fallback: false,
+            _info: Some(info),
+        };
+        _ = adap.request_device(&Default::default());
+    }
+}

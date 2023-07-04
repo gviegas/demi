@@ -65,30 +65,6 @@ mod tests {
     }
 
     #[test]
-    fn adapter() {
-        let adap = Adapter {};
-        _ = adap.features();
-        _ = adap.limits();
-        _ = adap.is_fallback_adapter();
-        _ = adap.request_adapter_info();
-        _ = adap.request_device(&DeviceDescriptor {
-            required_features: &[
-                Feature::TextureCompressionBc,
-                Feature::Depth32FloatStencil8,
-                Feature::TimestampQuery,
-            ],
-            required_limits: &[
-                Limit::MaxBindingsPerBindGroup(60),
-                Limit::MaxVertexBuffers(14),
-                Limit::MaxColorAttachments(10),
-            ],
-            default_queue: QueueDescriptor {},
-        });
-        let adap = Adapter {};
-        _ = adap.request_device(&Default::default());
-    }
-
-    #[test]
     fn device() {
         let mut dev = Device {};
         _ = dev.features();
