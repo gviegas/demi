@@ -27,7 +27,7 @@ pub use shader::*;
 pub use texture::*;
 
 // async
-pub fn request_adapter(_options: &RequestAdapterOptions) -> Result<Adapter> {
+pub fn request_adapter(_options: Option<&RequestAdapterOptions>) -> Result<Adapter> {
     panic!("not yet implemented");
 }
 
@@ -57,11 +57,15 @@ mod tests {
 
     #[test]
     fn initialization() {
-        _ = request_adapter(&RequestAdapterOptions {
+        _ = request_adapter(Some(&RequestAdapterOptions {
             power_preference: PowerPreference::HighPerformance,
             force_fallback_adapter: false,
-        });
-        _ = request_adapter(&Default::default());
+        }));
+        _ = request_adapter(Some(&RequestAdapterOptions {
+            force_fallback_adapter: true,
+            ..Default::default()
+        }));
+        _ = request_adapter(None);
     }
 
     #[test]

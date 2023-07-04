@@ -25,10 +25,10 @@ const VERTEX_BUF_SIZE: u64 = 3 * ((3 + 4) * mem::size_of::<f32>()) as u64;
 const UNIFORM_BUF_SIZE: u64 = 16 * mem::size_of::<f32>() as u64;
 
 fn request_adapter() -> Adapter {
-    xgpu::request_adapter(&RequestAdapterOptions {
+    xgpu::request_adapter(Some(&RequestAdapterOptions {
         power_preference: PowerPreference::HighPerformance,
         force_fallback_adapter: false,
-    })
+    }))
     .unwrap()
 }
 
