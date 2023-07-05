@@ -280,3 +280,39 @@ pub enum TextureAspect {
     Stencil,
     Depth,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn texture() {
+        // TODO: `Texture::new`.
+        let mut tex = Texture {
+            width: 1024,
+            height: 1024,
+            depth_or_layers: 16,
+            level_count: 1,
+            sample_count: 1,
+            dimension: TextureDimension::Two,
+            format: TextureFormat::Rgba8Unorm,
+            usage: TextureUsage::CopyDst | TextureUsage::TextureBinding,
+            _view_formats: vec![],
+        };
+        _ = tex.width();
+        _ = tex.height();
+        _ = tex.depth_or_layers();
+        _ = tex.level_count();
+        _ = tex.sample_count();
+        _ = tex.dimension();
+        _ = tex.format();
+        _ = tex.usage();
+        _ = tex.create_view(&TextureViewDescriptor {
+            format: TextureFormat::Rgba8Unorm,
+            dimension: TextureViewDimension::TwoArray,
+            aspect: TextureAspect::All,
+            level_range: ..,
+            layer_range: 4..,
+        });
+    }
+}

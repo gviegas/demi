@@ -70,14 +70,27 @@ mod tests {
 
     #[test]
     fn queue() {
-        let buf = request_adapter(None)
-            .unwrap()
-            .request_device(None)
-            .unwrap()
+        let mut dev = request_adapter(None).unwrap().request_device(None).unwrap();
+        let buf = dev
             .create_buffer(&BufferDescriptor {
                 size: 4096,
                 usage: BufferUsage::CopyDst | BufferUsage::Indirect,
                 mapped_at_creation: false,
+            })
+            .unwrap();
+        let tex = dev
+            .create_texture(&TextureDescriptor {
+                size: Extent3d {
+                    width: 4,
+                    height: 4,
+                    depth_or_layers: 1,
+                },
+                level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::Two,
+                format: TextureFormat::Rgba8Unorm,
+                usage: TextureUsage::CopyDst | TextureUsage::TextureBinding,
+                view_formats: &[],
             })
             .unwrap();
 
@@ -87,7 +100,7 @@ mod tests {
         _ = queue.write_buffer(&buf, 1024, &[1, 2, 3, 4]);
         _ = queue.write_texture(
             &ImageCopyTexture {
-                texture: &Texture {},
+                texture: &tex,
                 level: 0,
                 origin: Origin3d { x: 0, y: 0, z: 0 },
                 aspect: TextureAspect::All,
@@ -107,26 +120,6 @@ mod tests {
     }
 
     #[test]
-    fn texture() {
-        let mut tex = Texture {};
-        _ = tex.width();
-        _ = tex.height();
-        _ = tex.depth_or_layers();
-        _ = tex.level_count();
-        _ = tex.sample_count();
-        _ = tex.dimension();
-        _ = tex.format();
-        _ = tex.usage();
-        _ = tex.create_view(&TextureViewDescriptor {
-            format: TextureFormat::Rgba8UnormSrgb,
-            dimension: TextureViewDimension::TwoArray,
-            aspect: TextureAspect::All,
-            level_range: ..,
-            layer_range: 4..,
-        });
-    }
-
-    #[test]
     fn pipeline() {
         let comp = ComputePipeline {};
         let rend = RenderPipeline {};
@@ -136,10 +129,8 @@ mod tests {
 
     #[test]
     fn command() {
-        let rbuf = request_adapter(None)
-            .unwrap()
-            .request_device(None)
-            .unwrap()
+        let mut dev = request_adapter(None).unwrap().request_device(None).unwrap();
+        let rbuf = dev
             .create_buffer(&BufferDescriptor {
                 size: 1 << 22,
                 usage: BufferUsage::CopySrc
@@ -151,10 +142,7 @@ mod tests {
                 mapped_at_creation: false,
             })
             .unwrap();
-        let wbuf = request_adapter(None)
-            .unwrap()
-            .request_device(None)
-            .unwrap()
+        let wbuf = dev
             .create_buffer(&BufferDescriptor {
                 size: 1 << 20,
                 usage: BufferUsage::CopySrc
@@ -162,6 +150,36 @@ mod tests {
                     | BufferUsage::QueryResolve
                     | BufferUsage::Storage,
                 mapped_at_creation: false,
+            })
+            .unwrap();
+        let rtex = dev
+            .create_texture(&TextureDescriptor {
+                size: Extent3d {
+                    width: 1024,
+                    height: 1024,
+                    depth_or_layers: 3,
+                },
+                level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::Two,
+                format: TextureFormat::Rgba8Unorm,
+                usage: TextureUsage::CopySrc | TextureUsage::CopyDst | TextureUsage::TextureBinding,
+                view_formats: &[],
+            })
+            .unwrap();
+        let wtex = dev
+            .create_texture(&TextureDescriptor {
+                size: Extent3d {
+                    width: 256,
+                    height: 256,
+                    depth_or_layers: 1,
+                },
+                level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::Two,
+                format: TextureFormat::Rgba8Unorm,
+                usage: TextureUsage::CopySrc | TextureUsage::CopyDst | TextureUsage::StorageBinding,
+                view_formats: &[],
             })
             .unwrap();
 
@@ -236,7 +254,7 @@ mod tests {
                 },
             },
             &ImageCopyTexture {
-                texture: &Texture {},
+                texture: &rtex,
                 level: 0,
                 origin: Origin3d::default(),
                 aspect: TextureAspect::All,
@@ -249,7 +267,7 @@ mod tests {
         );
         enc.copy_texture_to_buffer(
             &ImageCopyTexture {
-                texture: &Texture {},
+                texture: &rtex,
                 level: 1,
                 origin: Origin3d::default(),
                 aspect: TextureAspect::All,
@@ -270,15 +288,19 @@ mod tests {
         );
         enc.copy_texture_to_texture(
             &ImageCopyTexture {
-                texture: &Texture {},
+                texture: &rtex,
                 level: 0,
-                origin: Origin3d { x: 0, y: 0, z: 0 },
+                origin: Origin3d {
+                    x: 512,
+                    y: 512,
+                    z: 0,
+                },
                 aspect: TextureAspect::All,
             },
             &ImageCopyTexture {
-                texture: &Texture {},
+                texture: &wtex,
                 level: 0,
-                origin: Origin3d { x: 256, y: 0, z: 0 },
+                origin: Origin3d { x: 0, y: 0, z: 0 },
                 aspect: TextureAspect::All,
             },
             Extent3d {
