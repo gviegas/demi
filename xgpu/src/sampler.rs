@@ -3,6 +3,15 @@
 use std::ops::{RangeBounds, RangeInclusive};
 
 pub struct Sampler {
+    address_mode_u: AddressMode,
+    address_mode_v: AddressMode,
+    address_mode_w: AddressMode,
+    mag_filter: FilterMode,
+    min_filter: FilterMode,
+    mipmap_filter: MipmapFilterMode,
+    lod_clamp: RangeInclusive<f32>,
+    compare: Option<CompareFunction>,
+    max_anisotropy: u16,
     // TODO
 }
 

@@ -198,7 +198,7 @@ mod tests {
             compare: None,
             max_anisotropy: 8,
         });
-        _ = dev.create_sampler(&Default::default());
+        let splr = dev.create_sampler(&Default::default()).unwrap();
 
         _ = dev
             .create_bind_group_layout(&BindGroupLayoutDescriptor {
@@ -245,7 +245,7 @@ mod tests {
                 },
                 BindGroupEntry {
                     binding: 2,
-                    resource: BindingResource::Sampler(&Sampler {}),
+                    resource: BindingResource::Sampler(&splr),
                 },
                 BindGroupEntry {
                     binding: 3,
