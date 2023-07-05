@@ -452,9 +452,10 @@ mod tests {
     use super::*;
     use crate::{
         BindGroup, Buffer, BufferDescriptor, BufferUsage, ComputePipeline, Extent3d,
-        ImageCopyBuffer, ImageCopyTexture, ImageDataLayout, IndexFormat, Origin3d, QuerySet,
-        RenderPipeline, Result, TextureAspect, TextureDescriptor, TextureDimension, TextureFormat,
-        TextureUsage, TextureView, TextureViewDescriptor, TextureViewDimension,
+        ImageCopyBuffer, ImageCopyTexture, ImageDataLayout, IndexFormat, Origin3d, QueryKind,
+        QuerySet, QuerySetDescriptor, RenderPipeline, Result, TextureAspect, TextureDescriptor,
+        TextureDimension, TextureFormat, TextureUsage, TextureView, TextureViewDescriptor,
+        TextureViewDimension,
     };
 
     #[test]
@@ -563,6 +564,18 @@ mod tests {
                 layer_range: ..,
             })
             .unwrap();
+        let occ_qs = dev
+            .create_query_set(&QuerySetDescriptor {
+                kind: QueryKind::Occlusion,
+                count: 16,
+            })
+            .unwrap();
+        let ts_qs = dev
+            .create_query_set(&QuerySetDescriptor {
+                kind: QueryKind::Timestamp,
+                count: 32,
+            })
+            .unwrap();
 
         // TODO: `CommandEncoder::new`.
         let mut enc = CommandEncoder {};
@@ -598,11 +611,11 @@ mod tests {
                 stencil_store_op: StoreOp::Discard,
                 stencil_read_only: false,
             }),
-            occlusion_query_set: Some(&QuerySet {}),
+            occlusion_query_set: Some(&occ_qs),
             timestamp_writes: Some(RenderPassTimestampWrites {
-                query_set: &QuerySet {},
+                query_set: &ts_qs,
                 beginning_of_pass_write_index: 0,
-                end_of_pass_write_index: 64,
+                end_of_pass_write_index: 1,
             }),
             max_draw_count: Some(1 << 20),
         });
@@ -692,8 +705,8 @@ mod tests {
             },
         );
         enc.clear_buffer(&wbuf, ..);
-        enc.write_timestamp(&QuerySet {}, 5);
-        enc.resolve_query_set(&QuerySet {}, 1..10, &wbuf, 8192);
+        enc.write_timestamp(&ts_qs, 5);
+        enc.resolve_query_set(&occ_qs, ..1, &wbuf, 1024);
         _ = enc.finish(None);
 
         let mut enc = RenderBundleEncoder {};
