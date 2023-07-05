@@ -5,16 +5,18 @@ use std::ops::{BitOr, RangeBounds};
 use crate::Result;
 
 pub struct Buffer {
+    size: u64,
+    usage: BufferUsageFlags,
     // TODO
 }
 
 impl Buffer {
     pub fn size(&self) -> u64 {
-        panic!("not yet implemented");
+        self.size
     }
 
     pub fn usage(&self) -> BufferUsageFlags {
-        panic!("not yet implemented");
+        self.usage
     }
 
     pub fn map_state(&self) -> BufferMapState {

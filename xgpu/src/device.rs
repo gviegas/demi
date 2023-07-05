@@ -148,11 +148,16 @@ mod tests {
         _ = dev.limits();
         _ = dev.queue();
 
-        _ = dev.create_buffer(&BufferDescriptor {
-            size: 16384,
-            usage: BufferUsage::CopyDst | BufferUsage::QueryResolve | BufferUsage::Storage,
-            mapped_at_creation: false,
-        });
+        let buf = dev
+            .create_buffer(&BufferDescriptor {
+                size: 16384,
+                usage: BufferUsage::CopyDst
+                    | BufferUsage::QueryResolve
+                    | BufferUsage::Storage
+                    | BufferUsage::Uniform,
+                mapped_at_creation: false,
+            })
+            .unwrap();
 
         _ = dev
             .create_texture(&TextureDescriptor {
@@ -248,7 +253,7 @@ mod tests {
                 BindGroupEntry {
                     binding: 3,
                     resource: BindingResource::Buffer {
-                        buffer: &Buffer {},
+                        buffer: &buf,
                         range: 0..256,
                     },
                 },
