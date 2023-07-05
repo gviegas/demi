@@ -118,3 +118,26 @@ impl MappedRange<'_> {
         panic!("not yet implemented");
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn buffer() {
+        // TODO: `Buffer::new`.
+        let mut buf = Buffer {
+            size: 2048,
+            usage: BufferUsage::MapRead | BufferUsage::CopyDst,
+        };
+        _ = buf.size();
+        _ = buf.usage();
+        _ = buf.map_state();
+        _ = buf.map(MapMode::Read, ..);
+        let rng1 = buf.get_mapped_range(256..512).unwrap();
+        let mut rng2 = buf.get_mapped_range(0..256).unwrap();
+        _ = rng1.get();
+        _ = rng2.get_mut();
+        buf.unmap();
+    }
+}

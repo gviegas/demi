@@ -70,10 +70,21 @@ mod tests {
 
     #[test]
     fn queue() {
+        let buf = request_adapter(None)
+            .unwrap()
+            .request_device(None)
+            .unwrap()
+            .create_buffer(&BufferDescriptor {
+                size: 4096,
+                usage: BufferUsage::CopyDst | BufferUsage::Indirect,
+                mapped_at_creation: false,
+            })
+            .unwrap();
+
         let queue = Queue {};
         _ = queue.submit(Box::new([CommandBuffer {}]));
         _ = queue.on_submitted_work_done();
-        _ = queue.write_buffer(&Buffer {}, 1024, &[1, 2, 3, 4]);
+        _ = queue.write_buffer(&buf, 1024, &[1, 2, 3, 4]);
         _ = queue.write_texture(
             &ImageCopyTexture {
                 texture: &Texture {},
@@ -93,20 +104,6 @@ mod tests {
                 depth_or_layers: 1,
             },
         );
-    }
-
-    #[test]
-    fn buffer() {
-        let mut buf = Buffer {};
-        _ = buf.size();
-        _ = buf.usage();
-        _ = buf.map_state();
-        _ = buf.map(MapMode::Read, ..);
-        let rng1 = buf.get_mapped_range(256..512).unwrap();
-        let mut rng2 = buf.get_mapped_range(0..256).unwrap();
-        _ = rng1.get();
-        _ = rng2.get_mut();
-        buf.unmap();
     }
 
     #[test]
@@ -139,6 +136,35 @@ mod tests {
 
     #[test]
     fn command() {
+        let rbuf = request_adapter(None)
+            .unwrap()
+            .request_device(None)
+            .unwrap()
+            .create_buffer(&BufferDescriptor {
+                size: 1 << 22,
+                usage: BufferUsage::CopySrc
+                    | BufferUsage::CopyDst
+                    | BufferUsage::Index
+                    | BufferUsage::Vertex
+                    | BufferUsage::Uniform
+                    | BufferUsage::Indirect,
+                mapped_at_creation: false,
+            })
+            .unwrap();
+        let wbuf = request_adapter(None)
+            .unwrap()
+            .request_device(None)
+            .unwrap()
+            .create_buffer(&BufferDescriptor {
+                size: 1 << 20,
+                usage: BufferUsage::CopySrc
+                    | BufferUsage::CopyDst
+                    | BufferUsage::QueryResolve
+                    | BufferUsage::Storage,
+                mapped_at_creation: false,
+            })
+            .unwrap();
+
         let mut enc = CommandEncoder {};
 
         enc.push_debug_group("dbg1".to_string());
@@ -148,7 +174,7 @@ mod tests {
         pass.set_bind_group(0, Some(&BindGroup {}), &[]);
         pass.set_pipeline(&ComputePipeline {});
         pass.dispatch_workgroups(32, 32, 1);
-        pass.dispatch_workgroups_indirect(&Buffer {}, 0);
+        pass.dispatch_workgroups_indirect(&rbuf, 0);
         pass.end();
         enc.pop_debug_group();
 
@@ -190,19 +216,19 @@ mod tests {
         pass.set_bind_group(3, Some(&BindGroup {}), &[0, 256, 512]);
         pass.set_bind_group(1, None, &[]);
         pass.set_pipeline(&RenderPipeline {});
-        pass.set_index_buffer(&Buffer {}, IndexFormat::Uint16, ..600);
-        pass.set_vertex_buffer(0, &Buffer {}, 1024..1264);
-        pass.set_vertex_buffer(1, &Buffer {}, 1048576..);
+        pass.set_index_buffer(&rbuf, IndexFormat::Uint16, ..600);
+        pass.set_vertex_buffer(0, &rbuf, 1024..1264);
+        pass.set_vertex_buffer(1, &rbuf, 8192..8672);
         pass.draw(36, 1, 0, 0);
         pass.draw_indexed(24, 1, 0, -2, 0);
-        pass.draw_indirect(&Buffer {}, 0);
-        pass.draw_indexed_indirect(&Buffer {}, 1 << 24);
+        pass.draw_indirect(&rbuf, 0);
+        pass.draw_indexed_indirect(&rbuf, 1 << 20);
         pass.end();
 
-        enc.copy_buffer_to_buffer(&Buffer {}, 0, &Buffer {}, 0, 4096);
+        enc.copy_buffer_to_buffer(&rbuf, 0, &wbuf, 0, 4096);
         enc.copy_buffer_to_texture(
             &ImageCopyBuffer {
-                buffer: &Buffer {},
+                buffer: &rbuf,
                 data_layout: ImageDataLayout {
                     offset: 0,
                     bytes_per_row: 4 * 1024,
@@ -229,7 +255,7 @@ mod tests {
                 aspect: TextureAspect::All,
             },
             &ImageCopyBuffer {
-                buffer: &Buffer {},
+                buffer: &wbuf,
                 data_layout: ImageDataLayout {
                     offset: 0,
                     bytes_per_row: 4 * 512,
@@ -261,21 +287,21 @@ mod tests {
                 depth_or_layers: 1,
             },
         );
-        enc.clear_buffer(&Buffer {}, ..);
+        enc.clear_buffer(&wbuf, ..);
         enc.write_timestamp(&QuerySet {}, 5);
-        enc.resolve_query_set(&QuerySet {}, 1..10, &Buffer {}, 8192);
+        enc.resolve_query_set(&QuerySet {}, 1..10, &wbuf, 8192);
         _ = enc.finish(None);
 
         let mut enc = RenderBundleEncoder {};
         enc.insert_debug_marker("dbg3".to_string());
         enc.set_bind_group(0, Some(&BindGroup {}), &[]);
         enc.set_pipeline(&RenderPipeline {});
-        enc.set_index_buffer(&Buffer {}, IndexFormat::Uint32, ..280_000);
-        enc.set_vertex_buffer(0, &Buffer {}, ..);
+        enc.set_index_buffer(&rbuf, IndexFormat::Uint32, ..280_000);
+        enc.set_vertex_buffer(0, &rbuf, ..);
         enc.draw(3, 100, 0, 0);
         enc.draw_indexed(70_000, 1, 0, 0, 0);
-        enc.draw_indirect(&Buffer {}, 1 << 21);
-        enc.draw_indexed_indirect(&Buffer {}, 0);
+        enc.draw_indirect(&rbuf, 1 << 21);
+        enc.draw_indexed_indirect(&rbuf, 0);
         _ = enc.finish(None);
     }
 }
