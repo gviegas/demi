@@ -5,40 +5,49 @@ use std::ops::{BitOr, RangeBounds};
 use crate::Result;
 
 pub struct Texture {
+    width: u32,
+    height: u32,
+    depth_or_layers: u32,
+    level_count: u32,
+    sample_count: u32,
+    dimension: TextureDimension,
+    format: TextureFormat,
+    usage: TextureUsageFlags,
+    _view_formats: Vec<TextureFormat>,
     // TODO
 }
 
 impl Texture {
     pub fn width(&self) -> u32 {
-        panic!("not yet implemented");
+        self.width
     }
 
     pub fn height(&self) -> u32 {
-        panic!("not yet implemented");
+        self.height
     }
 
     pub fn depth_or_layers(&self) -> u32 {
-        panic!("not yet implemented");
+        self.depth_or_layers
     }
 
     pub fn level_count(&self) -> u32 {
-        panic!("not yet implemented");
+        self.level_count
     }
 
     pub fn sample_count(&self) -> u32 {
-        panic!("not yet implemented");
+        self.sample_count
     }
 
     pub fn dimension(&self) -> TextureDimension {
-        panic!("not yet implemented");
+        self.dimension
     }
 
     pub fn format(&self) -> TextureFormat {
-        panic!("not yet implemented");
+        self.format
     }
 
     pub fn usage(&self) -> TextureUsageFlags {
-        panic!("not yet implemented");
+        self.usage
     }
 
     pub fn create_view<T, U>(&mut self, _desc: &TextureViewDescriptor<T, U>) -> Result<TextureView>
