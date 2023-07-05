@@ -50,6 +50,7 @@ pub enum Feature {
 }
 pub(crate) const MAX_FEATURE: usize = 1 + Feature::Float32Filterable as usize;
 
+#[cfg_attr(test, derive(Default))] // TODO: Remove.
 #[derive(Clone)]
 pub struct SupportedFeatures([bool; MAX_FEATURE]);
 
@@ -331,7 +332,7 @@ mod tests {
 
         // TODO: `Adapter::new`.
         let adap = Adapter {
-            features: SupportedFeatures([false; MAX_FEATURE]), // NOTE: This is invalid.
+            features: Default::default(), // NOTE: This is invalid.
             limits: Default::default(),
             fallback: false,
             _info: Some(info.clone()),
@@ -348,7 +349,7 @@ mod tests {
 
         // TODO: `Adapter::new`.
         let adap = Adapter {
-            features: SupportedFeatures([false; MAX_FEATURE]), // NOTE: This is invalid.
+            features: Default::default(), // NOTE: This is invalid.
             limits: Default::default(),
             fallback: false,
             _info: Some(info),
