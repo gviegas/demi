@@ -48,7 +48,7 @@ pub enum Feature {
     Bgra8UnormStorage,
     Float32Filterable,
 }
-const MAX_FEATURE: usize = 1 + Feature::Float32Filterable as usize;
+pub(crate) const MAX_FEATURE: usize = 1 + Feature::Float32Filterable as usize;
 
 #[derive(Clone)]
 pub struct SupportedFeatures([bool; MAX_FEATURE]);
