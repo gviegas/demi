@@ -12,16 +12,20 @@ use crate::{
 };
 
 pub struct Device {
-    // TODO
+    //adapter: Adapter, // XXX
+    features: SupportedFeatures,
+    limits: SupportedLimits,
+    // TODO: Queue.
+    // TODO: Backend.
 }
 
 impl Device {
     pub fn features(&self) -> &SupportedFeatures {
-        panic!("not yet implemented");
+        &self.features
     }
 
     pub fn limits(&self) -> &SupportedLimits {
-        panic!("not yet implemented");
+        &self.limits
     }
 
     pub fn queue(&self) -> &Queue {
