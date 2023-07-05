@@ -132,9 +132,10 @@ mod tests {
         DepthStencilState, Extent3d, FilterMode, FragmentState, FrontFace, MipmapFilterMode,
         MultisampleState, PipelineConstant, PipelineConstantValue, PrimitiveState,
         PrimitiveTopology, ProgrammableStage, QueryKind, RenderPassLayout, SamplerBindingKind,
-        ShaderStage, StencilFaceState, StencilOperation, StorageTextureAccess, TextureDimension,
-        TextureFormat, TextureSampleKind, TextureUsage, TextureView, TextureViewDimension,
-        VertexAttribute, VertexBufferLayout, VertexFormat, VertexState, VertexStepMode,
+        ShaderStage, StencilFaceState, StencilOperation, TextureAspect, TextureDimension,
+        TextureFormat, TextureSampleKind, TextureUsage, TextureViewDescriptor,
+        TextureViewDimension, VertexAttribute, VertexBufferLayout, VertexFormat, VertexState,
+        VertexStepMode,
     };
 
     #[test]
@@ -159,7 +160,7 @@ mod tests {
             })
             .unwrap();
 
-        _ = dev
+        let mut tex = dev
             .create_texture(&TextureDescriptor {
                 size: Extent3d {
                     width: 1024,
@@ -174,6 +175,15 @@ mod tests {
                     | TextureUsage::TextureBinding
                     | TextureUsage::RenderAttachment,
                 view_formats: &[TextureFormat::R8Unorm, TextureFormat::Rg16Float],
+            })
+            .unwrap();
+        let view = tex
+            .create_view(&TextureViewDescriptor {
+                format: tex.format(),
+                dimension: TextureViewDimension::Two,
+                aspect: TextureAspect::All,
+                level_range: ..,
+                layer_range: ..,
             })
             .unwrap();
 
@@ -210,15 +220,6 @@ mod tests {
                         },
                     },
                     BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: ShaderStage::Compute.into(),
-                        resource: BindingResourceLayout::StorageTexture {
-                            access: StorageTextureAccess::WriteOnly,
-                            format: TextureFormat::R32Uint,
-                            view_dimension: TextureViewDimension::One,
-                        },
-                    },
-                    BindGroupLayoutEntry {
                         binding: 3,
                         visibility: ShaderStage::Vertex.into(),
                         resource: BindingResourceLayout::Buffer {
@@ -240,15 +241,11 @@ mod tests {
             entries: &[
                 BindGroupEntry {
                     binding: 0,
-                    resource: BindingResource::Texture(&TextureView {}),
+                    resource: BindingResource::Texture(&view),
                 },
                 BindGroupEntry {
                     binding: 2,
                     resource: BindingResource::Sampler(&Sampler {}),
-                },
-                BindGroupEntry {
-                    binding: 1,
-                    resource: BindingResource::StorageTexture(&TextureView {}),
                 },
                 BindGroupEntry {
                     binding: 3,

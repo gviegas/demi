@@ -182,6 +182,54 @@ mod tests {
                 view_formats: &[],
             })
             .unwrap();
+        let mut color_tex = dev
+            .create_texture(&TextureDescriptor {
+                size: Extent3d {
+                    width: 480,
+                    height: 270,
+                    depth_or_layers: 1,
+                },
+                level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::Two,
+                format: TextureFormat::Rgba8Unorm,
+                usage: TextureUsage::RenderAttachment.into(),
+                view_formats: &[],
+            })
+            .unwrap();
+        let color_view = color_tex
+            .create_view(&TextureViewDescriptor {
+                format: color_tex.format(),
+                dimension: TextureViewDimension::Two,
+                aspect: TextureAspect::All,
+                level_range: ..,
+                layer_range: ..,
+            })
+            .unwrap();
+        let mut ds_tex = dev
+            .create_texture(&TextureDescriptor {
+                size: Extent3d {
+                    width: 480,
+                    height: 270,
+                    depth_or_layers: 1,
+                },
+                level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::Two,
+                format: TextureFormat::Depth24PlusStencil8,
+                usage: TextureUsage::RenderAttachment.into(),
+                view_formats: &[],
+            })
+            .unwrap();
+        let ds_view = ds_tex
+            .create_view(&TextureViewDescriptor {
+                format: color_tex.format(),
+                dimension: TextureViewDimension::Two,
+                aspect: TextureAspect::All,
+                level_range: ..,
+                layer_range: ..,
+            })
+            .unwrap();
 
         let mut enc = CommandEncoder {};
 
@@ -199,14 +247,14 @@ mod tests {
         enc.insert_debug_marker("dbg2".to_string());
         let mut pass = enc.begin_render_pass(&RenderPassDescriptor {
             color_attachments: vec![Some(RenderPassColorAttachment {
-                view: &TextureView {},
+                view: &color_view,
                 resolve_target: None,
                 clear_value: Some(Color::Float(0.0, 0.0, 0.0, 1.0)),
                 load_op: LoadOp::Load,
                 store_op: StoreOp::Store,
             })],
             depth_stencil_attachment: Some(RenderPassDepthStencilAttachment {
-                view: &TextureView {},
+                view: &ds_view,
                 depth_clear_value: 1.0,
                 depth_load_op: LoadOp::Clear,
                 depth_store_op: StoreOp::Store,

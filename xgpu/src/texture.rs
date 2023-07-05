@@ -1,8 +1,8 @@
 //! GPU texture.
 
-use std::ops::{BitOr, RangeBounds};
+use std::ops::{BitOr, Bound, Range, RangeBounds};
 
-use crate::Result;
+use crate::{Error, Result};
 
 pub struct Texture {
     width: u32,
@@ -50,12 +50,46 @@ impl Texture {
         self.usage
     }
 
-    pub fn create_view<T, U>(&mut self, _desc: &TextureViewDescriptor<T, U>) -> Result<TextureView>
+    #[allow(unreachable_code, unused_variables)]
+    pub fn create_view<T, U>(&mut self, desc: &TextureViewDescriptor<T, U>) -> Result<TextureView>
     where
         T: RangeBounds<u32>,
         U: RangeBounds<u32>,
     {
-        panic!("not yet implemented");
+        // TODO: Validate.
+        // TODO: Create internal data.
+        panic!("WIP");
+
+        fn convert_range_bounds(
+            bounds: &impl RangeBounds<u32>,
+            max_exclusive: u32,
+        ) -> Result<Range<u32>> {
+            let start = match bounds.start_bound() {
+                Bound::Included(x) => *x,
+                Bound::Excluded(_) => unreachable!(),
+                Bound::Unbounded => 0,
+            };
+            let end = match bounds.start_bound() {
+                Bound::Included(x) => *x - 1,
+                Bound::Excluded(x) => *x,
+                Bound::Unbounded => max_exclusive,
+            };
+            if start >= end || end >= max_exclusive {
+                Err(Error::Validation("invalid texture view subresource"))
+            } else {
+                Ok(start..end)
+            }
+        }
+        let level_range = convert_range_bounds(&desc.level_range, self.level_count)?;
+        let layer_range = convert_range_bounds(&desc.layer_range, self.depth_or_layers)?;
+
+        Ok(TextureView {
+            format: desc.format,
+            dimension: desc.dimension,
+            aspect: desc.aspect,
+            level_range,
+            layer_range,
+        })
     }
 }
 
@@ -249,6 +283,13 @@ impl From<TextureUsage> for TextureUsageFlags {
 }
 
 pub struct TextureView {
+    // TODO: Need to reference `Texture` somehow (borrowing will prevent
+    // new views from being created).
+    format: TextureFormat,
+    dimension: TextureViewDimension,
+    aspect: TextureAspect,
+    level_range: Range<u32>,
+    layer_range: Range<u32>,
     // TODO
 }
 
