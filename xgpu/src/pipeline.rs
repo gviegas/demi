@@ -313,3 +313,17 @@ pub enum BlendFactor {
     Constant,
     OneMinusConstant,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pipeline() {
+        // TODO: `*Pipeline::New`.
+        let comp = ComputePipeline {};
+        let rend = RenderPipeline {};
+        _ = comp.get_bind_group_layout(0);
+        _ = rend.get_bind_group_layout(1);
+    }
+}
