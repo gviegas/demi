@@ -451,16 +451,15 @@ pub struct RenderBundleDescriptor;
 mod tests {
     use super::*;
     use crate::{
-        BindGroup, Buffer, BufferDescriptor, BufferUsage, ComputePipeline, Extent3d,
-        ImageCopyBuffer, ImageCopyTexture, ImageDataLayout, IndexFormat, Origin3d, QueryKind,
-        QuerySet, QuerySetDescriptor, RenderPipeline, Result, TextureAspect, TextureDescriptor,
-        TextureDimension, TextureFormat, TextureUsage, TextureView, TextureViewDescriptor,
-        TextureViewDimension,
+        BindGroup, BufferDescriptor, BufferUsage, ComputePipeline, Extent3d, ImageCopyBuffer,
+        ImageCopyTexture, ImageDataLayout, IndexFormat, Origin3d, QueryKind, QuerySetDescriptor,
+        RenderPipeline, TextureAspect, TextureDescriptor, TextureDimension, TextureFormat,
+        TextureUsage, TextureViewDescriptor, TextureViewDimension,
     };
 
     #[test]
     fn command() {
-        let mut dev = crate::request_adapter(None)
+        let dev = crate::request_adapter(None)
             .unwrap()
             .request_device(None)
             .unwrap();
@@ -516,7 +515,7 @@ mod tests {
                 view_formats: &[],
             })
             .unwrap();
-        let mut color_tex = dev
+        let color_tex = dev
             .create_texture(&TextureDescriptor {
                 size: Extent3d {
                     width: 480,
@@ -540,7 +539,7 @@ mod tests {
                 layer_range: ..,
             })
             .unwrap();
-        let mut ds_tex = dev
+        let ds_tex = dev
             .create_texture(&TextureDescriptor {
                 size: Extent3d {
                     width: 480,

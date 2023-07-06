@@ -51,7 +51,7 @@ impl Texture {
     }
 
     #[allow(unreachable_code, unused_variables)]
-    pub fn create_view<T, U>(&mut self, desc: &TextureViewDescriptor<T, U>) -> Result<TextureView>
+    pub fn create_view<T, U>(&self, desc: &TextureViewDescriptor<T, U>) -> Result<TextureView>
     where
         T: RangeBounds<u32>,
         U: RangeBounds<u32>,
@@ -283,8 +283,7 @@ impl From<TextureUsage> for TextureUsageFlags {
 }
 
 pub struct TextureView {
-    // TODO: Need to reference `Texture` somehow (borrowing will prevent
-    // new views from being created).
+    // TODO: `texture`.
     format: TextureFormat,
     dimension: TextureViewDimension,
     aspect: TextureAspect,
@@ -329,7 +328,7 @@ mod tests {
     #[test]
     fn texture() {
         // TODO: `Texture::new`.
-        let mut tex = Texture {
+        let tex = Texture {
             width: 1024,
             height: 1024,
             depth_or_layers: 16,

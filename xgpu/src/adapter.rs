@@ -7,7 +7,7 @@ pub struct Adapter {
     limits: SupportedLimits,
     fallback: bool,
     _info: Option<AdapterInfo>,
-    // TODO: Backend.
+    // TODO
 }
 
 impl Adapter {

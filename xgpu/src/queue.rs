@@ -6,7 +6,6 @@ pub struct Queue {
     // TODO
 }
 
-// TODO: Cannot use mutable references here.
 impl Queue {
     pub fn submit(&self, _command_buffers: Box<[CommandBuffer]>) -> Result<()> {
         panic!("not yet implemented");
@@ -65,7 +64,7 @@ mod tests {
 
     #[test]
     fn queue() {
-        let mut dev = crate::request_adapter(None)
+        let dev = crate::request_adapter(None)
             .unwrap()
             .request_device(None)
             .unwrap();

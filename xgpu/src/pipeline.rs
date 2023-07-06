@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn pipeline() {
-        // TODO: `*Pipeline::New`.
+        // TODO: `*Pipeline::new`.
         let comp = ComputePipeline {};
         let rend = RenderPipeline {};
         _ = comp.get_bind_group_layout(0);

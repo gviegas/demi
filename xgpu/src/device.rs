@@ -12,11 +12,11 @@ use crate::{
 };
 
 pub struct Device {
-    //adapter: Adapter, // XXX
+    // TODO: `adapter`.
     features: SupportedFeatures,
     limits: SupportedLimits,
-    // TODO: Queue.
-    // TODO: Backend.
+    // TODO: `queue`.
+    // TODO
 }
 
 impl Device {
@@ -32,17 +32,15 @@ impl Device {
         panic!("not yet implemented");
     }
 
-    // TODO: Maybe use interior mutability for the following
-
-    pub fn create_buffer(&mut self, _desc: &BufferDescriptor) -> Result<Buffer> {
+    pub fn create_buffer(&self, _desc: &BufferDescriptor) -> Result<Buffer> {
         panic!("not yet implemented");
     }
 
-    pub fn create_texture(&mut self, _desc: &TextureDescriptor) -> Result<Texture> {
+    pub fn create_texture(&self, _desc: &TextureDescriptor) -> Result<Texture> {
         panic!("not yet implemented");
     }
 
-    pub fn create_sampler<T>(&mut self, _desc: &SamplerDescriptor<T>) -> Result<Sampler>
+    pub fn create_sampler<T>(&self, _desc: &SamplerDescriptor<T>) -> Result<Sampler>
     where
         T: RangeBounds<f32>,
     {
@@ -50,30 +48,30 @@ impl Device {
     }
 
     pub fn create_bind_group_layout(
-        &mut self,
+        &self,
         _desc: &BindGroupLayoutDescriptor,
     ) -> Result<BindGroupLayout> {
         panic!("not yet implemented");
     }
 
     pub fn create_pipeline_layout(
-        &mut self,
+        &self,
         _desc: &PipelineLayoutDescriptor,
     ) -> Result<PipelineLayout> {
         panic!("not yet implemented");
     }
 
-    pub fn create_bind_group(&mut self, _desc: &BindGroupDescriptor) -> Result<BindGroup> {
+    pub fn create_bind_group(&self, _desc: &BindGroupDescriptor) -> Result<BindGroup> {
         panic!("not yet implemented");
     }
 
-    pub fn create_shader_module(&mut self, _desc: &ShaderModuleDescriptor) -> Result<ShaderModule> {
+    pub fn create_shader_module(&self, _desc: &ShaderModuleDescriptor) -> Result<ShaderModule> {
         panic!("not yet implemented");
     }
 
     // async
     pub fn create_compute_pipeline(
-        &mut self,
+        &self,
         _desc: &ComputePipelineDescriptor,
     ) -> Result<ComputePipeline> {
         panic!("not yet implemented");
@@ -81,27 +79,27 @@ impl Device {
 
     // async
     pub fn create_render_pipeline(
-        &mut self,
+        &self,
         _desc: &RenderPipelineDescriptor,
     ) -> Result<RenderPipeline> {
         panic!("not yet implemented");
     }
 
     pub fn create_command_encoder(
-        &mut self,
+        &self,
         _desc: Option<&CommandEncoderDescriptor>,
     ) -> Result<CommandEncoder> {
         panic!("not yet implemented");
     }
 
     pub fn create_render_bundle_encoder(
-        &mut self,
+        &self,
         _desc: &RenderBundleEncoderDescriptor,
     ) -> Result<RenderBundleEncoder> {
         panic!("not yet implemented");
     }
 
-    pub fn create_query_set(&mut self, _desc: &QuerySetDescriptor) -> Result<QuerySet> {
+    pub fn create_query_set(&self, _desc: &QuerySetDescriptor) -> Result<QuerySet> {
         panic!("not yet implemented");
     }
 }
@@ -141,7 +139,7 @@ mod tests {
     #[test]
     fn device() {
         // TODO: `Device::new`.
-        let mut dev = Device {
+        let dev = Device {
             features: Default::default(), // NOTE: This is invalid.
             limits: Default::default(),
         };
@@ -160,7 +158,7 @@ mod tests {
             })
             .unwrap();
 
-        let mut tex = dev
+        let tex = dev
             .create_texture(&TextureDescriptor {
                 size: Extent3d {
                     width: 1024,
