@@ -1,34 +1,44 @@
 //! xgpu.
 
 mod adapter;
-mod binding;
-mod buffer;
-mod command;
-mod device;
-mod error;
-mod pipeline;
-mod query;
-mod queue;
-mod sampler;
-mod shader;
-mod texture;
-
 pub use adapter::*;
+
+mod binding;
 pub use binding::*;
+
+mod buffer;
 pub use buffer::*;
+
+mod command;
 pub use command::*;
+
+mod device;
 pub use device::*;
+
+mod error;
 pub use error::*;
+
+mod pipeline;
 pub use pipeline::*;
+
+mod query;
 pub use query::*;
+
+mod queue;
 pub use queue::*;
+
+mod sampler;
 pub use sampler::*;
+
+mod shader;
 pub use shader::*;
+
+mod texture;
 pub use texture::*;
 
-// async
-pub fn request_adapter(_options: Option<&RequestAdapterOptions>) -> Result<Adapter> {
-    panic!("not yet implemented");
+// TODO: async.
+pub fn request_adapter(options: Option<&RequestAdapterOptions>) -> Result<Adapter> {
+    Adapter::new(options)
 }
 
 pub struct RequestAdapterOptions {

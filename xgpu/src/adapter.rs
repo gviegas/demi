@@ -1,6 +1,6 @@
 //! GPU adapter.
 
-use crate::{Device, DeviceDescriptor, Result};
+use crate::{Device, DeviceDescriptor, RequestAdapterOptions, Result};
 
 pub struct Adapter {
     features: SupportedFeatures,
@@ -11,6 +11,10 @@ pub struct Adapter {
 }
 
 impl Adapter {
+    pub(crate) fn new(_options: Option<&RequestAdapterOptions>) -> Result<Self> {
+        panic!("not yet implemented");
+    }
+
     pub fn features(&self) -> &SupportedFeatures {
         &self.features
     }
@@ -320,23 +324,15 @@ pub struct AdapterInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::PowerPreference;
 
     #[test]
     fn adapter() {
-        let info = AdapterInfo {
-            vendor: "unknown".to_string(),
-            architecture: "unknown".to_string(),
-            device: "unknown".to_string(),
-            description: Default::default(),
-        };
-
-        // TODO: `Adapter::new`.
-        let adap = Adapter {
-            features: Default::default(), // NOTE: This is invalid.
-            limits: Default::default(),
-            fallback: false,
-            _info: Some(info.clone()),
-        };
+        let adap = Adapter::new(Some(&RequestAdapterOptions {
+            power_preference: PowerPreference::HighPerformance,
+            ..Default::default()
+        }))
+        .unwrap();
         _ = adap.features();
         _ = adap.limits();
         _ = adap.is_fallback_adapter();
@@ -348,12 +344,7 @@ mod tests {
         }));
 
         // TODO: `Adapter::new`.
-        let adap = Adapter {
-            features: Default::default(), // NOTE: This is invalid.
-            limits: Default::default(),
-            fallback: false,
-            _info: Some(info),
-        };
+        let adap = Adapter::new(None).unwrap();
         _ = adap.request_device(None);
     }
 }
