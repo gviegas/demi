@@ -36,6 +36,8 @@ pub use shader::*;
 mod texture;
 pub use texture::*;
 
+mod internal;
+
 // TODO: async.
 pub fn request_adapter(options: Option<&RequestAdapterOptions>) -> Result<Adapter> {
     Adapter::new(options)
