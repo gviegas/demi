@@ -1,9 +1,9 @@
 //! Vulkan API.
 
-use std::ffi::c_void;
+#![feature(c_size_t)]
 
-#[allow(non_camel_case_types)]
-pub type c_size_t = usize; // XXX
+use ::core::ffi::c_size_t;
+use std::ffi::c_void;
 
 mod init;
 pub use crate::init::*;

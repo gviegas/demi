@@ -1,9 +1,10 @@
+use core::ffi::c_size_t;
 use std::ffi::c_void;
 use std::mem;
 use std::result;
 
 use crate::{
-    c_size_t, AcquireNextImageKhr, AllocateCommandBuffers, AllocateDescriptorSets, AllocateMemory,
+    AcquireNextImageKhr, AllocateCommandBuffers, AllocateDescriptorSets, AllocateMemory,
     AllocationCallbacks, BeginCommandBuffer, BindBufferMemory, BindImageMemory, Bool32, Buffer,
     BufferCopy, BufferCreateInfo, BufferDeviceAddressInfo, BufferImageCopy, BufferMemoryBarrier,
     BufferView, BufferViewCreateInfo, ClearColorValue, ClearDepthStencilValue, CmdBeginQuery,

@@ -1,8 +1,7 @@
+use core::ffi::c_size_t;
 use std::ffi::c_void;
 
-use crate::{
-    c_size_t, Bool32, ResolveModeFlags, SampleCountFlags, ShaderStageFlags, StructureType,
-};
+use crate::{Bool32, ResolveModeFlags, SampleCountFlags, ShaderStageFlags, StructureType};
 
 /// VkPhysicalDeviceLimits
 #[derive(Debug)]

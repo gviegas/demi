@@ -1,8 +1,9 @@
+use core::ffi::c_size_t;
 use std::ffi::{c_char, c_void};
 use std::fmt;
 
 use crate::{
-    c_size_t, AllocationCallbacks, Bool32, Extent3d, Format, Offset3d, PhysicalDeviceFeatures,
+    AllocationCallbacks, Bool32, Extent3d, Format, Offset3d, PhysicalDeviceFeatures,
     PhysicalDeviceLimits, PhysicalDeviceSparseProperties, Rect2d, Result, StructureType,
 };
 
