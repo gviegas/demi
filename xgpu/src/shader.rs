@@ -57,9 +57,14 @@ pub struct ProgrammableStage<'a> {
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct PipelineConstant {
-    // TODO: Should allow string IDs too.
-    pub id: u32,
+    pub id: PipelineConstantId,
     pub value: PipelineConstantValue,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum PipelineConstantId {
+    Id(u32),
+    Name(&'static str),
 }
 
 #[derive(Clone, Copy, PartialEq)]

@@ -128,10 +128,10 @@ mod tests {
         BindingResourceLayout, BlendComponent, BlendFactor, BlendOperation, BlendState,
         BufferBindingKind, BufferUsage, ColorTargetState, ColorWrite, CompareFunction, CullMode,
         DepthStencilState, Extent3d, FilterMode, FragmentState, FrontFace, MipmapFilterMode,
-        MultisampleState, PipelineConstant, PipelineConstantValue, PrimitiveState,
-        PrimitiveTopology, ProgrammableStage, QueryKind, RenderPassLayout, SamplerBindingKind,
-        ShaderStage, StencilFaceState, StencilOperation, TextureAspect, TextureDimension,
-        TextureFormat, TextureSampleKind, TextureUsage, TextureViewDescriptor,
+        MultisampleState, PipelineConstant, PipelineConstantId, PipelineConstantValue,
+        PrimitiveState, PrimitiveTopology, ProgrammableStage, QueryKind, RenderPassLayout,
+        SamplerBindingKind, ShaderStage, StencilFaceState, StencilOperation, TextureAspect,
+        TextureDimension, TextureFormat, TextureSampleKind, TextureUsage, TextureViewDescriptor,
         TextureViewDimension, VertexAttribute, VertexBufferLayout, VertexFormat, VertexState,
         VertexStepMode,
     };
@@ -263,7 +263,7 @@ mod tests {
                 module: &ShaderModule {},
                 entry_point: "main".to_string(),
                 constants: vec![PipelineConstant {
-                    id: 0,
+                    id: PipelineConstantId::Id(0),
                     value: PipelineConstantValue::Float32(-1.0),
                 }],
             },
