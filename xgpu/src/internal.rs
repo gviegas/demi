@@ -1,99 +1,34 @@
-use std::sync::{Arc, RwLock};
+//! Internal types.
 
-pub struct Adapter {
-    // TODO
-}
+mod adapter;
+pub use adapter::*;
 
-pub struct Device {
-    // TODO
-}
+mod binding;
+pub use binding::*;
 
-pub struct Buffer {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod buffer;
+pub use buffer::*;
 
-pub struct Texture {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod command;
+pub use command::*;
 
-pub struct TextureView {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod device;
+pub use device::*;
 
-pub struct Sampler {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod pipeline;
+pub use pipeline::*;
 
-pub struct BindGroupLayout {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod query;
+pub use query::*;
 
-pub struct BindGroup {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod queue;
+pub use queue::*;
 
-pub struct PipelineLayout {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod sampler;
+pub use sampler::*;
 
-pub struct ShaderModule {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod shader;
+pub use shader::*;
 
-pub struct ComputePipeline {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct RenderPipeline {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct CommandBuffer {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct CommandEncoder {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct ComputePassEncoder {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct RenderPassEncoder {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct RenderBundle {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct RenderBundleEncoder {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct Queue {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
-
-pub struct QuerySet {
-    device: Arc<RwLock<Device>>,
-    // TODO
-}
+mod texture;
+pub use texture::*;
