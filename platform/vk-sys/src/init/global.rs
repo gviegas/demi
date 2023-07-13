@@ -34,6 +34,8 @@ pub unsafe fn enumerate_instance_extension_properties(
 /// vkEnumerateInstanceVersion (v1.1)
 pub unsafe fn enumerate_instance_version(api_version: *mut u32) -> Result {
     debug_assert!(GLOBAL_FP.is_some());
+    // TODO: Should `debug_assert` the parameters of every proc.
+    debug_assert!(!api_version.is_null());
     if let Some(fp) = GLOBAL_FP
         .as_ref()
         .unwrap_unchecked()
@@ -41,7 +43,6 @@ pub unsafe fn enumerate_instance_version(api_version: *mut u32) -> Result {
     {
         fp(api_version)
     } else {
-        debug_assert!(!api_version.is_null());
         *api_version = API_VERSION_1_0;
         SUCCESS
     }
