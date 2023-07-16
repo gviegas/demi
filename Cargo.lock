@@ -6,6 +6,7 @@ version = 3
 name = "demi"
 version = "0.1.0"
 dependencies = [
+ "vk",
  "vk-sys",
 ]
 
@@ -19,6 +20,13 @@ dependencies = [
 [[package]]
 name = "dl-sys"
 version = "0.1.0"
+
+[[package]]
+name = "vk"
+version = "0.1.0"
+dependencies = [
+ "vk-sys",
+]
 
 [[package]]
 name = "vk-sys"
