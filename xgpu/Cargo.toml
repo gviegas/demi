@@ -6,10 +6,10 @@ edition = "2021"
 [dependencies]
 
 [target.'cfg(any(target_os = "linux", windows))'.dependencies]
-vk-sys.workspace = true
+vk.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
-wlc-sys.workspace = true
+wlc-sys.workspace = true #TODO: Should be a wrapper.
 
 [target.'cfg(windows)'.dependencies]
 # TODO
