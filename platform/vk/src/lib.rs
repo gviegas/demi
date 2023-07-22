@@ -144,3 +144,43 @@ impl From<vks::Result> for Status {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn result() {
+        let e = err().unwrap_err();
+        assert_eq!(e.status, Some(Status::OutOfDeviceMemory));
+        assert_eq!(e.description, "OODM!");
+
+        let e = err_status().unwrap_err();
+        assert_eq!(e.status, Some(Status::DeviceLost));
+        assert_eq!(e.description, "");
+
+        let e = err_description().unwrap_err();
+        assert_eq!(e.status, None);
+        assert_eq!(e.description, "!fAiLeD!");
+
+        let e = err_result().unwrap_err();
+        assert_eq!(e.status, Some(Status::Timeout));
+        assert_eq!(e.description, "");
+
+        fn err() -> Result<()> {
+            Err(Error::status(Status::OutOfDeviceMemory, "OODM!"))
+        }
+
+        fn err_status() -> Result<()> {
+            Err(Status::DeviceLost.into())
+        }
+
+        fn err_description() -> Result<()> {
+            Err("!fAiLeD!".into())
+        }
+
+        fn err_result() -> Result<()> {
+            Err(vks::TIMEOUT.into())
+        }
+    }
+}
