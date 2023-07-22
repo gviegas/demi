@@ -27,6 +27,10 @@ impl Error {
     pub fn status(status: Status, description: &'static str) -> Self {
         Self::new(Some(status), description)
     }
+
+    pub fn result(result: vks::Result, description: &'static str) -> Self {
+        Self::status(result.into(), description)
+    }
 }
 
 impl From<Status> for Error {
@@ -168,7 +172,7 @@ mod tests {
         assert_eq!(e.description, "");
 
         fn err() -> Result<()> {
-            Err(Error::status(Status::OutOfDeviceMemory, "OODM!"))
+            Err(Error::result(vks::ERROR_OUT_OF_DEVICE_MEMORY, "OODM!"))
         }
 
         fn err_status() -> Result<()> {
