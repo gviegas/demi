@@ -1,6 +1,8 @@
 use std::ptr;
 use vk_sys as vks;
 
+use crate::{Error, Result};
+
 /// Instance.
 pub struct Instance {
     inst: vks::Instance,
@@ -8,7 +10,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(/*_exts: &[&str]*/) -> Result<Self, &'static str> {
+    pub fn new(/*_exts: &[&str]*/) -> Result<Self> {
         vks::init()?;
 
         let app_info = vks::ApplicationInfo {
@@ -40,10 +42,10 @@ impl Instance {
                     Ok(fp) => Ok(Self { inst, fp }),
                     Err(_) => {
                         vks::fini();
-                        Err("vk_sys::InstanceFp::new failed")
+                        Err("IntanceFp::new".into())
                     }
                 },
-                _ => Err("vk_sys::create_instance failed"),
+                err => Err(Error::result(err, "create_instance")),
             }
         }
     }
