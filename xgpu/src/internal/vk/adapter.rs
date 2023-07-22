@@ -1,5 +1,3 @@
-use std::ptr;
-
 use crate::internal::NAdapter;
 use crate::{Error, PowerPreference, Result};
 
@@ -13,10 +11,10 @@ impl NAdapter for Adapter {
 }
 
 impl Adapter {
-    pub(super) fn new(power_pref: PowerPreference) -> Result<Self> {
+    pub(super) fn new(_power_pref: PowerPreference) -> Result<Self> {
         let inst = match vk::Instance::new(/*...*/) {
             Ok(x) => x,
-            Err(s) => return Err(Error::Internal(s)),
+            Err(err) => return Err(err.into()),
         };
 
         // TODO: Device selection.
