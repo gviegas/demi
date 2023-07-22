@@ -47,6 +47,6 @@ dependencies = [
 name = "xgpu"
 version = "0.1.0"
 dependencies = [
- "vk-sys",
+ "vk",
  "wlc-sys",
 ]
