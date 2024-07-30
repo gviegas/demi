@@ -1,4 +1,5 @@
-use core::ffi::c_size_t;
+use crate::c_size_t;
+//use core::ffi::c_size_t;
 use std::ffi::{c_char, c_void};
 use std::fmt;
 
