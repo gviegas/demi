@@ -11,8 +11,8 @@ vk-sys.workspace = true #TODO: Remove.
 members = ["xgpu"]
 
 [workspace.dependencies]
-dl-sys = { path = "platform/dl-sys" }
-dl = { path = "platform/dl" }
-vk-sys = { path = "platform/vk-sys" }
-vk = { path = "platform/vk" }
-wl-sys = { path = "platform/wl-sys" }
+dl-sys = { path = "sys/dl-sys" }
+dl = { path = "sys/dl" }
+vk-sys = { path = "sys/vk-sys" }
+vk = { path = "sys/vk" }
+wl-sys = { path = "sys/wl-sys" }
