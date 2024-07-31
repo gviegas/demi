@@ -194,16 +194,16 @@ static RC: AtomicUsize = AtomicUsize::new(0);
 /// Initializes the library.
 ///
 /// NOTE: It should be paired with a subsequent [`fini`] call.
-pub fn init() -> Result<(), &'static str> {
-    static mut ERR: String = String::new();
+pub fn init() -> Result<(), String> {
+    let mut err = String::new();
     match RC.swap(usize::MAX, Ordering::AcqRel) {
         0 => {
             match Dl::new(LIB_NAME, dl::LAZY | dl::LOCAL) {
                 Ok(lib) => match get_fp(&lib) {
                     Ok(fp) => unsafe { LIB = Some((lib, fp)) },
-                    Err(e) => unsafe { ERR = e },
+                    Err(e) => err = e,
                 },
-                Err(e) => unsafe { ERR = e },
+                Err(e) => err = e,
             }
             RC.store(1, Ordering::Release);
         }
@@ -222,7 +222,7 @@ pub fn init() -> Result<(), &'static str> {
         if LIB.is_some() {
             Ok(())
         } else {
-            Err(&ERR)
+            Err(err)
         }
     }
 }

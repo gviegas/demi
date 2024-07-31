@@ -26,8 +26,8 @@ static RC: AtomicUsize = AtomicUsize::new(0);
 /// Initializes the library.
 ///
 /// NOTE: It should be paired with a subsequent [`fini`] call.
-pub fn init() -> Result<(), &'static str> {
-    static mut ERR: String = String::new();
+pub fn init() -> Result<(), String> {
+    let mut err = String::new();
     match RC.swap(usize::MAX, Ordering::AcqRel) {
         0 => {
             match Proc::new() {
@@ -36,9 +36,9 @@ pub fn init() -> Result<(), &'static str> {
                         PROC = Some(proc);
                         GLOBAL_FP = Some(globl);
                     },
-                    Err(e) => unsafe { ERR = e },
+                    Err(e) => err = e,
                 },
-                Err(e) => unsafe { ERR = e },
+                Err(e) => err = e,
             }
             RC.store(1, Ordering::Release);
         }
@@ -57,7 +57,7 @@ pub fn init() -> Result<(), &'static str> {
         if PROC.is_some() {
             Ok(())
         } else {
-            Err(&ERR)
+            Err(err)
         }
     }
 }
