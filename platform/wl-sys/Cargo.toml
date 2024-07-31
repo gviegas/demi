@@ -1,5 +1,5 @@
 [package]
-name = "wlc-sys"
+name = "wl-sys"
 version = "0.1.0"
 edition = "2021"
 

@@ -864,7 +864,9 @@ mod tests {
             .unwrap();
 
         assert_eq!(mesh.primitives().len(), 2);
-        let [p0, p1] = &mesh.primitives()[..] else { unreachable!() };
+        let [p0, p1] = &mesh.primitives()[..] else {
+            unreachable!()
+        };
         assert_eq!(p0.vertex_count(), 21);
         assert_eq!(
             p0.semantic_data(Semantic::Position).unwrap().data_type,

@@ -1,4 +1,4 @@
-//! Wayland client API.
+//! Wayland API (client).
 
 #![cfg(unix)]
 

@@ -7,7 +7,7 @@ use std::os::unix::io::AsRawFd;
 use std::pin::Pin;
 use std::ptr;
 
-use wlc_sys::{
+use wl_sys::{
     self, Buffer, BufferListener, Compositor, Display, Keyboard, KeyboardListener, Output, Pointer,
     PointerListener, Registry, RegistryListener, Seat, SeatListener, Shm, ShmPool, Surface,
     SurfaceListener, Toplevel, ToplevelListener, Touch, WmBase, WmBaseListener, XdgSurface,
@@ -16,7 +16,7 @@ use wlc_sys::{
 
 #[test]
 fn test_client() {
-    wlc_sys::init().unwrap();
+    wl_sys::init().unwrap();
 
     let display = connect();
 
@@ -64,7 +64,7 @@ fn test_client() {
         WIDTH,
         HEIGHT,
         WIDTH * BPP / 8,
-        wlc_sys::SHM_FORMAT_XRGB8888,
+        wl_sys::SHM_FORMAT_XRGB8888,
     );
     println!("buffer: {:#?}", buffer);
 
@@ -79,7 +79,7 @@ fn test_client() {
 
     disconnect(display);
 
-    wlc_sys::fini();
+    wl_sys::fini();
 }
 
 static mut QUIT: bool = false;
@@ -91,7 +91,7 @@ fn quit() -> bool {
 
 fn connect() -> *mut Display {
     unsafe {
-        let display = wlc_sys::display_connect(ptr::null());
+        let display = wl_sys::display_connect(ptr::null());
         assert!(!display.is_null());
         display
     }
@@ -99,37 +99,37 @@ fn connect() -> *mut Display {
 
 fn disconnect(display: *mut Display) {
     unsafe {
-        wlc_sys::display_disconnect(display);
+        wl_sys::display_disconnect(display);
     }
 }
 
 fn dispatch(display: *mut Display) {
     unsafe {
-        wlc_sys::display_dispatch(display);
+        wl_sys::display_dispatch(display);
     }
 }
 
 fn dispatch_pending(display: *mut Display) {
     unsafe {
-        wlc_sys::display_dispatch_pending(display);
+        wl_sys::display_dispatch_pending(display);
     }
 }
 
 fn flush(display: *mut Display) {
     unsafe {
-        wlc_sys::display_flush(display);
+        wl_sys::display_flush(display);
     }
 }
 
 fn roundtrip(display: *mut Display) {
     unsafe {
-        wlc_sys::display_roundtrip(display);
+        wl_sys::display_roundtrip(display);
     }
 }
 
 fn get_registry(display: *mut Display) -> *mut Registry {
     unsafe {
-        let registry = wlc_sys::display_get_registry(display);
+        let registry = wl_sys::display_get_registry(display);
         assert!(!registry.is_null());
         registry
     }
@@ -147,7 +147,7 @@ fn bind(display: *mut Display) -> Pin<Box<Global>> {
         });
 
         assert_eq!(
-            wlc_sys::registry_add_listener(
+            wl_sys::registry_add_listener(
                 registry,
                 &REGISTRY_LISTENER,
                 &mut *global as *mut _ as _
@@ -155,7 +155,7 @@ fn bind(display: *mut Display) -> Pin<Box<Global>> {
             0
         );
 
-        wlc_sys::display_roundtrip(display);
+        wl_sys::display_roundtrip(display);
 
         // These globals are expected to be present.
         assert!(!global.compositor.0.is_null());
@@ -180,10 +180,10 @@ struct Global {
 impl Global {
     fn create_surface(&self) -> *mut Surface {
         unsafe {
-            let surface = wlc_sys::compositor_create_surface(self.compositor.0);
+            let surface = wl_sys::compositor_create_surface(self.compositor.0);
             assert!(!surface.is_null());
             assert_eq!(
-                wlc_sys::surface_add_listener(surface, &SURFACE_LISTENER, ptr::null_mut()),
+                wl_sys::surface_add_listener(surface, &SURFACE_LISTENER, ptr::null_mut()),
                 0
             );
             surface
@@ -193,7 +193,7 @@ impl Global {
     fn set_wm(&self) {
         unsafe {
             assert_eq!(
-                wlc_sys::wm_base_add_listener(
+                wl_sys::wm_base_add_listener(
                     self.wm_base.0,
                     &WM_BASE_LISTENER,
                     &mut PING as *mut _ as *mut _,
@@ -205,10 +205,10 @@ impl Global {
 
     fn get_xdg_surface(&self, surface: *mut Surface) -> *mut XdgSurface {
         unsafe {
-            let xdg_surface = wlc_sys::wm_base_get_xdg_surface(self.wm_base.0, surface);
+            let xdg_surface = wl_sys::wm_base_get_xdg_surface(self.wm_base.0, surface);
             assert!(!xdg_surface.is_null());
             assert_eq!(
-                wlc_sys::xdg_surface_add_listener(
+                wl_sys::xdg_surface_add_listener(
                     xdg_surface,
                     &XDG_SURFACE_LISTENER,
                     ptr::null_mut(),
@@ -221,7 +221,7 @@ impl Global {
 
     fn create_pool(&self, fd: i32, size: i32) -> *mut ShmPool {
         unsafe {
-            let shm_pool = wlc_sys::shm_create_pool(self.shm.0, fd, size);
+            let shm_pool = wl_sys::shm_create_pool(self.shm.0, fd, size);
             assert!(!shm_pool.is_null());
             shm_pool
         }
@@ -236,18 +236,18 @@ impl Global {
             });
 
             assert_eq!(
-                wlc_sys::seat_add_listener(self.seat.0, &SEAT_LISTENER, &mut *input as *mut _ as _),
+                wl_sys::seat_add_listener(self.seat.0, &SEAT_LISTENER, &mut *input as *mut _ as _),
                 0
             );
 
-            wlc_sys::display_roundtrip(display);
+            wl_sys::display_roundtrip(display);
 
             // It is ok for input to be missing.
             if (*input).pointer.is_null() {
                 println!("[!] no pointer device!");
             } else {
                 assert_eq!(
-                    wlc_sys::pointer_add_listener(
+                    wl_sys::pointer_add_listener(
                         (*input).pointer,
                         &POINTER_LISTENER,
                         ptr::null_mut(),
@@ -259,7 +259,7 @@ impl Global {
                 println!("[!] no keyboard device!");
             } else {
                 assert_eq!(
-                    wlc_sys::keyboard_add_listener(
+                    wl_sys::keyboard_add_listener(
                         (*input).keyboard,
                         &KEYBOARD_LISTENER,
                         ptr::null_mut(),
@@ -281,10 +281,10 @@ impl Global {
 
 fn get_toplevel(xdg_surface: *mut XdgSurface) -> *mut Toplevel {
     unsafe {
-        let toplevel = wlc_sys::xdg_surface_get_toplevel(xdg_surface);
+        let toplevel = wl_sys::xdg_surface_get_toplevel(xdg_surface);
         assert!(!toplevel.is_null());
         assert_eq!(
-            wlc_sys::toplevel_add_listener(toplevel, &TOPLEVEL_LISTENER, ptr::null_mut()),
+            wl_sys::toplevel_add_listener(toplevel, &TOPLEVEL_LISTENER, ptr::null_mut()),
             0
         );
         toplevel
@@ -301,10 +301,10 @@ fn create_buffer(
 ) -> *mut Buffer {
     unsafe {
         let buffer =
-            wlc_sys::shm_pool_create_buffer(shm_pool, offset, width, height, stride, format);
+            wl_sys::shm_pool_create_buffer(shm_pool, offset, width, height, stride, format);
         assert!(!buffer.is_null());
         assert_eq!(
-            wlc_sys::buffer_add_listener(buffer, &BUFFER_LISTENER, ptr::null_mut()),
+            wl_sys::buffer_add_listener(buffer, &BUFFER_LISTENER, ptr::null_mut()),
             0
         );
         buffer
@@ -313,13 +313,13 @@ fn create_buffer(
 
 fn attach(surface: *mut Surface, buffer: *mut Buffer, x: i32, y: i32) {
     unsafe {
-        wlc_sys::surface_attach(surface, buffer, x, y);
+        wl_sys::surface_attach(surface, buffer, x, y);
     }
 }
 
 fn commit(surface: *mut Surface) {
     unsafe {
-        wlc_sys::surface_commit(surface);
+        wl_sys::surface_commit(surface);
     }
 }
 
@@ -355,28 +355,27 @@ unsafe extern "C" fn rty_global(
 
     match CStr::from_ptr(interface).to_str().unwrap() {
         "wl_compositor" => {
-            let cpt =
-                wlc_sys::registry_bind(registry, name, &wlc_sys::COMPOSITOR_INTERFACE, version);
+            let cpt = wl_sys::registry_bind(registry, name, &wl_sys::COMPOSITOR_INTERFACE, version);
             assert!(!cpt.is_null());
             data.compositor = (cpt.cast(), name);
         }
         "xdg_wm_base" => {
-            let wm = wlc_sys::registry_bind(registry, name, &wlc_sys::WM_BASE_INTERFACE, version);
+            let wm = wl_sys::registry_bind(registry, name, &wl_sys::WM_BASE_INTERFACE, version);
             assert!(!wm.is_null());
             data.wm_base = (wm.cast(), name);
         }
         "wl_shm" => {
-            let shm = wlc_sys::registry_bind(registry, name, &wlc_sys::SHM_INTERFACE, version);
+            let shm = wl_sys::registry_bind(registry, name, &wl_sys::SHM_INTERFACE, version);
             assert!(!shm.is_null());
             data.shm = (shm.cast(), name);
         }
         "wl_seat" => {
-            let seat = wlc_sys::registry_bind(registry, name, &wlc_sys::SEAT_INTERFACE, version);
+            let seat = wl_sys::registry_bind(registry, name, &wl_sys::SEAT_INTERFACE, version);
             assert!(!seat.is_null());
             data.seat = (seat.cast(), name);
         }
         "wl_output" => {
-            let out = wlc_sys::registry_bind(registry, name, &wlc_sys::OUTPUT_INTERFACE, version);
+            let out = wl_sys::registry_bind(registry, name, &wl_sys::OUTPUT_INTERFACE, version);
             assert!(!out.is_null());
             data.output = (out.cast(), name);
         }
@@ -416,7 +415,7 @@ static WM_BASE_LISTENER: WmBaseListener = WmBaseListener { ping: wm_ping };
 
 unsafe extern "C" fn wm_ping(data: *mut c_void, wm_base: *mut WmBase, serial: u32) {
     println!("wm_base.ping: {:?} {:?} {:?}", data, wm_base, serial);
-    wlc_sys::wm_base_pong(wm_base, serial);
+    wl_sys::wm_base_pong(wm_base, serial);
     *data.cast::<usize>() += 1;
 }
 
@@ -429,7 +428,7 @@ unsafe extern "C" fn xsf_configure(data: *mut c_void, xdg_surface: *mut XdgSurfa
         "xdg_surface.configure: {:?} {:?} {:?}",
         data, xdg_surface, serial
     );
-    wlc_sys::xdg_surface_ack_configure(xdg_surface, serial);
+    wl_sys::xdg_surface_ack_configure(xdg_surface, serial);
 }
 
 static TOPLEVEL_LISTENER: ToplevelListener = ToplevelListener {
@@ -489,16 +488,16 @@ unsafe extern "C" fn seat_capabilities(data: *mut c_void, seat: *mut Seat, capab
 
     let data: &mut Input = &mut *data.cast();
 
-    if capabilities & wlc_sys::SEAT_CAPABILITY_POINTER != 0 {
-        data.pointer = wlc_sys::seat_get_pointer(seat);
+    if capabilities & wl_sys::SEAT_CAPABILITY_POINTER != 0 {
+        data.pointer = wl_sys::seat_get_pointer(seat);
         assert!(!data.pointer.is_null());
     }
-    if capabilities & wlc_sys::SEAT_CAPABILITY_KEYBOARD != 0 {
-        data.keyboard = wlc_sys::seat_get_keyboard(seat);
+    if capabilities & wl_sys::SEAT_CAPABILITY_KEYBOARD != 0 {
+        data.keyboard = wl_sys::seat_get_keyboard(seat);
         assert!(!data.keyboard.is_null());
     }
-    if capabilities & wlc_sys::SEAT_CAPABILITY_TOUCH != 0 {
-        data.touch = wlc_sys::seat_get_touch(seat);
+    if capabilities & wl_sys::SEAT_CAPABILITY_TOUCH != 0 {
+        data.touch = wl_sys::seat_get_touch(seat);
         assert!(!data.touch.is_null());
     }
 }
@@ -541,7 +540,7 @@ unsafe extern "C" fn pt_enter(
         surface_x / 256,
         surface_y / 256
     );
-    wlc_sys::pointer_set_cursor(pointer, serial, ptr::null_mut(), 0, 0);
+    wl_sys::pointer_set_cursor(pointer, serial, ptr::null_mut(), 0, 0);
 }
 
 unsafe extern "C" fn pt_leave(

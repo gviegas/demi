@@ -1601,7 +1601,7 @@ mod plat {
     use std::pin::Pin;
     use std::ptr;
 
-    use wlc_sys::{
+    use wl_sys::{
         self, Compositor, Display, Registry, RegistryListener, Surface, Toplevel, ToplevelListener,
         WmBase, WmBaseListener, XdgSurface, XdgSurfaceListener,
     };
@@ -1614,8 +1614,8 @@ mod plat {
 
     pub fn init() {
         unsafe {
-            wlc_sys::init().unwrap();
-            DISPLAY = wlc_sys::display_connect(ptr::null());
+            wl_sys::init().unwrap();
+            DISPLAY = wl_sys::display_connect(ptr::null());
             assert!(!DISPLAY.is_null());
             let global = bind(DISPLAY);
             SURFACE = global.create_surface();
@@ -1625,20 +1625,20 @@ mod plat {
             assert!(!XDG_SURFACE.is_null());
             TOPLEVEL = get_toplevel(XDG_SURFACE);
             assert!(!TOPLEVEL.is_null());
-            wlc_sys::display_flush(DISPLAY);
+            wl_sys::display_flush(DISPLAY);
         }
     }
 
     pub fn fini() {
         unsafe {
-            wlc_sys::display_disconnect(DISPLAY);
+            wl_sys::display_disconnect(DISPLAY);
         }
-        wlc_sys::fini();
+        wl_sys::fini();
     }
 
     pub fn poll() {
         unsafe {
-            wlc_sys::display_dispatch_pending(DISPLAY);
+            wl_sys::display_dispatch_pending(DISPLAY);
         }
     }
 
@@ -1648,7 +1648,7 @@ mod plat {
 
     fn get_registry(display: *mut Display) -> *mut Registry {
         unsafe {
-            let registry = wlc_sys::display_get_registry(display);
+            let registry = wl_sys::display_get_registry(display);
             assert!(!registry.is_null());
             registry
         }
@@ -1662,14 +1662,14 @@ mod plat {
                 wm_base: (ptr::null_mut(), u32::MAX),
             });
             assert_eq!(
-                wlc_sys::registry_add_listener(
+                wl_sys::registry_add_listener(
                     registry,
                     &REGISTRY_LISTENER,
                     &mut *global as *mut _ as *mut _
                 ),
                 0
             );
-            wlc_sys::display_roundtrip(display);
+            wl_sys::display_roundtrip(display);
             assert!(!global.compositor.0.is_null());
             assert!(!global.wm_base.0.is_null());
             global
@@ -1684,7 +1684,7 @@ mod plat {
     impl Global {
         fn create_surface(&self) -> *mut Surface {
             unsafe {
-                let surface = wlc_sys::compositor_create_surface(self.compositor.0);
+                let surface = wl_sys::compositor_create_surface(self.compositor.0);
                 assert!(!surface.is_null());
                 surface
             }
@@ -1693,7 +1693,7 @@ mod plat {
         fn set_wm(&self) {
             unsafe {
                 assert_eq!(
-                    wlc_sys::wm_base_add_listener(
+                    wl_sys::wm_base_add_listener(
                         self.wm_base.0,
                         &WM_BASE_LISTENER,
                         ptr::null_mut(),
@@ -1705,10 +1705,10 @@ mod plat {
 
         fn get_xdg_surface(&self, surface: *mut Surface) -> *mut XdgSurface {
             unsafe {
-                let xdg_surface = wlc_sys::wm_base_get_xdg_surface(self.wm_base.0, surface);
+                let xdg_surface = wl_sys::wm_base_get_xdg_surface(self.wm_base.0, surface);
                 assert!(!xdg_surface.is_null());
                 assert_eq!(
-                    wlc_sys::xdg_surface_add_listener(
+                    wl_sys::xdg_surface_add_listener(
                         xdg_surface,
                         &XDG_SURFACE_LISTENER,
                         ptr::null_mut(),
@@ -1722,10 +1722,10 @@ mod plat {
 
     fn get_toplevel(xdg_surface: *mut XdgSurface) -> *mut Toplevel {
         unsafe {
-            let toplevel = wlc_sys::xdg_surface_get_toplevel(xdg_surface);
+            let toplevel = wl_sys::xdg_surface_get_toplevel(xdg_surface);
             assert!(!toplevel.is_null());
             assert_eq!(
-                wlc_sys::toplevel_add_listener(toplevel, &TOPLEVEL_LISTENER, ptr::null_mut()),
+                wl_sys::toplevel_add_listener(toplevel, &TOPLEVEL_LISTENER, ptr::null_mut()),
                 0
             );
             toplevel
@@ -1748,13 +1748,12 @@ mod plat {
         match CStr::from_ptr(interface).to_str().unwrap() {
             "wl_compositor" => {
                 let cpt =
-                    wlc_sys::registry_bind(registry, name, &wlc_sys::COMPOSITOR_INTERFACE, version);
+                    wl_sys::registry_bind(registry, name, &wl_sys::COMPOSITOR_INTERFACE, version);
                 assert!(!cpt.is_null());
                 data.compositor = (cpt.cast(), name);
             }
             "xdg_wm_base" => {
-                let wm =
-                    wlc_sys::registry_bind(registry, name, &wlc_sys::WM_BASE_INTERFACE, version);
+                let wm = wl_sys::registry_bind(registry, name, &wl_sys::WM_BASE_INTERFACE, version);
                 assert!(!wm.is_null());
                 data.wm_base = (wm.cast(), name);
             }
@@ -1771,7 +1770,7 @@ mod plat {
     static WM_BASE_LISTENER: WmBaseListener = WmBaseListener { ping: wm_ping };
 
     unsafe extern "C" fn wm_ping(_data: *mut c_void, wm_base: *mut WmBase, serial: u32) {
-        wlc_sys::wm_base_pong(wm_base, serial);
+        wl_sys::wm_base_pong(wm_base, serial);
     }
 
     static XDG_SURFACE_LISTENER: XdgSurfaceListener = XdgSurfaceListener {
@@ -1783,7 +1782,7 @@ mod plat {
         xdg_surface: *mut XdgSurface,
         serial: u32,
     ) {
-        wlc_sys::xdg_surface_ack_configure(xdg_surface, serial);
+        wl_sys::xdg_surface_ack_configure(xdg_surface, serial);
     }
 
     static TOPLEVEL_LISTENER: ToplevelListener = ToplevelListener {

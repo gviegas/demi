@@ -15,4 +15,4 @@ dl-sys = { path = "platform/dl-sys" }
 dl = { path = "platform/dl" }
 vk-sys = { path = "platform/vk-sys" }
 vk = { path = "platform/vk" }
-wlc-sys = { path = "platform/wlc-sys" }
+wl-sys = { path = "platform/wl-sys" }

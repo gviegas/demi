@@ -33,11 +33,11 @@ name = "vk-sys"
 version = "0.1.0"
 dependencies = [
  "dl",
- "wlc-sys",
+ "wl-sys",
 ]
 
 [[package]]
-name = "wlc-sys"
+name = "wl-sys"
 version = "0.1.0"
 dependencies = [
  "dl",
@@ -48,5 +48,5 @@ name = "xgpu"
 version = "0.1.0"
 dependencies = [
  "vk",
- "wlc-sys",
+ "wl-sys",
 ]
