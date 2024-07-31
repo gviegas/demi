@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::Write;
 use std::os::unix::io::AsRawFd;
 use std::pin::Pin;
-use std::ptr;
+use std::ptr::{self, addr_of};
 
 use wl_sys::{
     self, Buffer, BufferListener, Compositor, Display, Keyboard, KeyboardListener, Output, Pointer,
@@ -196,7 +196,7 @@ impl Global {
                 wl_sys::wm_base_add_listener(
                     self.wm_base.0,
                     &WM_BASE_LISTENER,
-                    &mut PING as *mut _ as *mut _,
+                    addr_of!(PING) as *mut _,
                 ),
                 0
             );
