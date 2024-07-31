@@ -10,56 +10,8 @@ pub use instance::*;
 
 pub type Result<T> = result::Result<T, Error>;
 
-#[derive(Debug)]
-pub struct Error {
-    pub status: Option<Status>,
-    pub description: &'static str,
-}
-
-impl Error {
-    pub fn new(status: Option<Status>, description: &'static str) -> Self {
-        Self {
-            status,
-            description,
-        }
-    }
-
-    pub fn status(status: Status, description: &'static str) -> Self {
-        Self::new(Some(status), description)
-    }
-
-    pub fn result(result: vks::Result, description: &'static str) -> Self {
-        Self::status(result.into(), description)
-    }
-}
-
-impl From<Status> for Error {
-    fn from(status: Status) -> Self {
-        Self {
-            status: Some(status),
-            description: "",
-        }
-    }
-}
-
-impl From<&'static str> for Error {
-    fn from(description: &'static str) -> Self {
-        Self {
-            status: None,
-            description,
-        }
-    }
-}
-
-impl From<vks::Result> for Error {
-    fn from(result: vks::Result) -> Self {
-        <vks::Result as Into<Status>>::into(result).into()
-    }
-}
-
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Status {
-    Success = 0,
+pub enum Error {
     NotReady = 1,
     Timeout = 2,
     EventSet = 3,
@@ -98,53 +50,64 @@ pub enum Status {
     OperationDeferred = 1000268002,
     OperationNotDeferred = 1000268003,
     CompressionExhausted = -1000338000,
+    Other = 0,
 }
 
-impl From<vks::Result> for Status {
-    fn from(result: vks::Result) -> Self {
+impl Default for Error {
+    fn default() -> Self {
+        Error::Other
+    }
+}
+
+impl TryFrom<vks::Result> for Error {
+    type Error = &'static str;
+
+    fn try_from(result: vks::Result) -> result::Result<Self, Self::Error> {
         match result {
-            vks::SUCCESS => Status::Success,
-            vks::NOT_READY => Status::NotReady,
-            vks::TIMEOUT => Status::Timeout,
-            vks::EVENT_SET => Status::EventSet,
-            vks::EVENT_RESET => Status::EventReset,
-            vks::INCOMPLETE => Status::Incomplete,
-            vks::ERROR_OUT_OF_HOST_MEMORY => Status::OutOfHostMemory,
-            vks::ERROR_OUT_OF_DEVICE_MEMORY => Status::OutOfDeviceMemory,
-            vks::ERROR_INITIALIZATION_FAILED => Status::InitializationFailed,
-            vks::ERROR_DEVICE_LOST => Status::DeviceLost,
-            vks::ERROR_MEMORY_MAP_FAILED => Status::MemoryMapFailed,
-            vks::ERROR_LAYER_NOT_PRESENT => Status::LayerNotPresent,
-            vks::ERROR_EXTENSION_NOT_PRESENT => Status::ExtensionNotPresent,
-            vks::ERROR_FEATURE_NOT_PRESENT => Status::FeatureNotPresent,
-            vks::ERROR_INCOMPATIBLE_DRIVER => Status::IncompatibleDriver,
-            vks::ERROR_TOO_MANY_OBJECTS => Status::TooManyObjects,
-            vks::ERROR_FORMAT_NOT_SUPPORTED => Status::FormatNotSupported,
-            vks::ERROR_FRAGMENTED_POOL => Status::FragmentedPool,
-            vks::ERROR_UNKNOWN => Status::Unknown,
-            vks::ERROR_OUT_OF_POOL_MEMORY => Status::OutOfPoolMemory,
-            vks::ERROR_INVALID_EXTERNAL_HANDLE => Status::InvalidExternalHandle,
-            vks::ERROR_FRAGMENTATION => Status::Fragmentation,
-            vks::ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS => Status::InvalidOpaqueCaptureAddress,
-            vks::PIPELINE_COMPILE_REQUIRED => Status::PipelineCompileRequired,
-            vks::ERROR_SURFACE_LOST_KHR => Status::SurfaceLost,
-            vks::ERROR_NATIVE_WINDOW_IN_USE_KHR => Status::NativeWindowInUse,
-            vks::SUBOPTIMAL_KHR => Status::Suboptimal,
-            vks::ERROR_OUT_OF_DATE_KHR => Status::OutOfDate,
-            vks::ERROR_INCOMPATIBLE_DISPLAY_KHR => Status::IncompatibleDriver,
-            vks::ERROR_VALIDATION_FAILED_EXT => Status::ValidationFailed,
-            vks::ERROR_INVALID_SHADER_NV => Status::InvalidShader,
+            vks::SUCCESS => Err("`VK_SUCCESS` is not an `Error`"),
+            vks::NOT_READY => Ok(Error::NotReady),
+            vks::TIMEOUT => Ok(Error::Timeout),
+            vks::EVENT_SET => Ok(Error::EventSet),
+            vks::EVENT_RESET => Ok(Error::EventReset),
+            vks::INCOMPLETE => Ok(Error::Incomplete),
+            vks::ERROR_OUT_OF_HOST_MEMORY => Ok(Error::OutOfHostMemory),
+            vks::ERROR_OUT_OF_DEVICE_MEMORY => Ok(Error::OutOfDeviceMemory),
+            vks::ERROR_INITIALIZATION_FAILED => Ok(Error::InitializationFailed),
+            vks::ERROR_DEVICE_LOST => Ok(Error::DeviceLost),
+            vks::ERROR_MEMORY_MAP_FAILED => Ok(Error::MemoryMapFailed),
+            vks::ERROR_LAYER_NOT_PRESENT => Ok(Error::LayerNotPresent),
+            vks::ERROR_EXTENSION_NOT_PRESENT => Ok(Error::ExtensionNotPresent),
+            vks::ERROR_FEATURE_NOT_PRESENT => Ok(Error::FeatureNotPresent),
+            vks::ERROR_INCOMPATIBLE_DRIVER => Ok(Error::IncompatibleDriver),
+            vks::ERROR_TOO_MANY_OBJECTS => Ok(Error::TooManyObjects),
+            vks::ERROR_FORMAT_NOT_SUPPORTED => Ok(Error::FormatNotSupported),
+            vks::ERROR_FRAGMENTED_POOL => Ok(Error::FragmentedPool),
+            vks::ERROR_UNKNOWN => Ok(Error::Unknown),
+            vks::ERROR_OUT_OF_POOL_MEMORY => Ok(Error::OutOfPoolMemory),
+            vks::ERROR_INVALID_EXTERNAL_HANDLE => Ok(Error::InvalidExternalHandle),
+            vks::ERROR_FRAGMENTATION => Ok(Error::Fragmentation),
+            vks::ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS => Ok(Error::InvalidOpaqueCaptureAddress),
+            vks::PIPELINE_COMPILE_REQUIRED => Ok(Error::PipelineCompileRequired),
+            vks::ERROR_SURFACE_LOST_KHR => Ok(Error::SurfaceLost),
+            vks::ERROR_NATIVE_WINDOW_IN_USE_KHR => Ok(Error::NativeWindowInUse),
+            vks::SUBOPTIMAL_KHR => Ok(Error::Suboptimal),
+            vks::ERROR_OUT_OF_DATE_KHR => Ok(Error::OutOfDate),
+            vks::ERROR_INCOMPATIBLE_DISPLAY_KHR => Ok(Error::IncompatibleDriver),
+            vks::ERROR_VALIDATION_FAILED_EXT => Ok(Error::ValidationFailed),
+            vks::ERROR_INVALID_SHADER_NV => Ok(Error::InvalidShader),
             vks::ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT => {
-                Status::InvalidDrmFormatModifierPlaneLayout
+                Ok(Error::InvalidDrmFormatModifierPlaneLayout)
             }
-            vks::ERROR_NOT_PERMITTED_KHR => Status::NotPermitted,
-            vks::ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT => Status::FullScreenExclusiveModeLost,
-            vks::THREAD_IDLE_KHR => Status::ThreadIdle,
-            vks::THREAD_DONE_KHR => Status::ThreadDone,
-            vks::OPERATION_DEFERRED_KHR => Status::OperationDeferred,
-            vks::OPERATION_NOT_DEFERRED_KHR => Status::OperationNotDeferred,
-            vks::ERROR_COMPRESSION_EXHAUSTED_EXT => Status::CompressionExhausted,
-            _ => Status::Unknown,
+            vks::ERROR_NOT_PERMITTED_KHR => Ok(Error::NotPermitted),
+            vks::ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT => {
+                Ok(Error::FullScreenExclusiveModeLost)
+            }
+            vks::THREAD_IDLE_KHR => Ok(Error::ThreadIdle),
+            vks::THREAD_DONE_KHR => Ok(Error::ThreadDone),
+            vks::OPERATION_DEFERRED_KHR => Ok(Error::OperationDeferred),
+            vks::OPERATION_NOT_DEFERRED_KHR => Ok(Error::OperationNotDeferred),
+            vks::ERROR_COMPRESSION_EXHAUSTED_EXT => Ok(Error::CompressionExhausted),
+            _ => Err("Undefined error code"),
         }
     }
 }
@@ -156,35 +119,18 @@ mod tests {
     #[test]
     fn result() {
         let e = err().unwrap_err();
-        assert_eq!(e.status, Some(Status::OutOfDeviceMemory));
-        assert_eq!(e.description, "OODM!");
+        assert_eq!(e, Error::OutOfDeviceMemory);
 
-        let e = err_status().unwrap_err();
-        assert_eq!(e.status, Some(Status::DeviceLost));
-        assert_eq!(e.description, "");
-
-        let e = err_description().unwrap_err();
-        assert_eq!(e.status, None);
-        assert_eq!(e.description, "!fAiLeD!");
-
-        let e = err_result().unwrap_err();
-        assert_eq!(e.status, Some(Status::Timeout));
-        assert_eq!(e.description, "");
+        let e = success_is_not_err();
+        assert!(e.is_err());
+        assert_eq!(e.unwrap_or_default(), Error::Other);
 
         fn err() -> Result<()> {
-            Err(Error::result(vks::ERROR_OUT_OF_DEVICE_MEMORY, "OODM!"))
+            Err(vks::ERROR_OUT_OF_DEVICE_MEMORY.try_into().unwrap())
         }
 
-        fn err_status() -> Result<()> {
-            Err(Status::DeviceLost.into())
-        }
-
-        fn err_description() -> Result<()> {
-            Err("!fAiLeD!".into())
-        }
-
-        fn err_result() -> Result<()> {
-            Err(vks::TIMEOUT.into())
+        fn success_is_not_err() -> result::Result<Error, &'static str> {
+            vks::SUCCESS.try_into()
         }
     }
 }

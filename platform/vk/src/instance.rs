@@ -11,7 +11,8 @@ pub struct Instance {
 
 impl Instance {
     pub fn new(/*_exts: &[&str]*/) -> Result<Self> {
-        vks::init()?;
+        // TODO: Log the error message.
+        vks::init().map_err(|_| Error::InitializationFailed)?;
 
         let app_info = vks::ApplicationInfo {
             s_type: vks::STRUCTURE_TYPE_APPLICATION_INFO,
@@ -42,10 +43,10 @@ impl Instance {
                     Ok(fp) => Ok(Self { inst, fp }),
                     Err(_) => {
                         vks::fini();
-                        Err("IntanceFp::new".into())
+                        Err(Error::InitializationFailed)
                     }
                 },
-                err => Err(Error::result(err, "create_instance")),
+                err => Err(err.try_into().unwrap_or_default()),
             }
         }
     }
