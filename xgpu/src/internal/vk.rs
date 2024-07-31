@@ -11,14 +11,11 @@ pub(super) fn new_adapter(power_pref: PowerPreference) -> Result<Box<dyn NAdapte
 
 impl From<vk::Error> for Error {
     fn from(vk_err: vk::Error) -> Self {
-        match vk_err.status {
-            Some(vk::Status::DeviceLost) => {
-                Error::DeviceLost(DeviceLostReason::Unknown, vk_err.description)
-            }
-            Some(vk::Status::OutOfHostMemory) | Some(vk::Status::OutOfDeviceMemory) => {
-                Error::OutOfMemory(vk_err.description)
-            }
-            _ => Error::Internal(vk_err.description),
+        match vk_err {
+            vk::Error::DeviceLost => Error::DeviceLost(DeviceLostReason::Unknown, "Device lost"),
+            vk::Error::OutOfHostMemory => Error::OutOfMemory("Out of host memory"),
+            vk::Error::OutOfDeviceMemory => Error::OutOfMemory("Out of device memory"),
+            _ => Error::Internal("Unknown"), // TODO: String from Error.
         }
     }
 }
