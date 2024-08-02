@@ -280,7 +280,7 @@ impl fmt::Display for Impl {
 ///
 /// On success, returns the instance and the raw version.
 fn create_instance() -> Option<(Instance, u32)> {
-    const NAME: *const c_char = b"demi\0" as *const u8 as _;
+    const NAME: *const c_char = c"demi".as_ptr();
     const VERS: u32 = 1;
 
     let vers = check_instance_version()?;
@@ -352,15 +352,13 @@ fn check_instance_version() -> Option<u32> {
 
 #[cfg(target_os = "linux")]
 const INSTANCE_EXTS: &[*const c_char; 2] = &[
-    b"VK_KHR_surface\0" as *const u8 as _,
-    b"VK_KHR_wayland_surface\0" as *const u8 as _,
+    c"VK_KHR_surface".as_ptr(),
+    c"VK_KHR_wayland_surface".as_ptr(),
 ];
 
 #[cfg(windows)]
-const INSTANCE_EXTS: &[*const c_char; 2] = &[
-    b"VK_KHR_surface\0" as *const u8 as _,
-    b"VK_KHR_win32_surface\0" as *const u8 as _,
-];
+const INSTANCE_EXTS: &[*const c_char; 2] =
+    &[c"VK_KHR_surface".as_ptr(), c"VK_KHR_win32_surface".as_ptr()];
 
 /// Checks whether the instance has all required extensions.
 ///
@@ -591,7 +589,7 @@ fn check_device_features(dev: PhysicalDevice, fp: &InstanceFp) -> Option<Physica
     Some(feat)
 }
 
-const DEVICE_EXTS: &[*const c_char; 1] = &[b"VK_KHR_swapchain\0" as *const u8 as _];
+const DEVICE_EXTS: &[*const c_char; 1] = &[c"VK_KHR_swapchain".as_ptr()];
 
 /// Checks whether a given physical device has all required extensions.
 ///
