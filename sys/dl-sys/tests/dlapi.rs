@@ -1,7 +1,6 @@
 #![cfg(unix)]
 
 use core::ffi::CStr;
-use dl_sys;
 
 // XXX: This is unlikely to test much in a non-linux/gnu OS.
 #[test]
