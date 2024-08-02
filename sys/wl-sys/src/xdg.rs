@@ -16,23 +16,23 @@ pub struct WmBase {
 
 /// xdg_wm_base_interface
 pub static WM_BASE_INTERFACE: Interface = Interface {
-    name: b"xdg_wm_base\0".as_ptr().cast(),
+    name: c"xdg_wm_base".as_ptr(),
     version: 4,
     method_count: 4,
     methods: [
         Message {
-            name: b"destroy\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"destroy".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"create_positioner\0".as_ptr().cast(),
-            signature: b"n\0".as_ptr().cast(),
+            name: c"create_positioner".as_ptr(),
+            signature: c"n".as_ptr(),
             types: [&POSITIONER_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"get_xdg_surface\0".as_ptr().cast(),
-            signature: b"no\0".as_ptr().cast(),
+            name: c"get_xdg_surface".as_ptr(),
+            signature: c"no".as_ptr(),
             types: [
                 &XDG_SURFACE_INTERFACE as *const Interface,
                 &SURFACE_INTERFACE,
@@ -40,16 +40,16 @@ pub static WM_BASE_INTERFACE: Interface = Interface {
             .as_ptr(),
         },
         Message {
-            name: b"pong\0".as_ptr().cast(),
-            signature: b"u\0".as_ptr().cast(),
+            name: c"pong".as_ptr(),
+            signature: c"u".as_ptr(),
             types: NULL_TYPES,
         },
     ]
     .as_ptr(),
     event_count: 1,
     events: [Message {
-        name: b"ping\0".as_ptr().cast(),
-        signature: b"u\0".as_ptr().cast(),
+        name: c"ping".as_ptr(),
+        signature: c"u".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
@@ -154,58 +154,58 @@ pub struct Positioner {
 
 /// xdg_positioner_interface
 pub static POSITIONER_INTERFACE: Interface = Interface {
-    name: b"xdg_positioner\0".as_ptr().cast(),
+    name: c"xdg_positioner".as_ptr(),
     version: 4,
     method_count: 10,
     methods: [
         Message {
-            name: b"destroy\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"destroy".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_size\0".as_ptr().cast(),
-            signature: b"ii\0".as_ptr().cast(),
+            name: c"set_size".as_ptr(),
+            signature: c"ii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_anchor_rect\0".as_ptr().cast(),
-            signature: b"iiii\0".as_ptr().cast(),
+            name: c"set_anchor_rect".as_ptr(),
+            signature: c"iiii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_anchor\0".as_ptr().cast(),
-            signature: b"u\0".as_ptr().cast(),
+            name: c"set_anchor".as_ptr(),
+            signature: c"u".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_gravity\0".as_ptr().cast(),
-            signature: b"u\0".as_ptr().cast(),
+            name: c"set_gravity".as_ptr(),
+            signature: c"u".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_constraint_adjustment\0".as_ptr().cast(),
-            signature: b"u\0".as_ptr().cast(),
+            name: c"set_constraint_adjustment".as_ptr(),
+            signature: c"u".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_offset\0".as_ptr().cast(),
-            signature: b"ii\0".as_ptr().cast(),
+            name: c"set_offset".as_ptr(),
+            signature: c"ii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_reactive\0".as_ptr().cast(),
-            signature: b"3\0".as_ptr().cast(),
+            name: c"set_reactive".as_ptr(),
+            signature: c"3".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_parent_size\0".as_ptr().cast(),
-            signature: b"3ii\0".as_ptr().cast(),
+            name: c"set_parent_size".as_ptr(),
+            signature: c"3ii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_parent_configure\0".as_ptr().cast(),
-            signature: b"3u\0".as_ptr().cast(),
+            name: c"set_parent_configure".as_ptr(),
+            signature: c"3u".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -448,23 +448,23 @@ pub struct XdgSurface {
 
 /// xdg_surface_interface
 pub static XDG_SURFACE_INTERFACE: Interface = Interface {
-    name: b"xdg_surface\0".as_ptr().cast(),
+    name: c"xdg_surface".as_ptr(),
     version: 4,
     method_count: 5,
     methods: [
         Message {
-            name: b"destroy\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"destroy".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"get_toplevel\0".as_ptr().cast(),
-            signature: b"n\0".as_ptr().cast(),
+            name: c"get_toplevel".as_ptr(),
+            signature: c"n".as_ptr(),
             types: [&TOPLEVEL_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"get_popup\0".as_ptr().cast(),
-            signature: b"n?oo\0".as_ptr().cast(),
+            name: c"get_popup".as_ptr(),
+            signature: c"n?oo".as_ptr(),
             types: [
                 &POPUP_INTERFACE as *const Interface,
                 &XDG_SURFACE_INTERFACE,
@@ -473,21 +473,21 @@ pub static XDG_SURFACE_INTERFACE: Interface = Interface {
             .as_ptr(),
         },
         Message {
-            name: b"set_window_geometry\0".as_ptr().cast(),
-            signature: b"iiii\0".as_ptr().cast(),
+            name: c"set_window_geometry".as_ptr(),
+            signature: c"iiii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"ack_configure\0".as_ptr().cast(),
-            signature: b"u\0".as_ptr().cast(),
+            name: c"ack_configure".as_ptr(),
+            signature: c"u".as_ptr(),
             types: NULL_TYPES,
         },
     ]
     .as_ptr(),
     event_count: 1,
     events: [Message {
-        name: b"configure\0".as_ptr().cast(),
-        signature: b"u\0".as_ptr().cast(),
+        name: c"configure".as_ptr(),
+        signature: c"u".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
@@ -608,78 +608,78 @@ pub struct Toplevel {
 
 /// xdg_toplevel_interface
 pub static TOPLEVEL_INTERFACE: Interface = Interface {
-    name: b"xdg_toplevel\0".as_ptr().cast(),
+    name: c"xdg_toplevel".as_ptr(),
     version: 4,
     method_count: 14,
     methods: [
         Message {
-            name: b"destroy\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"destroy".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_parent\0".as_ptr().cast(),
-            signature: b"?o\0".as_ptr().cast(),
+            name: c"set_parent".as_ptr(),
+            signature: c"?o".as_ptr(),
             types: [&TOPLEVEL_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"set_title\0".as_ptr().cast(),
-            signature: b"s\0".as_ptr().cast(),
+            name: c"set_title".as_ptr(),
+            signature: c"s".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_app_id\0".as_ptr().cast(),
-            signature: b"s\0".as_ptr().cast(),
+            name: c"set_app_id".as_ptr(),
+            signature: c"s".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"show_window_menu\0".as_ptr().cast(),
-            signature: b"ouii\0".as_ptr().cast(),
+            name: c"show_window_menu".as_ptr(),
+            signature: c"ouii".as_ptr(),
             types: [&SEAT_INTERFACE, ptr::null(), ptr::null(), ptr::null()].as_ptr(),
         },
         Message {
-            name: b"move\0".as_ptr().cast(),
-            signature: b"ou\0".as_ptr().cast(),
+            name: c"move".as_ptr(),
+            signature: c"ou".as_ptr(),
             types: [&SEAT_INTERFACE, ptr::null()].as_ptr(),
         },
         Message {
-            name: b"resize\0".as_ptr().cast(),
-            signature: b"ouu\0".as_ptr().cast(),
+            name: c"resize".as_ptr(),
+            signature: c"ouu".as_ptr(),
             types: [&SEAT_INTERFACE, ptr::null(), ptr::null()].as_ptr(),
         },
         Message {
-            name: b"set_max_size\0".as_ptr().cast(),
-            signature: b"ii\0".as_ptr().cast(),
+            name: c"set_max_size".as_ptr(),
+            signature: c"ii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_min_size\0".as_ptr().cast(),
-            signature: b"ii\0".as_ptr().cast(),
+            name: c"set_min_size".as_ptr(),
+            signature: c"ii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_maximized\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"set_maximized".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"unset_maximized\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"unset_maximized".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_fullscreen\0".as_ptr().cast(),
-            signature: b"?o\0".as_ptr().cast(),
+            name: c"set_fullscreen".as_ptr(),
+            signature: c"?o".as_ptr(),
             types: [&OUTPUT_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"unset_fullscreen\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"unset_fullscreen".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_minimized\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"set_minimized".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -687,18 +687,18 @@ pub static TOPLEVEL_INTERFACE: Interface = Interface {
     event_count: 3,
     events: [
         Message {
-            name: b"configure\0".as_ptr().cast(),
-            signature: b"iia\0".as_ptr().cast(),
+            name: c"configure".as_ptr(),
+            signature: c"iia".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"close\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"close".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"configure_bounds\0".as_ptr().cast(),
-            signature: b"4ii\0".as_ptr().cast(),
+            name: c"configure_bounds".as_ptr(),
+            signature: c"4ii".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -983,23 +983,23 @@ pub struct Popup {
 
 /// xdg_popup_interface
 pub static POPUP_INTERFACE: Interface = Interface {
-    name: b"xdg_popup\0".as_ptr().cast(),
+    name: c"xdg_popup".as_ptr(),
     version: 4,
     method_count: 3,
     methods: [
         Message {
-            name: b"destroy\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"destroy".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"grab\0".as_ptr().cast(),
-            signature: b"ou\0".as_ptr().cast(),
+            name: c"grac".as_ptr(),
+            signature: c"ou".as_ptr(),
             types: [&SEAT_INTERFACE, ptr::null()].as_ptr(),
         },
         Message {
-            name: b"reposition\0".as_ptr().cast(),
-            signature: b"3ou\0".as_ptr().cast(),
+            name: c"reposition".as_ptr(),
+            signature: c"3ou".as_ptr(),
             types: [&POSITIONER_INTERFACE, ptr::null()].as_ptr(),
         },
     ]
@@ -1007,18 +1007,18 @@ pub static POPUP_INTERFACE: Interface = Interface {
     event_count: 3,
     events: [
         Message {
-            name: b"configure\0".as_ptr().cast(),
-            signature: b"iiii\0".as_ptr().cast(),
+            name: c"configure".as_ptr(),
+            signature: c"iiii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"popup_done\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"popup_done".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"repositioned\0".as_ptr().cast(),
-            signature: b"3u\0".as_ptr().cast(),
+            name: c"repositioned".as_ptr(),
+            signature: c"3u".as_ptr(),
             types: NULL_TYPES,
         },
     ]

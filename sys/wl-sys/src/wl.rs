@@ -56,14 +56,14 @@ pub struct Callback {
 
 /// wl_callback_interface
 pub static CALLBACK_INTERFACE: Interface = Interface {
-    name: b"wl_callback\0".as_ptr().cast(),
+    name: c"wl_callback".as_ptr(),
     version: 1,
     method_count: 0,
     methods: ptr::null(),
     event_count: 1,
     events: [Message {
-        name: b"done\0".as_ptr().cast(),
-        signature: b"u\0".as_ptr().cast(),
+        name: c"done".as_ptr(),
+        signature: c"u".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
@@ -92,25 +92,25 @@ pub struct Registry {
 
 /// wl_registry_interface
 pub static REGISTRY_INTERFACE: Interface = Interface {
-    name: b"wl_registry\0".as_ptr().cast(),
+    name: c"wl_registry".as_ptr(),
     version: 1,
     method_count: 1,
     methods: [Message {
-        name: b"bind\0".as_ptr().cast(),
-        signature: b"usun\0".as_ptr().cast(),
+        name: c"bind".as_ptr(),
+        signature: c"usun".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
     event_count: 2,
     events: [
         Message {
-            name: b"global\0".as_ptr().cast(),
-            signature: b"usu\0".as_ptr().cast(),
+            name: c"global".as_ptr(),
+            signature: c"usu".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"global_remove\0".as_ptr().cast(),
-            signature: b"u\0".as_ptr().cast(),
+            name: c"global_remove".as_ptr(),
+            signature: c"u".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -170,18 +170,18 @@ pub struct Compositor {
 
 /// wl_compositor_interface
 pub static COMPOSITOR_INTERFACE: Interface = Interface {
-    name: b"wl_compositor\0".as_ptr().cast(),
+    name: c"wl_compositor".as_ptr(),
     version: 5,
     method_count: 2,
     methods: [
         Message {
-            name: b"create_surface\0".as_ptr().cast(),
-            signature: b"n\0".as_ptr().cast(),
+            name: c"create_surface".as_ptr(),
+            signature: c"n".as_ptr(),
             types: [&SURFACE_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"create_region\0".as_ptr().cast(),
-            signature: b"n\0".as_ptr().cast(),
+            name: c"create_region".as_ptr(),
+            signature: c"n".as_ptr(),
             types: [&REGION_INTERFACE as *const Interface].as_ptr(),
         },
     ]
@@ -227,63 +227,63 @@ pub struct Surface {
 
 /// wl_surface_interface
 pub static SURFACE_INTERFACE: Interface = Interface {
-    name: b"wl_surface\0".as_ptr().cast(),
+    name: c"wl_surface".as_ptr(),
     version: 5,
     method_count: 11,
     methods: [
         Message {
-            name: b"destroy\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"destroy".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"attach\0".as_ptr().cast(),
-            signature: b"?oii\0".as_ptr().cast(),
+            name: c"attach".as_ptr(),
+            signature: c"?oii".as_ptr(),
             types: [&BUFFER_INTERFACE, ptr::null(), ptr::null()].as_ptr(),
         },
         Message {
-            name: b"damage\0".as_ptr().cast(),
-            signature: b"iiii\0".as_ptr().cast(),
+            name: c"damage".as_ptr(),
+            signature: c"iiii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"frame\0".as_ptr().cast(),
-            signature: b"n\0".as_ptr().cast(),
+            name: c"frame".as_ptr(),
+            signature: c"n".as_ptr(),
             types: [&CALLBACK_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"set_opaque_region\0".as_ptr().cast(),
-            signature: b"?o\0".as_ptr().cast(),
+            name: c"set_opaque_region".as_ptr(),
+            signature: c"?o".as_ptr(),
             types: [&REGION_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"set_input_region\0".as_ptr().cast(),
-            signature: b"?o\0".as_ptr().cast(),
+            name: c"set_input_region".as_ptr(),
+            signature: c"?o".as_ptr(),
             types: [&REGION_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"commit\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"commit".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_buffer_transform\0".as_ptr().cast(),
-            signature: b"2i\0".as_ptr().cast(),
+            name: c"set_buffer_transform".as_ptr(),
+            signature: c"2i".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"set_buffer_scale\0".as_ptr().cast(),
-            signature: b"3i\0".as_ptr().cast(),
+            name: c"set_buffer_scale".as_ptr(),
+            signature: c"3i".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"damage_buffer\0".as_ptr().cast(),
-            signature: b"4iiii\0".as_ptr().cast(),
+            name: c"damage_buffer".as_ptr(),
+            signature: c"4iiii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"offset\0".as_ptr().cast(),
-            signature: b"5ii\0".as_ptr().cast(),
+            name: c"offset".as_ptr(),
+            signature: c"5ii".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -291,13 +291,13 @@ pub static SURFACE_INTERFACE: Interface = Interface {
     event_count: 2,
     events: [
         Message {
-            name: b"enter\0".as_ptr().cast(),
-            signature: b"o\0".as_ptr().cast(),
+            name: c"enter".as_ptr(),
+            signature: c"o".as_ptr(),
             types: [&OUTPUT_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"leave\0".as_ptr().cast(),
-            signature: b"o\0".as_ptr().cast(),
+            name: c"leave".as_ptr(),
+            signature: c"o".as_ptr(),
             types: [&OUTPUT_INTERFACE as *const Interface].as_ptr(),
         },
     ]
@@ -498,23 +498,23 @@ pub struct Region {
 
 /// wl_region_interface
 pub static REGION_INTERFACE: Interface = Interface {
-    name: b"wl_region\0".as_ptr().cast(),
+    name: c"wl_region".as_ptr(),
     version: 1,
     method_count: 3,
     methods: [
         Message {
-            name: b"destroy\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"destroy".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"add\0".as_ptr().cast(),
-            signature: b"iiii\0".as_ptr().cast(),
+            name: c"add".as_ptr(),
+            signature: c"iiii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"subtract\0".as_ptr().cast(),
-            signature: b"iiii\0".as_ptr().cast(),
+            name: c"subtract".as_ptr(),
+            signature: c"iiii".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -576,19 +576,19 @@ pub struct Shm {
 
 /// wl_shm_interface
 pub static SHM_INTERFACE: Interface = Interface {
-    name: b"wl_shm\0".as_ptr().cast(),
+    name: c"wl_shm".as_ptr(),
     version: 1,
     method_count: 1,
     methods: [Message {
-        name: b"create_pool\0".as_ptr().cast(),
-        signature: b"nhi\0".as_ptr().cast(),
+        name: c"create_pool".as_ptr(),
+        signature: c"nhi".as_ptr(),
         types: [&SHM_POOL_INTERFACE, ptr::null(), ptr::null()].as_ptr(),
     }]
     .as_ptr(),
     event_count: 1,
     events: [Message {
-        name: b"format\0".as_ptr().cast(),
-        signature: b"u\0".as_ptr().cast(),
+        name: c"format".as_ptr(),
+        signature: c"u".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
@@ -967,13 +967,13 @@ pub struct ShmPool {
 
 /// wl_shm_pool_interface
 pub static SHM_POOL_INTERFACE: Interface = Interface {
-    name: b"wl_shm_pool\0".as_ptr().cast(),
+    name: c"wl_shm_pool".as_ptr(),
     version: 1,
     method_count: 3,
     methods: [
         Message {
-            name: b"create_buffer\0".as_ptr().cast(),
-            signature: b"niiiiu\0".as_ptr().cast(),
+            name: c"create_buffer".as_ptr(),
+            signature: c"niiiiu".as_ptr(),
             types: [
                 &BUFFER_INTERFACE,
                 ptr::null(),
@@ -985,13 +985,13 @@ pub static SHM_POOL_INTERFACE: Interface = Interface {
             .as_ptr(),
         },
         Message {
-            name: b"destroy\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"destroy".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"resize\0".as_ptr().cast(),
-            signature: b"i\0".as_ptr().cast(),
+            name: c"resize".as_ptr(),
+            signature: c"i".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -1060,19 +1060,19 @@ pub struct Buffer {
 
 /// wl_buffer_interface
 pub static BUFFER_INTERFACE: Interface = Interface {
-    name: b"wl_buffer\0".as_ptr().cast(),
+    name: c"wl_buffer".as_ptr(),
     version: 1,
     method_count: 1,
     methods: [Message {
-        name: b"destroy\0".as_ptr().cast(),
-        signature: b"\0".as_ptr().cast(),
+        name: c"destroy".as_ptr(),
+        signature: c"".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
     event_count: 1,
     events: [Message {
-        name: b"release\0".as_ptr().cast(),
-        signature: b"\0".as_ptr().cast(),
+        name: c"release".as_ptr(),
+        signature: c"".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
@@ -1114,28 +1114,28 @@ pub struct Seat {
 
 /// wl_seat_interface
 pub static SEAT_INTERFACE: Interface = Interface {
-    name: b"wl_seat\0".as_ptr().cast(),
+    name: c"wl_seat".as_ptr(),
     version: 7,
     method_count: 4,
     methods: [
         Message {
-            name: b"get_pointer\0".as_ptr().cast(),
-            signature: b"n\0".as_ptr().cast(),
+            name: c"get_pointer".as_ptr(),
+            signature: c"n".as_ptr(),
             types: [&POINTER_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"get_keyboard\0".as_ptr().cast(),
-            signature: b"n\0".as_ptr().cast(),
+            name: c"get_keyboard".as_ptr(),
+            signature: c"n".as_ptr(),
             types: [&KEYBOARD_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"get_touch\0".as_ptr().cast(),
-            signature: b"n\0".as_ptr().cast(),
+            name: c"get_touch".as_ptr(),
+            signature: c"n".as_ptr(),
             types: [&TOUCH_INTERFACE as *const Interface].as_ptr(),
         },
         Message {
-            name: b"release\0".as_ptr().cast(),
-            signature: b"5\0".as_ptr().cast(),
+            name: c"release".as_ptr(),
+            signature: c"5".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -1143,13 +1143,13 @@ pub static SEAT_INTERFACE: Interface = Interface {
     event_count: 2,
     events: [
         Message {
-            name: b"capabilities\0".as_ptr().cast(),
-            signature: b"u\0".as_ptr().cast(),
+            name: c"capabilities".as_ptr(),
+            signature: c"u".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"name\0".as_ptr().cast(),
-            signature: b"2s\0".as_ptr().cast(),
+            name: c"name".as_ptr(),
+            signature: c"2s".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -1244,18 +1244,18 @@ pub struct Pointer {
 
 /// wl_pointer_interface
 pub static POINTER_INTERFACE: Interface = Interface {
-    name: b"wl_pointer\0".as_ptr().cast(),
+    name: c"wl_pointer".as_ptr(),
     version: 7,
     method_count: 2,
     methods: [
         Message {
-            name: b"set_cursor\0".as_ptr().cast(),
-            signature: b"u?oii\0".as_ptr().cast(),
+            name: c"set_cursor".as_ptr(),
+            signature: c"u?oii".as_ptr(),
             types: [ptr::null(), &SURFACE_INTERFACE, ptr::null(), ptr::null()].as_ptr(),
         },
         Message {
-            name: b"release\0".as_ptr().cast(),
-            signature: b"3\0".as_ptr().cast(),
+            name: c"release".as_ptr(),
+            signature: c"3".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -1263,48 +1263,48 @@ pub static POINTER_INTERFACE: Interface = Interface {
     event_count: 9,
     events: [
         Message {
-            name: b"enter\0".as_ptr().cast(),
-            signature: b"uoff\0".as_ptr().cast(),
+            name: c"enter".as_ptr(),
+            signature: c"uoff".as_ptr(),
             types: [ptr::null(), &SURFACE_INTERFACE, ptr::null(), ptr::null()].as_ptr(),
         },
         Message {
-            name: b"leave\0".as_ptr().cast(),
-            signature: b"uo\0".as_ptr().cast(),
+            name: c"leave".as_ptr(),
+            signature: c"uo".as_ptr(),
             types: [ptr::null(), &SURFACE_INTERFACE].as_ptr(),
         },
         Message {
-            name: b"motion\0".as_ptr().cast(),
-            signature: b"uff\0".as_ptr().cast(),
+            name: c"motion".as_ptr(),
+            signature: c"uff".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"button\0".as_ptr().cast(),
-            signature: b"uuuu\0".as_ptr().cast(),
+            name: c"button".as_ptr(),
+            signature: c"uuuu".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"axis\0".as_ptr().cast(),
-            signature: b"uuf\0".as_ptr().cast(),
+            name: c"axis".as_ptr(),
+            signature: c"uuf".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"frame\0".as_ptr().cast(),
-            signature: b"5\0".as_ptr().cast(),
+            name: c"frame".as_ptr(),
+            signature: c"5".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"axis_source\0".as_ptr().cast(),
-            signature: b"5u\0".as_ptr().cast(),
+            name: c"axis_source".as_ptr(),
+            signature: c"5u".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"axis_stop\0".as_ptr().cast(),
-            signature: b"5uu\0".as_ptr().cast(),
+            name: c"axis_stop".as_ptr(),
+            signature: c"5uu".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"axis_discrete\0".as_ptr().cast(),
-            signature: b"5ui\0".as_ptr().cast(),
+            name: c"axis_discrete".as_ptr(),
+            signature: c"5ui".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -1438,45 +1438,45 @@ pub struct Keyboard {
 
 /// wl_keyboard_interface
 pub static KEYBOARD_INTERFACE: Interface = Interface {
-    name: b"wl_keyboard\0".as_ptr().cast(),
+    name: c"wl_keyboard".as_ptr(),
     version: 7,
     method_count: 1,
     methods: [Message {
-        name: b"release\0".as_ptr().cast(),
-        signature: b"3\0".as_ptr().cast(),
+        name: c"release".as_ptr(),
+        signature: c"3".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
     event_count: 6,
     events: [
         Message {
-            name: b"keymap\0".as_ptr().cast(),
-            signature: b"uhu\0".as_ptr().cast(),
+            name: c"keymap".as_ptr(),
+            signature: c"uhu".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"enter\0".as_ptr().cast(),
-            signature: b"uoa\0".as_ptr().cast(),
+            name: c"enter".as_ptr(),
+            signature: c"uoa".as_ptr(),
             types: [ptr::null(), &SURFACE_INTERFACE, ptr::null()].as_ptr(),
         },
         Message {
-            name: b"leave\0".as_ptr().cast(),
-            signature: b"uo\0".as_ptr().cast(),
+            name: c"leave".as_ptr(),
+            signature: c"uo".as_ptr(),
             types: [ptr::null(), &SURFACE_INTERFACE].as_ptr(),
         },
         Message {
-            name: b"key\0".as_ptr().cast(),
-            signature: b"uuuu\0".as_ptr().cast(),
+            name: c"key".as_ptr(),
+            signature: c"uuuu".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"modifiers\0".as_ptr().cast(),
-            signature: b"uuuuu\0".as_ptr().cast(),
+            name: c"modifiers".as_ptr(),
+            signature: c"uuuuu".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"repeat_info\0".as_ptr().cast(),
-            signature: b"4ii\0".as_ptr().cast(),
+            name: c"repeat_info".as_ptr(),
+            signature: c"4ii".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -1569,20 +1569,20 @@ pub struct Touch {
 
 /// wl_touch_interface
 pub static TOUCH_INTERFACE: Interface = Interface {
-    name: b"wl_touch\0".as_ptr().cast(),
+    name: c"wl_touch".as_ptr(),
     version: 7,
     method_count: 1,
     methods: [Message {
-        name: b"release\0".as_ptr().cast(),
-        signature: b"3\0".as_ptr().cast(),
+        name: c"release".as_ptr(),
+        signature: c"3".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
     event_count: 7,
     events: [
         Message {
-            name: b"down\0".as_ptr().cast(),
-            signature: b"uuoiff\0".as_ptr().cast(),
+            name: c"down".as_ptr(),
+            signature: c"uuoiff".as_ptr(),
             types: [
                 ptr::null(),
                 ptr::null(),
@@ -1594,33 +1594,33 @@ pub static TOUCH_INTERFACE: Interface = Interface {
             .as_ptr(),
         },
         Message {
-            name: b"up\0".as_ptr().cast(),
-            signature: b"uui\0".as_ptr().cast(),
+            name: c"up".as_ptr(),
+            signature: c"uui".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"motion\0".as_ptr().cast(),
-            signature: b"uiff\0".as_ptr().cast(),
+            name: c"motion".as_ptr(),
+            signature: c"uiff".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"frame\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"frame".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"cancel\0".as_ptr().cast(),
-            signature: b"\0".as_ptr().cast(),
+            name: c"cancel".as_ptr(),
+            signature: c"".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"shape\0".as_ptr().cast(),
-            signature: b"6iff\0".as_ptr().cast(),
+            name: c"shape".as_ptr(),
+            signature: c"6iff".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"orientation\0".as_ptr().cast(),
-            signature: b"6if\0".as_ptr().cast(),
+            name: c"orientation".as_ptr(),
+            signature: c"6if".as_ptr(),
             types: NULL_TYPES,
         },
     ]
@@ -1696,45 +1696,45 @@ pub struct Output {
 
 /// wl_output_interface
 pub static OUTPUT_INTERFACE: Interface = Interface {
-    name: b"wl_output\0".as_ptr().cast(),
+    name: c"wl_output".as_ptr(),
     version: 4,
     method_count: 1,
     methods: [Message {
-        name: b"release\0".as_ptr().cast(),
-        signature: b"3\0".as_ptr().cast(),
+        name: c"release".as_ptr(),
+        signature: c"3".as_ptr(),
         types: NULL_TYPES,
     }]
     .as_ptr(),
     event_count: 6,
     events: [
         Message {
-            name: b"geometry\0".as_ptr().cast(),
-            signature: b"iiiiissi\0".as_ptr().cast(),
+            name: c"geometry".as_ptr(),
+            signature: c"iiiiissi".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"mode\0".as_ptr().cast(),
-            signature: b"uiii\0".as_ptr().cast(),
+            name: c"mode".as_ptr(),
+            signature: c"uiii".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"done\0".as_ptr().cast(),
-            signature: b"2\0".as_ptr().cast(),
+            name: c"done".as_ptr(),
+            signature: c"2".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"scale\0".as_ptr().cast(),
-            signature: b"2i\0".as_ptr().cast(),
+            name: c"scale".as_ptr(),
+            signature: c"2i".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"name\0".as_ptr().cast(),
-            signature: b"4s\0".as_ptr().cast(),
+            name: c"name".as_ptr(),
+            signature: c"4s".as_ptr(),
             types: NULL_TYPES,
         },
         Message {
-            name: b"description\0".as_ptr().cast(),
-            signature: b"4s\0".as_ptr().cast(),
+            name: c"description".as_ptr(),
+            signature: c"4s".as_ptr(),
             types: NULL_TYPES,
         },
     ]
