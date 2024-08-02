@@ -303,14 +303,11 @@ impl InstState {
 
         let exts: [*const c_char; 2] = if cfg!(target_os = "linux") {
             [
-                b"VK_KHR_surface\0".as_ptr().cast(),
-                b"VK_KHR_wayland_surface\0".as_ptr().cast(),
+                c"VK_KHR_surface".as_ptr(),
+                c"VK_KHR_wayland_surface".as_ptr(),
             ]
         } else if cfg!(windows) {
-            [
-                b"VK_KHR_surface\0".as_ptr().cast(),
-                b"VK_KHR_win32_surface\0".as_ptr().cast(),
-            ]
+            [c"VK_KHR_surface".as_ptr(), c"VK_KHR_win32_surface".as_ptr()]
         } else {
             panic!("invalid OS");
         };
@@ -428,7 +425,7 @@ impl DevState {
             });
         }
 
-        const EXTS: [*const c_char; 1] = [b"VK_KHR_swapchain\0".as_ptr().cast()];
+        const EXTS: [*const c_char; 1] = [c"VK_KHR_swapchain".as_ptr()];
 
         let dev_info = DeviceCreateInfo {
             s_type: vk_sys::STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -1328,7 +1325,7 @@ impl PlState {
                 flags: 0,
                 stage: vk_sys::SHADER_STAGE_VERTEX_BIT,
                 module: shd_state.vert,
-                name: b"main\0".as_ptr().cast(),
+                name: c"main".as_ptr(),
                 specialization_info: ptr::null(),
             },
             PipelineShaderStageCreateInfo {
@@ -1337,7 +1334,7 @@ impl PlState {
                 flags: 0,
                 stage: vk_sys::SHADER_STAGE_FRAGMENT_BIT,
                 module: shd_state.frag,
-                name: b"main\0".as_ptr().cast(),
+                name: c"main".as_ptr(),
                 specialization_info: ptr::null(),
             },
         ];

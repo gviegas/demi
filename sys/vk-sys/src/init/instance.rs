@@ -86,41 +86,38 @@ impl InstanceFp {
         let get = PROC.as_ref().unwrap().fp();
 
         macro_rules! get {
-            ($bs:expr) => {
-                match get(instance, $bs.as_ptr().cast()) {
+            ($cs:expr) => {
+                match get(instance, $cs.as_ptr()) {
                     Some(x) => Ok(mem::transmute(x)),
-                    None => Err(format!(
-                        "could not obtain FP: {}",
-                        String::from_utf8_lossy(&$bs[..$bs.len() - 1])
-                    )),
+                    None => Err(format!("could not obtain FP: {}", $cs.to_string_lossy())),
                 }
             };
         }
 
         Ok(Self {
-            destroy_instance: get!(b"vkDestroyInstance\0")?,
-            enumerate_physical_devices: get!(b"vkEnumeratePhysicalDevices\0")?,
-            get_physical_device_properties: get!(b"vkGetPhysicalDeviceProperties\0")?,
+            destroy_instance: get!(c"vkDestroyInstance")?,
+            enumerate_physical_devices: get!(c"vkEnumeratePhysicalDevices")?,
+            get_physical_device_properties: get!(c"vkGetPhysicalDeviceProperties")?,
             get_physical_device_queue_family_properties: get!(
-                b"vkGetPhysicalDeviceQueueFamilyProperties\0"
+                c"vkGetPhysicalDeviceQueueFamilyProperties"
             )?,
-            get_physical_device_memory_properties: get!(b"vkGetPhysicalDeviceMemoryProperties\0")?,
-            get_physical_device_features: get!(b"vkGetPhysicalDeviceFeatures\0")?,
-            get_physical_device_format_properties: get!(b"vkGetPhysicalDeviceFormatProperties\0")?,
-            enumerate_device_extension_properties: get!(b"vkEnumerateDeviceExtensionProperties\0")?,
-            create_device: get!(b"vkCreateDevice\0")?,
+            get_physical_device_memory_properties: get!(c"vkGetPhysicalDeviceMemoryProperties")?,
+            get_physical_device_features: get!(c"vkGetPhysicalDeviceFeatures")?,
+            get_physical_device_format_properties: get!(c"vkGetPhysicalDeviceFormatProperties")?,
+            enumerate_device_extension_properties: get!(c"vkEnumerateDeviceExtensionProperties")?,
+            create_device: get!(c"vkCreateDevice")?,
 
-            get_device_proc_addr: get!(b"vkGetDeviceProcAddr\0")?,
+            get_device_proc_addr: get!(c"vkGetDeviceProcAddr")?,
 
-            enumerate_physical_device_groups: get!(b"vkEnumeratePhysicalDeviceGroups\0").ok(),
-            get_physical_device_properties_2: get!(b"vkGetPhysicalDeviceProperties2\0").ok(),
-            get_physical_device_features_2: get!(b"vkGetPhysicalDeviceFeatures2\0").ok(),
+            enumerate_physical_device_groups: get!(c"vkEnumeratePhysicalDeviceGroups").ok(),
+            get_physical_device_properties_2: get!(c"vkGetPhysicalDeviceProperties2").ok(),
+            get_physical_device_features_2: get!(c"vkGetPhysicalDeviceFeatures2").ok(),
 
             #[cfg(target_os = "linux")]
-            create_wayland_surface_khr: get!(b"vkCreateWaylandSurfaceKHR\0").ok(),
+            create_wayland_surface_khr: get!(c"vkCreateWaylandSurfaceKHR").ok(),
 
             #[cfg(windows)]
-            create_win32_surface_khr: get!(b"vkCreateWin32SurfaceKHR\0").ok(),
+            create_win32_surface_khr: get!(c"vkCreateWin32SurfaceKHR").ok(),
 
             #[cfg(all(
                 unix,
@@ -128,23 +125,19 @@ impl InstanceFp {
                 not(target_os = "ios"),
                 not(target_os = "macos")
             ))]
-            create_xcb_surface_khr: get!(b"vkCreateXcbSurfaceKHR\0").ok(),
+            create_xcb_surface_khr: get!(c"vkCreateXcbSurfaceKHR").ok(),
 
-            destroy_surface_khr: get!(b"vkDestroySurfaceKHR\0").ok(),
-            get_physical_device_surface_support_khr: get!(
-                b"vkGetPhysicalDeviceSurfaceSupportKHR\0"
-            )
-            .ok(),
+            destroy_surface_khr: get!(c"vkDestroySurfaceKHR").ok(),
+            get_physical_device_surface_support_khr: get!(c"vkGetPhysicalDeviceSurfaceSupportKHR")
+                .ok(),
             get_physical_device_surface_capabilities_khr: get!(
-                b"vkGetPhysicalDeviceSurfaceCapabilitiesKHR\0"
+                c"vkGetPhysicalDeviceSurfaceCapabilitiesKHR"
             )
             .ok(),
-            get_physical_device_surface_formats_khr: get!(
-                b"vkGetPhysicalDeviceSurfaceFormatsKHR\0"
-            )
-            .ok(),
+            get_physical_device_surface_formats_khr: get!(c"vkGetPhysicalDeviceSurfaceFormatsKHR")
+                .ok(),
             get_physical_device_surface_present_modes_khr: get!(
-                b"vkGetPhysicalDeviceSurfacePresentModesKHR\0"
+                c"vkGetPhysicalDeviceSurfacePresentModesKHR"
             )
             .ok(),
         })

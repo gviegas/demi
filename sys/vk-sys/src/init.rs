@@ -98,27 +98,24 @@ struct GlobalFp {
 impl GlobalFp {
     fn new(get: GetInstanceProcAddr) -> Result<Self, String> {
         macro_rules! get {
-            ($bs:expr) => {
+            ($cs:expr) => {
                 unsafe {
-                    match get(ptr::null_mut(), $bs.as_ptr().cast()) {
+                    match get(ptr::null_mut(), $cs.as_ptr()) {
                         Some(x) => Ok(mem::transmute(x)),
-                        None => Err(format!(
-                            "could not get FP: {}",
-                            String::from_utf8_lossy(&$bs[..$bs.len() - 1])
-                        )),
+                        None => Err(format!("could not get FP: {}", $cs.to_string_lossy())),
                     }
                 }
             };
         }
 
         Ok(Self {
-            enumerate_instance_layer_properties: get!(b"vkEnumerateInstanceLayerProperties\0")?,
+            enumerate_instance_layer_properties: get!(c"vkEnumerateInstanceLayerProperties")?,
             enumerate_instance_extension_properties: get!(
-                b"vkEnumerateInstanceExtensionProperties\0"
+                c"vkEnumerateInstanceExtensionProperties"
             )?,
-            create_instance: get!(b"vkCreateInstance\0")?,
+            create_instance: get!(c"vkCreateInstance")?,
 
-            enumerate_instance_version: get!(b"vkEnumerateInstanceVersion\0").ok(),
+            enumerate_instance_version: get!(c"vkEnumerateInstanceVersion").ok(),
         })
     }
 }
