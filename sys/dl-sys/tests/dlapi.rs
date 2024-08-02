@@ -1,13 +1,13 @@
 #![cfg(unix)]
 
-use core::ffi::{c_char, CStr};
+use core::ffi::CStr;
 use dl_sys;
 
 // XXX: This is unlikely to test much in a non-linux/gnu OS.
 #[test]
 fn test_api() {
     unsafe {
-        let lib = b"libpthread.so.0\0" as *const u8 as *const c_char;
+        let lib = c"libpthread.so.0".as_ptr();
         let handle = dl_sys::dlopen(lib, dl_sys::RTLD_LAZY | dl_sys::RTLD_GLOBAL);
         if handle.is_null() {
             let err = dl_sys::dlerror();
@@ -17,10 +17,10 @@ fn test_api() {
         }
 
         let syms = [
-            b"pthread_create\0" as *const u8 as *const c_char,
-            b"pthread_self\0" as *const u8 as *const c_char,
-            b"pthread_join\0" as *const u8 as *const c_char,
-            b"pthread_self\0" as *const u8 as *const c_char,
+            c"pthread_create".as_ptr(),
+            c"pthread_self".as_ptr(),
+            c"pthread_join".as_ptr(),
+            c"pthread_self".as_ptr(),
         ];
         for i in syms {
             let sym = dl_sys::dlsym(handle, i);
