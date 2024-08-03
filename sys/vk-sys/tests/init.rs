@@ -2,7 +2,7 @@ use std::ffi::CStr;
 use std::ptr;
 
 use vk_sys::{
-    self, Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo, Instance, InstanceCreateInfo,
+    Device, DeviceCreateInfo, DeviceFp, DeviceQueueCreateInfo, Instance, InstanceCreateInfo,
     InstanceFp,
 };
 

@@ -1599,7 +1599,7 @@ mod plat {
     use std::ptr;
 
     use wl_sys::{
-        self, Compositor, Display, Registry, RegistryListener, Surface, Toplevel, ToplevelListener,
+        Compositor, Display, Registry, RegistryListener, Surface, Toplevel, ToplevelListener,
         WmBase, WmBaseListener, XdgSurface, XdgSurfaceListener,
     };
 
