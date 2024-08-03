@@ -43,7 +43,7 @@ fn test_draw() {
 
     let mut state = State::new();
 
-    const TIMEOUT: Duration = Duration::new(60, 0);
+    const TIMEOUT: Duration = Duration::new(2, 0);
     let tm = Instant::now();
 
     while tm.elapsed() < TIMEOUT && !plat::quit() {
