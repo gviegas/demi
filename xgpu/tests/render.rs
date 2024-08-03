@@ -2,7 +2,7 @@ use std::mem;
 use std::slice;
 
 use xgpu::{
-    self, Adapter, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
+    Adapter, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
     BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingResource, BindingResourceLayout,
     Buffer, BufferBindingKind, BufferDescriptor, BufferUsage, Color, ColorTargetState, ColorWrite,
     CommandBuffer, CompareFunction, CullMode, DepthStencilState, Device, Extent3d, FragmentState,
@@ -358,6 +358,7 @@ impl Context {
         // The implementation must ensure that this copy happens after
         // the render pass finishes writing to the color attachment
         // (synchronization is implicit).
+        // TODO: Consider adding explicit memory barriers to the API.
         enc.copy_texture_to_buffer(
             &ImageCopyTexture {
                 texture: &self.color_tex,
