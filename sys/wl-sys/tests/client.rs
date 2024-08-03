@@ -8,7 +8,7 @@ use std::pin::Pin;
 use std::ptr::{self, addr_of};
 
 use wl_sys::{
-    self, Buffer, BufferListener, Compositor, Display, Keyboard, KeyboardListener, Output, Pointer,
+    Buffer, BufferListener, Compositor, Display, Keyboard, KeyboardListener, Output, Pointer,
     PointerListener, Registry, RegistryListener, Seat, SeatListener, Shm, ShmPool, Surface,
     SurfaceListener, Toplevel, ToplevelListener, Touch, WmBase, WmBaseListener, XdgSurface,
     XdgSurfaceListener,
