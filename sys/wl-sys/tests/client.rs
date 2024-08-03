@@ -6,12 +6,13 @@ use std::io::Write;
 use std::os::unix::io::AsRawFd;
 use std::pin::Pin;
 use std::ptr::{self, addr_of};
+use std::time::{Duration, Instant};
 
 use wl_sys::{
     Buffer, BufferListener, Compositor, Display, Keyboard, KeyboardListener, Output, Pointer,
     PointerListener, Registry, RegistryListener, Seat, SeatListener, Shm, ShmPool, Surface,
     SurfaceListener, Toplevel, ToplevelListener, Touch, WmBase, WmBaseListener, XdgSurface,
-    XdgSurfaceListener,
+    XdgSurfaceListener, KEYBOARD_KEY_STATE_PRESSED,
 };
 
 #[test]
@@ -73,7 +74,11 @@ fn test_client() {
     commit(surface);
     flush(display);
 
-    while !quit() {
+    const TIMEOUT: Duration = Duration::new(10, 0);
+    let tm = Instant::now();
+
+    while !quit() && tm.elapsed() < TIMEOUT {
+        // Note that this call may block.
         dispatch(display);
     }
 
@@ -104,27 +109,20 @@ fn disconnect(display: *mut Display) {
 }
 
 fn dispatch(display: *mut Display) {
-    unsafe {
-        wl_sys::display_dispatch(display);
-    }
+    assert!(unsafe { wl_sys::display_dispatch(display) } != -1);
 }
 
+#[allow(dead_code)]
 fn dispatch_pending(display: *mut Display) {
-    unsafe {
-        wl_sys::display_dispatch_pending(display);
-    }
+    assert!(unsafe { wl_sys::display_dispatch_pending(display) } != -1);
 }
 
 fn flush(display: *mut Display) {
-    unsafe {
-        wl_sys::display_flush(display);
-    }
+    assert!(unsafe { wl_sys::display_flush(display) } != -1);
 }
 
 fn roundtrip(display: *mut Display) {
-    unsafe {
-        wl_sys::display_roundtrip(display);
-    }
+    assert!(unsafe { wl_sys::display_roundtrip(display) } != -1);
 }
 
 fn get_registry(display: *mut Display) -> *mut Registry {
@@ -688,6 +686,7 @@ unsafe extern "C" fn kb_key(
         "keyboard.key: {:?} {:?} {:?} {:?} {:?} {:?}",
         data, keyboard, serial, time, key, state
     );
+    QUIT = state == KEYBOARD_KEY_STATE_PRESSED && key == 1;
 }
 
 unsafe extern "C" fn kb_modifiers(
