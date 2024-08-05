@@ -919,6 +919,21 @@ impl<T: Float> Mat4<T> {
         m
     }
 
+    /// Composes a matrix from a translation vector.
+    pub fn from_t(t: &Vec3<T>) -> Self {
+        Mat4::translation(t[0], t[1], t[2])
+    }
+
+    /// Composes a matrix from a rotation quaternion.
+    pub fn from_r(r: &Quat<T>) -> Self {
+        Mat4::rotation_q(r)
+    }
+
+    /// Composes a matrix from a scale vector.
+    pub fn from_s(s: &Vec3<T>) -> Self {
+        Mat4::scale(s[0], s[1], s[2])
+    }
+
     /// Decomposes a matrix into TRS properties.
     pub fn into_trs(&self) -> (Vec3<T>, Quat<T>, Vec3<T>) {
         let mut ul = Mat3::from(self);
