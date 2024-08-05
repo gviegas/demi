@@ -329,23 +329,23 @@ length_impl!(Vec2<T>);
 length_impl!(Vec3<T>);
 length_impl!(Vec4<T>);
 
-macro_rules! norm_impl {
+macro_rules! normalize_impl {
     ($t:ty) => {
         impl<T: Float> $t {
             /// Returns a new direction vector.
             ///
             /// NOTE: One must ensure that `self.length()` is greater than zero.
             #[must_use]
-            pub fn norm(&self) -> Self {
+            pub fn normalize(&self) -> Self {
                 self / self.length()
             }
         }
     };
 }
 
-norm_impl!(Vec2<T>);
-norm_impl!(Vec3<T>);
-norm_impl!(Vec4<T>);
+normalize_impl!(Vec2<T>);
+normalize_impl!(Vec3<T>);
+normalize_impl!(Vec4<T>);
 
 impl<T: Copy + Sub<Output = T> + Mul<Output = T>> Vec3<T> {
     /// Computes the cross product.

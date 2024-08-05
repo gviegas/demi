@@ -169,9 +169,9 @@ fn vec_length() {
 }
 
 #[test]
-fn vec_norm() {
+fn vec_normalize() {
     let v = Vec3::new(3f64, 0.0, 4f64);
-    let u = v.norm();
+    let u = v.normalize();
     assert_eq!(u[0], 0.6);
     assert_eq!(u[1], 0.0);
     assert_eq!(u[2], 0.8);

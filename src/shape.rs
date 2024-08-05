@@ -215,7 +215,7 @@ impl Plane {
     ///
     /// This function normalizes `n`.
     pub fn new_norm(n: Vec3<f32>, p0: Vec3<f32>) -> Self {
-        Self::new_unnorm(n.norm(), p0)
+        Self::new_unnorm(n.normalize(), p0)
     }
 
     /// Creates a new plane from a normal vector and a point on the plane.
@@ -346,7 +346,7 @@ mod tests {
         let p0 = Vec3::new(1.0, -1.0, 0.0);
         let pln0 = Plane::new_unnorm(n, p0);
         let pln1 = Plane::new_norm(n, pln0.p0());
-        let nn = pln0.n().norm();
+        let nn = pln0.n().normalize();
         let pln2 = Plane::new(nn[0], nn[1], nn[2], -nn.dot(&pln1.p0()));
         assert_ne!(pln0, pln1);
         assert_ne!(pln0, pln2);
@@ -523,8 +523,8 @@ mod tests {
         assert!(sph.contains(Vec3::default()));
         assert!(!sph.contains(Vec3::from(1.0)));
         assert!(!sph.contains(Vec3::from(-1.0)));
-        assert!(sph.contains(Vec3::from(1.0).norm()));
-        assert!(sph.contains(Vec3::from(-1.0).norm()));
+        assert!(sph.contains(Vec3::from(1.0).normalize()));
+        assert!(sph.contains(Vec3::from(-1.0).normalize()));
         assert!(sph.contains(Vec3::new(1.0 / 3f32.sqrt(), 0.0, 0.0)));
         assert!(sph.contains(Vec3::new(0.0, -1.0 / 3f32.sqrt(), 0.0)));
         assert!(sph.contains(Vec3::new(0.0, 0.0, -1.0 / 3f32.sqrt())));
@@ -535,8 +535,8 @@ mod tests {
         assert!(!sph.contains(Vec3::default()));
         assert!(!sph.contains(Vec3::from(1.0)));
         assert!(!sph.contains(Vec3::from(-1.0)));
-        assert!(!sph.contains(Vec3::from(1.0).norm()));
-        assert!(sph.contains(Vec3::from(-1.0).norm()));
+        assert!(!sph.contains(Vec3::from(1.0).normalize()));
+        assert!(sph.contains(Vec3::from(-1.0).normalize()));
         assert!(!sph.contains(Vec3::new(1.0 / 3f32.sqrt(), 0.0, 0.0)));
         assert!(sph.contains(Vec3::new(0.0, -1.0 / 3f32.sqrt(), 0.0)));
         assert!(!sph.contains(Vec3::new(0.0, 0.0, -1.0 / 3f32.sqrt())));
@@ -547,8 +547,8 @@ mod tests {
         assert!(sph.contains(Vec3::default()));
         assert!(sph.contains(Vec3::from(1.0)));
         assert!(sph.contains(Vec3::from(-1.0)));
-        assert!(sph.contains(Vec3::from(1.0).norm()));
-        assert!(sph.contains(Vec3::from(-1.0).norm()));
+        assert!(sph.contains(Vec3::from(1.0).normalize()));
+        assert!(sph.contains(Vec3::from(-1.0).normalize()));
         assert!(sph.contains(Vec3::new(1.0 / 3f32.sqrt(), 0.0, 0.0)));
         assert!(sph.contains(Vec3::new(0.0, -1.0 / 3f32.sqrt(), 0.0)));
         assert!(sph.contains(Vec3::new(0.0, 0.0, -1.0 / 3f32.sqrt())));
@@ -556,13 +556,13 @@ mod tests {
         assert!(sph.contains(Vec3::new(0.0, -0.3333, 0.25)));
 
         let sph = sph0
-            .displace_by(Vec3::from(0.75).norm())
+            .displace_by(Vec3::from(0.75).normalize())
             .resize_by(0.817 - 1.0);
         assert!(!sph.contains(Vec3::default()));
         assert!(sph.contains(Vec3::from(1.0)));
         assert!(!sph.contains(Vec3::from(-1.0)));
-        assert!(sph.contains(Vec3::from(1.0).norm()));
-        assert!(!sph.contains(Vec3::from(-1.0).norm()));
+        assert!(sph.contains(Vec3::from(1.0).normalize()));
+        assert!(!sph.contains(Vec3::from(-1.0).normalize()));
         assert!(sph.contains(Vec3::new(1.0 / 3f32.sqrt(), 0.0, 0.0)));
         assert!(!sph.contains(Vec3::new(0.0, -1.0 / 3f32.sqrt(), 0.0)));
         assert!(!sph.contains(Vec3::new(0.0, 0.0, -1.0 / 3f32.sqrt())));
@@ -598,7 +598,7 @@ mod tests {
         assert!(!pln.contains(pln.p0() + Vec3::new(-1.0, 1.0, 0.0)));
         assert!(pln.contains(pln.p0() + Vec3::from(1.0)));
 
-        let mut v = Vec4::new(1.0, 1.0, 0.0, 0.0).norm();
+        let mut v = Vec4::new(1.0, 1.0, 0.0, 0.0).normalize();
         v[3] = -Vec3::from(v).dot(&Vec3::from(2.0));
         let pln = Plane::from(v);
         assert!(!pln.contains(Vec3::default()));

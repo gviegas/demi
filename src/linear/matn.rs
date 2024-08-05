@@ -537,7 +537,7 @@ impl<T: Scalar> Mat4<T> {
 impl<T: Float> Mat3<T> {
     /// Creates a new matrix encoding a rotation about an arbitrary axis.
     pub fn rotation(angle: T, axis: &Vec3<T>) -> Self {
-        let axis = axis.norm();
+        let axis = axis.normalize();
         let (x, y, z) = (axis[0], axis[1], axis[2]);
         let cos = angle.cos();
         let sin = angle.sin();
@@ -560,7 +560,7 @@ impl<T: Float> Mat3<T> {
         // TODO: Implement vector conversions.
         let imag = quat.imag();
         let real = quat.real();
-        let qvec = Vec4::new(imag[0], imag[1], imag[2], real).norm();
+        let qvec = Vec4::new(imag[0], imag[1], imag[2], real).normalize();
         let (x, y, z, w) = (qvec[0], qvec[1], qvec[2], qvec[3]);
         let xx2 = (T::ONE + T::ONE) * x * x;
         let xy2 = (T::ONE + T::ONE) * x * y;
@@ -615,7 +615,7 @@ impl<T: Float> Mat3<T> {
 impl<T: Float> Mat4<T> {
     /// Creates a new matrix encoding a rotation about an arbitrary axis.
     pub fn rotation(angle: T, axis: &Vec3<T>) -> Self {
-        let axis = axis.norm();
+        let axis = axis.normalize();
         let (x, y, z) = (axis[0], axis[1], axis[2]);
         let cos = angle.cos();
         let sin = angle.sin();
@@ -639,7 +639,7 @@ impl<T: Float> Mat4<T> {
         // TODO: Implement vector conversions.
         let imag = quat.imag();
         let real = quat.real();
-        let qvec = Vec4::new(imag[0], imag[1], imag[2], real).norm();
+        let qvec = Vec4::new(imag[0], imag[1], imag[2], real).normalize();
         let (x, y, z, w) = (qvec[0], qvec[1], qvec[2], qvec[3]);
         let xx2 = (T::ONE + T::ONE) * x * x;
         let xy2 = (T::ONE + T::ONE) * x * y;
@@ -721,8 +721,8 @@ impl<T: Scalar> Mat4<T> {
 impl<T: Float> Mat4<T> {
     /// Creates a new matrix encoding a view transform.
     pub fn look_at(center: &Vec3<T>, eye: &Vec3<T>, up: &Vec3<T>) -> Self {
-        let fwd = (center - eye).norm();
-        let side = fwd.cross(up).norm();
+        let fwd = (center - eye).normalize();
+        let side = fwd.cross(up).normalize();
         let up = fwd.cross(&side);
         Self::new(
             [side[0], up[0], -fwd[0], T::ZERO],

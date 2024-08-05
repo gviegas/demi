@@ -85,7 +85,7 @@ impl<T: Float> Quat<T> {
         let ang = angle / (T::ONE + T::ONE);
         let cos = ang.cos();
         let sin = ang.sin();
-        Self(axis.norm() * sin, cos)
+        Self(axis.normalize() * sin, cos)
     }
 
     /// Creates a new quaternion encoding the rotation described by a given matrix.
