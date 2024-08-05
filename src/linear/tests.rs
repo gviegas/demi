@@ -786,16 +786,19 @@ fn mat_trs() {
     let trs = m.into_trs();
     assert(&m, t, Quat::new([0.0; 3], 1.0), Vec3::from(1.0));
     assert(&m, trs.0, trs.1, trs.2);
+    assert(&m, m.into_t(), m.into_r(), m.into_s());
 
     let r = Quat::rotation_y(std::f64::consts::FRAC_PI_4);
     let m = Mat4::from_r(&r);
     let trs = m.into_trs();
     assert(&m, Vec3::from(0.0), r, Vec3::from(1.0));
     assert(&m, trs.0, trs.1, trs.2);
+    assert(&m, m.into_t(), m.into_r(), m.into_s());
 
     let s = Vec3::new(0.25, -1.0, 4.0);
     let m = Mat4::from_s(&s);
     let trs = m.into_trs();
     assert(&m, Vec3::from(0.0), Quat::new([0.0; 3], 1.0), s);
     assert(&m, trs.0, trs.1, trs.2);
+    assert(&m, m.into_t(), m.into_r(), m.into_s());
 }

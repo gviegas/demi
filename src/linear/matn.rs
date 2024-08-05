@@ -954,4 +954,38 @@ impl<T: Float> Mat4<T> {
         let t = Vec3::from(self[3]);
         (t, r, s)
     }
+
+    /// Decomposes a matrix into a translation vector.
+    pub fn into_t(&self) -> Vec3<T> {
+        Vec3::from(self[3])
+    }
+
+    /// Decomposes a matrix into a rotation quaternion.
+    pub fn into_r(&self) -> Quat<T> {
+        let mut ul = Mat3::from(self);
+        let det = ul.det();
+        let s = if det > T::ZERO {
+            Vec3::new(ul[0].length(), ul[1].length(), ul[2].length())
+        } else {
+            Vec3::new(-ul[0].length(), -ul[1].length(), -ul[2].length())
+        };
+        if det.abs() <= T::EPSILON {
+            Quat::new([T::ZERO; 3], T::ONE)
+        } else {
+            ul[0] /= s[0];
+            ul[1] /= s[1];
+            ul[2] /= s[2];
+            Quat::rotation_m(&ul)
+        }
+    }
+
+    /// Decomposes a matrix into a scale vector.
+    pub fn into_s(&self) -> Vec3<T> {
+        let ul = Mat3::from(self);
+        if ul.det() > T::ZERO {
+            Vec3::new(ul[0].length(), ul[1].length(), ul[2].length())
+        } else {
+            Vec3::new(-ul[0].length(), -ul[1].length(), -ul[2].length())
+        }
+    }
 }
