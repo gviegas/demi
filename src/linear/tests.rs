@@ -588,10 +588,14 @@ fn mat_view() {
     let eye = Vec3::new(-1.0, 0.0, 0.0);
     let up = Vec3::new(0.0, 1.0, 0.0);
     let m = Mat4::look_at(&center, &eye, &up);
-    assert_eq!(m[0][2], -1.0);
-    assert_eq!(m[1][1], -1.0);
-    assert_eq!(m[2][0], 1.0);
-    assert_eq!(m[3][2], -1.0);
+    assert_eq!(m[0][2], 1.0);
+    assert_eq!(m[1][1], 1.0);
+    assert_eq!(m[2][0], -1.0);
+    assert_eq!(m[3][2], 1.0);
+    assert_eq!(
+        m * Vec4::new(4.0, 3.0, 2.0, 1.0),
+        Vec4::new(-2.0, 3.0, 5.0, 1.0)
+    );
 }
 
 #[test]
@@ -605,9 +609,9 @@ fn mat_projection() {
     assert_eq!(m[3][3], 0.0);
     let n = Mat4::inf_perspective(yfov, aspect, znear);
     assert!(((n[0][0] * aspect) - 1.0).abs() <= f64::EPSILON);
+    assert_eq!(n[2][2], 1.0);
     assert_eq!(n[3][3], 0.0);
-    assert!(n[2][2] > m[2][2]);
-    assert!(n[3][2] > m[3][2]);
+    assert!(n[2][2] < m[2][2]);
 
     let (znear, zfar) = (0.0, -1.0);
     let (xmag, ymag) = (1.25, 1.5);

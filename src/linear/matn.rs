@@ -1,3 +1,5 @@
+// TODO: These could use explicit SIMD instructions.
+
 use std::mem;
 use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -719,58 +721,53 @@ impl<T: Scalar> Mat4<T> {
 }
 
 impl<T: Float> Mat4<T> {
-    /// Creates a new matrix encoding a view transform.
+    /// Creates a new matrix encoding a view transform (left-handed).
     pub fn look_at(center: &Vec3<T>, eye: &Vec3<T>, up: &Vec3<T>) -> Self {
         let fwd = (center - eye).normalize();
-        let side = fwd.cross(up).normalize();
+        let side = up.cross(&fwd).normalize();
         let up = fwd.cross(&side);
         Self::new(
-            [side[0], up[0], -fwd[0], T::ZERO],
-            [side[1], up[1], -fwd[1], T::ZERO],
-            [side[2], up[2], -fwd[2], T::ZERO],
-            [-side.dot(eye), -up.dot(eye), fwd.dot(eye), T::ONE],
+            [side[0], up[0], fwd[0], T::ZERO],
+            [side[1], up[1], fwd[1], T::ZERO],
+            [side[2], up[2], fwd[2], T::ZERO],
+            [-side.dot(eye), -up.dot(eye), -fwd.dot(eye), T::ONE],
         )
     }
 }
 
 impl<T: Float> Mat4<T> {
-    /// Creates a new matrix encoding a perspective projection.
+    /// Creates a new matrix encoding a perspective projection (left-handed/zero-to-one).
     pub fn perspective(yfov: T, aspect: T, znear: T, zfar: T) -> Self {
         let two = T::ONE + T::ONE;
         let ct = T::ONE / (yfov / two).tan();
+        let cz = zfar / (zfar - znear);
         Self::new(
             [ct / aspect, T::ZERO, T::ZERO, T::ZERO],
             [T::ZERO, ct, T::ZERO, T::ZERO],
-            [T::ZERO, T::ZERO, (zfar + znear) / (znear - zfar), -T::ONE],
-            [
-                T::ZERO,
-                T::ZERO,
-                (two * zfar * znear) / (znear - zfar),
-                T::ZERO,
-            ],
+            [T::ZERO, T::ZERO, cz, T::ONE],
+            [T::ZERO, T::ZERO, -znear * cz, T::ZERO],
         )
     }
 
-    /// Creates a new matrix encoding an infinity perspective projection.
+    /// Creates a new matrix encoding an infinite perspective projection (left-handed).
     pub fn inf_perspective(yfov: T, aspect: T, znear: T) -> Self {
         let two = T::ONE + T::ONE;
         let ct = T::ONE / (yfov / two).tan();
         Self::new(
             [ct / aspect, T::ZERO, T::ZERO, T::ZERO],
             [T::ZERO, ct, T::ZERO, T::ZERO],
-            [T::ZERO, T::ZERO, -T::ONE, -T::ONE],
+            [T::ZERO, T::ZERO, T::ONE, T::ONE],
             [T::ZERO, T::ZERO, -two * znear, T::ZERO],
         )
     }
 
-    /// Creates a new matrix encoding an orthographic projection.
+    /// Creates a new matrix encoding an orthographic projection (left-handed/zero-to-one).
     pub fn ortho(xmag: T, ymag: T, znear: T, zfar: T) -> Self {
-        let two = T::ONE + T::ONE;
         Self::new(
             [T::ONE / xmag, T::ZERO, T::ZERO, T::ZERO],
             [T::ZERO, T::ONE / ymag, T::ZERO, T::ZERO],
-            [T::ZERO, T::ZERO, two / (znear - zfar), T::ZERO],
-            [T::ZERO, T::ZERO, (zfar + znear) / (znear - zfar), T::ONE],
+            [T::ZERO, T::ZERO, T::ONE / (zfar - znear), T::ZERO],
+            [T::ZERO, T::ZERO, -znear / (zfar - znear), T::ONE],
         )
     }
 }
@@ -903,7 +900,7 @@ impl<T: Copy + Default> From<Mat4<T>> for Mat3<T> {
 impl<T: Float> Mat4<T> {
     /// Composes a matrix from TRS properties.
     pub fn from_trs(t: &Vec3<T>, r: &Quat<T>, s: &Vec3<T>) -> Self {
-        let mut m = Mat4::rotation_q(r);
+        let mut m = Self::rotation_q(r);
         m[0][0] *= s[0];
         m[0][1] *= s[0];
         m[0][2] *= s[0];
@@ -921,17 +918,17 @@ impl<T: Float> Mat4<T> {
 
     /// Composes a matrix from a translation vector.
     pub fn from_t(t: &Vec3<T>) -> Self {
-        Mat4::translation(t[0], t[1], t[2])
+        Self::translation(t[0], t[1], t[2])
     }
 
     /// Composes a matrix from a rotation quaternion.
     pub fn from_r(r: &Quat<T>) -> Self {
-        Mat4::rotation_q(r)
+        Self::rotation_q(r)
     }
 
     /// Composes a matrix from a scale vector.
     pub fn from_s(s: &Vec3<T>) -> Self {
-        Mat4::scale(s[0], s[1], s[2])
+        Self::scale(s[0], s[1], s[2])
     }
 
     /// Decomposes a matrix into TRS properties.
